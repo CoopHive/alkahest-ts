@@ -157,7 +157,14 @@ export const makeClient = (account: Account, chain: Chain) => {
       buyAttestation: `0x${string}`,
       fromBlock?: bigint,
       toBlock?: bigint,
-    ) => {
+    ): Promise<{
+      eventName: "PaymentClaimed";
+      args: {
+        payment: `0x${string}`;
+        fulfillment: `0x${string}`;
+        fulfiller: `0x${string}`;
+      };
+    }> => {
       const logs = await viemClient.getLogs({
         address: contractAddresses[chain.name].erc20PaymentObligation,
         event: parseAbiItem(
@@ -180,25 +187,27 @@ export const makeClient = (account: Account, chain: Chain) => {
         return data;
       }
 
-      const unwatch = viemClient.watchEvent({
-        address: contractAddresses[chain.name].erc20PaymentObligation,
-        event: parseAbiItem(
-          "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
-        ),
-        args: {
-          payment: buyAttestation,
-        },
-        onLogs: (logs) => {
-          const data = decodeEventLog({
-            abi: parseAbi([
-              "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
-            ]),
-            data: logs[0].data,
-            topics: logs[0].topics,
-          });
-          unwatch();
-          return data;
-        },
+      return new Promise((resolve) => {
+        const unwatch = viemClient.watchEvent({
+          address: contractAddresses[chain.name].erc20PaymentObligation,
+          event: parseAbiItem(
+            "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
+          ),
+          args: {
+            payment: buyAttestation,
+          },
+          onLogs: (logs) => {
+            const data = decodeEventLog({
+              abi: parseAbi([
+                "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
+              ]),
+              data: logs[0].data,
+              topics: logs[0].topics,
+            });
+            unwatch();
+            resolve(data);
+          },
+        });
       });
     },
     buyErc20ForErc20: async (
