@@ -30,10 +30,10 @@ export const contractAddresses: Record<
     eas: "0x4200000000000000000000000000000000000021" as const,
     easSchemaRegistry: "0x4200000000000000000000000000000000000020" as const,
     erc20PaymentObligation:
-      "0xc38a35f2605277C95C843fC5b9b8809009EcE44c" as const,
+      "0x9B09a8354AC84A34dd267c843d509e5E1343111f" as const,
     erc20PaymentFulfillmentArbiter:
-      "0x46b47c98853753abbb76B5979E0295830b2014B2" as const,
-    erc20BarterUtils: "0xf108310c8b90E4E64A773fC1157F845e3CD2CAd2" as const,
+      "0x308aDDd58832d16369054cC4d50f7bCF3899a3b4" as const,
+    erc20BarterUtils: "0xaB1ACD30cAA43C5D8FBc180aDB0f6EC916A4af5F" as const,
     usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as const,
   },
 };
@@ -42,6 +42,11 @@ export const contractAddresses: Record<
 // erc20PaymentObligation: "0xdc1994888fB81D473B22b014CFCe7326846f3ca5" as const,
 // erc20PaymentFulfillmentArbiter: "0x335988634e319fBea2b8d2850468e46dEFf0B40b" as const,
 // erc20BarterUtils: "0xb3ad5A0A227D07f778154dD4CFc99A26d7091ab2" as const,
+
+// (no makeFor)
+// erc20PaymentObligation: "0xc38a35f2605277C95C843fC5b9b8809009EcE44c" as const,
+// erc20PaymentFulfillmentArbiter: "0x46b47c98853753abbb76B5979E0295830b2014B2" as const,
+// erc20BarterUtils: "0xf108310c8b90E4E64A773fC1157F845e3CD2CAd2" as const,
 
 const supportedChains = ["Base Sepolia"];
 
@@ -75,45 +80,45 @@ export const makeClient = (account: Account, chain: Chain) => {
     });
   };
 
+  const approveIfLess = async (
+    token: `0x${string}`,
+    amount: bigint,
+    address: `0x${string}`,
+  ) => {
+    const currentAllowance = (await viemClient.readContract({
+      address: token,
+      abi: iErc20Abi.abi,
+      functionName: "allowance",
+      args: [account.address, address],
+    })) as bigint;
+
+    if (currentAllowance < amount) {
+      const hash = await viemClient.writeContract({
+        address: token,
+        abi: iErc20Abi.abi,
+        functionName: "approve",
+        args: [contractAddresses[chain.name].erc20PaymentObligation, amount],
+      });
+
+      await viemClient.waitForTransactionReceipt({ hash });
+    }
+  };
+
   const makeErc20PaymentStatement = async (
     price: { token: `0x${string}`; amount: bigint },
     item: { arbiter: `0x${string}`; demand: `0x${string}` },
     fulfilling: `0x${string}`,
   ) => {
-    const currentNonce = await viemClient.getTransactionCount({
-      address: account.address,
-    });
-
     // approve token
-    const currentAllowance = (await viemClient.readContract({
-      address: price.token,
-      abi: iErc20Abi.abi,
-      functionName: "allowance",
-      args: [
-        account.address,
-        contractAddresses[chain.name].erc20PaymentObligation,
-      ],
-    })) as bigint;
-
-    if (currentAllowance < price.amount) {
-      const approveTx = await viemClient.writeContract({
-        address: price.token,
-        abi: iErc20Abi.abi,
-        functionName: "approve",
-        args: [
-          contractAddresses[chain.name].erc20PaymentObligation,
-          price.amount,
-        ],
-      });
-
-      // Wait for approval to be confirmed
-      await viemClient.waitForTransactionReceipt({ hash: approveTx });
-    }
+    await approveIfLess(
+      price.token,
+      price.amount,
+      contractAddresses[chain.name].erc20PaymentObligation,
+    );
 
     // buy statement
     return await viemClient.writeContract({
       address: contractAddresses[chain.name].erc20PaymentObligation,
-      nonce: currentNonce + 2,
       abi: erc20PaymentObligationAbi.abi,
       functionName: "makeStatement",
       args: [
@@ -213,12 +218,18 @@ export const makeClient = (account: Account, chain: Chain) => {
     buyErc20ForErc20: async (
       bid: { token: `0x${string}`; amount: bigint },
       ask: { token: `0x${string}`; amount: bigint },
+      expiration: number = 0,
     ) => {
+      await approveIfLess(
+        bid.token,
+        bid.amount,
+        contractAddresses[chain.name].erc20BarterUtils,
+      );
       const hash = await viemClient.writeContract({
         address: contractAddresses[chain.name].erc20BarterUtils,
         abi: erc20BarterUtilsAbi.abi,
         functionName: "buyErc20ForErc20",
-        args: [bid.token, bid.amount, ask.token, ask.amount],
+        args: [bid.token, bid.amount, ask.token, ask.amount, expiration],
       });
       const attested = await getAttestationFromTxHash(hash);
       return { hash, attested };
