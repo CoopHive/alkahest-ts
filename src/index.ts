@@ -1,9 +1,7 @@
 import {
   createWalletClient,
   decodeAbiParameters,
-  decodeEventLog,
   http,
-  parseAbi,
   parseAbiItem,
   parseAbiParameters,
   parseEventLogs,
