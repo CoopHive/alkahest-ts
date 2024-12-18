@@ -67,19 +67,11 @@ export const makeClient = (account: Account, chain: Chain) => {
   // decode attestation from logs; result from simulation isn't reliable
   const getAttestationFromTxHash = async (hash: `0x${string}`) => {
     const tx = await viemClient.waitForTransactionReceipt({ hash });
-    const attestedLog = parseEventLogs({
+    return parseEventLogs({
       abi: iEasAbi.abi,
       eventName: "Attested",
       logs: tx.logs,
-    })[0];
-
-    return decodeEventLog({
-      abi: parseAbi([
-        "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)",
-      ]),
-      data: attestedLog.data,
-      topics: attestedLog.topics,
-    });
+    })[0].args;
   };
 
   const approveIfLess = async (
@@ -106,71 +98,63 @@ export const makeClient = (account: Account, chain: Chain) => {
     }
   };
 
-  const makeErc20PaymentStatement = async (
-    price: { token: `0x${string}`; amount: bigint },
-    item: { arbiter: `0x${string}`; demand: `0x${string}` },
-    fulfilling: `0x${string}`,
-  ) => {
-    // approve token
-    await approveIfLess(
-      price.token,
-      price.amount,
-      contractAddresses[chain.name].erc20PaymentObligation,
-    );
-
-    // buy statement
-    return await viemClient.writeContract({
-      address: contractAddresses[chain.name].erc20PaymentObligation,
-      abi: erc20PaymentObligationAbi.abi,
-      functionName: "makeStatement",
-      args: [
-        {
-          token: price.token,
-          amount: price.amount,
-          arbiter: item.arbiter,
-          demand: item.demand,
-        },
-        0n,
-        fulfilling,
-      ],
-    });
-  };
-
   // alkahest client
   return {
-    approvePayments: async (token: `0x${string}`, amount: bigint) => {
-      const approveTx = await viemClient.writeContract({
-        address: token,
-        abi: iErc20Abi.abi,
-        functionName: "approve",
-        args: [contractAddresses[chain.name].erc20PaymentObligation, amount],
-      });
-
-      return await viemClient.waitForTransactionReceipt({ hash: approveTx });
-    },
     buyWithErc20: async (
       price: { token: `0x${string}`; amount: bigint },
       item: { arbiter: `0x${string}`; demand: `0x${string}` },
     ) => {
-      const hash = await makeErc20PaymentStatement(
-        price,
-        item,
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
+      await approveIfLess(
+        price.token,
+        price.amount,
+        contractAddresses[chain.name].erc20PaymentObligation,
       );
+
+      const hash = await viemClient.writeContract({
+        address: contractAddresses[chain.name].erc20PaymentObligation,
+        abi: erc20PaymentObligationAbi.abi,
+        functionName: "makeStatement",
+        args: [
+          {
+            token: price.token,
+            amount: price.amount,
+            arbiter: item.arbiter,
+            demand: item.demand,
+          },
+          0n,
+          "0x0000000000000000000000000000000000000000000000000000000000000000",
+        ],
+      });
       const attested = await getAttestationFromTxHash(hash);
       return { hash, attested };
+    },
+    claimErc20Payment: async (
+      payment: `0x${string}`,
+      fulfillment: `0x${string}`,
+    ) => {
+      const hash = await viemClient.writeContract({
+        address: contractAddresses[chain.name].erc20PaymentObligation,
+        abi: erc20PaymentObligationAbi.abi,
+        functionName: "collectPayment",
+        args: [payment, fulfillment],
+      });
+      const tx = await viemClient.waitForTransactionReceipt({ hash });
+      const claimedLog = parseEventLogs({
+        abi: erc20PaymentObligationAbi.abi,
+        eventName: "PaymentClaimed",
+        logs: tx.logs,
+      })[0];
+
+      return { hash, claimed: claimedLog.args };
     },
     waitForFulfillment: async (
       buyAttestation: `0x${string}`,
       fromBlock?: bigint,
       toBlock?: bigint,
     ): Promise<{
-      eventName: "PaymentClaimed";
-      args: {
-        payment: `0x${string}`;
-        fulfillment: `0x${string}`;
-        fulfiller: `0x${string}`;
-      };
+      payment?: `0x${string}` | undefined;
+      fulfillment?: `0x${string}` | undefined;
+      fulfiller?: `0x${string}` | undefined;
     }> => {
       const logs = await viemClient.getLogs({
         address: contractAddresses[chain.name].erc20PaymentObligation,
@@ -184,14 +168,7 @@ export const makeClient = (account: Account, chain: Chain) => {
         toBlock,
       });
       if (logs.length) {
-        const data = decodeEventLog({
-          abi: parseAbi([
-            "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
-          ]),
-          data: logs[0].data,
-          topics: logs[0].topics,
-        });
-        return data;
+        return logs[0].args;
       }
 
       return new Promise((resolve) => {
@@ -204,15 +181,8 @@ export const makeClient = (account: Account, chain: Chain) => {
             payment: buyAttestation,
           },
           onLogs: (logs) => {
-            const data = decodeEventLog({
-              abi: parseAbi([
-                "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
-              ]),
-              data: logs[0].data,
-              topics: logs[0].topics,
-            });
             unwatch();
-            resolve(data);
+            resolve(logs[0].args);
           },
         });
       });
