@@ -1,19 +1,21 @@
 import {
   createWalletClient,
+  decodeAbiParameters,
   decodeEventLog,
   http,
   parseAbi,
   parseAbiItem,
+  parseAbiParameters,
   parseEventLogs,
   publicActions,
   type Account,
   type Chain,
 } from "viem";
 
-import iEasAbi from "./contracts/IEAS.json";
-import iErc20Abi from "./contracts/IERC20.json";
-import erc20PaymentObligationAbi from "./contracts/ERC20PaymentObligation.json";
-import erc20BarterUtilsAbi from "./contracts/ERC20BarterUtils.json";
+import { abi as iEasAbi } from "./contracts/IEAS";
+import { abi as iErc20Abi } from "./contracts/IERC20";
+import { abi as erc20PaymentObligationAbi } from "./contracts/ERC20PaymentObligation";
+import { abi as erc20BarterUtilsAbi } from "./contracts/ERC20BarterUtils";
 
 export const contractAddresses: Record<
   string,
@@ -128,7 +130,7 @@ export const makeClient = (account: Account, chain: Chain) => {
           arbiter: item.arbiter,
           demand: item.demand,
         },
-        0,
+        0n,
         fulfilling,
       ],
     });
@@ -218,7 +220,7 @@ export const makeClient = (account: Account, chain: Chain) => {
     buyErc20ForErc20: async (
       bid: { token: `0x${string}`; amount: bigint },
       ask: { token: `0x${string}`; amount: bigint },
-      expiration: number = 0,
+      expiration: bigint = 0n,
     ) => {
       await approveIfLess(
         bid.token,
@@ -235,6 +237,31 @@ export const makeClient = (account: Account, chain: Chain) => {
       return { hash, attested };
     },
     payErc20ForErc20: async (buyAttestation: `0x${string}`) => {
+      const buyAttestation_ = await viemClient.readContract({
+        address: contractAddresses[chain.name].eas,
+        abi: iEasAbi.abi,
+        functionName: "getAttestation",
+        args: [buyAttestation],
+      });
+
+      const [statementData] = decodeAbiParameters(
+        parseAbiParameters(
+          "(address token, uint256 amount, address arbiter, bytes demand)",
+        ),
+        buyAttestation_.data,
+      );
+
+      const [demandData] = decodeAbiParameters(
+        parseAbiParameters("(address token, uint256 amount)"),
+        statementData.demand,
+      );
+
+      await approveIfLess(
+        demandData.token,
+        demandData.amount,
+        contractAddresses[chain.name].erc20BarterUtils,
+      );
+
       const hash = await viemClient.writeContract({
         address: contractAddresses[chain.name].erc20BarterUtils,
         abi: erc20BarterUtilsAbi.abi,
