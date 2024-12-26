@@ -48,10 +48,8 @@ export const makeErc20Client = (viemClient: ViemClient) => ({
 
   // Direct escrow interactions
   buyWithErc20: async (
-    token: `0x${string}`,
-    amount: bigint,
-    arbiter: `0x${string}`,
-    demand: `0x${string}`,
+    price: { token: `0x${string}`; amount: bigint },
+    item: { arbiter: `0x${string}`; demand: `0x${string}` },
     expiration: bigint = 0n,
   ) => {
     const hash = await viemClient.writeContract({
@@ -60,10 +58,10 @@ export const makeErc20Client = (viemClient: ViemClient) => ({
       functionName: "makeStatement",
       args: [
         {
-          token,
-          amount,
-          arbiter,
-          demand,
+          token: price.token,
+          amount: price.amount,
+          arbiter: item.arbiter,
+          demand: item.demand,
         },
         expiration,
       ],
@@ -74,8 +72,7 @@ export const makeErc20Client = (viemClient: ViemClient) => ({
   },
 
   payWithErc20: async (
-    token: `0x${string}`,
-    amount: bigint,
+    price: { token: `0x${string}`; amount: bigint },
     payee: `0x${string}`,
   ) => {
     const hash = await viemClient.writeContract({
@@ -84,8 +81,8 @@ export const makeErc20Client = (viemClient: ViemClient) => ({
       functionName: "makeStatement",
       args: [
         {
-          token,
-          amount,
+          token: price.token,
+          amount: price.amount,
           payee,
         },
       ],
@@ -325,11 +322,10 @@ export const makeErc20Client = (viemClient: ViemClient) => ({
     return { hash, attested };
   },
 
-  // Generic buy with ERC20
+  // Generic buy with ERC20 with permit
   buyWithErc20WithPermit: async (
-    bid: { token: `0x${string}`; amount: bigint },
-    arbiter: `0x${string}`,
-    demand: `0x${string}`,
+    price: { token: `0x${string}`; amount: bigint },
+    item: { arbiter: `0x${string}`; demand: `0x${string}` },
     permit: {
       deadline: bigint;
       v: number;
@@ -343,10 +339,10 @@ export const makeErc20Client = (viemClient: ViemClient) => ({
       abi: erc20BarterUtilsAbi.abi,
       functionName: "permitAndBuyWithErc20",
       args: [
-        bid.token,
-        bid.amount,
-        arbiter,
-        demand,
+        price.token,
+        price.amount,
+        item.arbiter,
+        item.demand,
         expiration,
         permit.v,
         permit.r,
@@ -358,10 +354,9 @@ export const makeErc20Client = (viemClient: ViemClient) => ({
     return { hash, attested };
   },
 
-  // Generic pay with ERC20
+  // Generic pay with ERC20 with permit
   payWithErc20WithPermit: async (
-    token: `0x${string}`,
-    amount: bigint,
+    price: { token: `0x${string}`; amount: bigint },
     payee: `0x${string}`,
     permit: {
       v: number;
@@ -373,7 +368,7 @@ export const makeErc20Client = (viemClient: ViemClient) => ({
       address: contractAddresses[viemClient.chain.name].erc20BarterUtils,
       abi: erc20BarterUtilsAbi.abi,
       functionName: "permitAndPayWithErc20",
-      args: [token, amount, payee, permit.v, permit.r, permit.s],
+      args: [price.token, price.amount, payee, permit.v, permit.r, permit.s],
     });
 
     const attested = await getAttestationFromTxHash(viemClient, hash);
