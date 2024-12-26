@@ -9,7 +9,9 @@ export const contractAddresses: Record<string, ChainAddresses> = {
     erc20PaymentFulfillmentArbiter:
       "0xF2C2705F8aD552aCA7e8d4d5d33b9E6f91636cfA",
     erc20BarterUtils: "0xdF3eA58dceCbF2cb58b2b020e700c2E85ae2C4e6",
+    erc721EscrowObligation: "0x345Ea2bA59a76c21e6b813Ee94aee64853a021dF",
     erc721BarterUtils: "0xC801A1DD4E11EC6d0f36Fa39c3A31e61D39e27F9",
+    erc1155EscrowObligation: "0x528BCf69D6BE4b3Dc0667C14077B6422d8009ad2",
     erc1155BarterUtils: "0xe45f7E15A86015098f72f5B1179b3130B4480E3b",
     tokenBundleBarterUtils: "0x5cB936d0f508C69DE4860f54f2c02d6b5aBCfb3d",
     usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
