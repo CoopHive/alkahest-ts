@@ -10,6 +10,9 @@ export type ChainAddresses = {
   erc1155EscrowObligation: `0x${string}`;
   erc1155BarterUtils: `0x${string}`;
   tokenBundleBarterUtils: `0x${string}`;
+  attestationEscrowObligation: `0x${string}`;
+  attestationEscrowObligation2: `0x${string}`;
+  attestationBarterUtils: `0x${string}`;
   usdc: `0x${string}`;
 };
 

@@ -14,6 +14,9 @@ export const contractAddresses: Record<string, ChainAddresses> = {
     erc1155EscrowObligation: "0x528BCf69D6BE4b3Dc0667C14077B6422d8009ad2",
     erc1155BarterUtils: "0xe45f7E15A86015098f72f5B1179b3130B4480E3b",
     tokenBundleBarterUtils: "0x5cB936d0f508C69DE4860f54f2c02d6b5aBCfb3d",
+    attestationEscrowObligation: "0x",
+    attestationEscrowObligation2: "0x",
+    attestationBarterUtils: "0x",
     usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
   },
 } as const;

@@ -5,6 +5,7 @@ import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeTokenBundleClient } from "./clients/tokenBundle";
+import { makeAttestationClient } from "./clients/attestation";
 
 export const makeClient = (account: Account, chain: Chain) => {
   if (!supportedChains.includes(chain.name)) {
@@ -18,6 +19,7 @@ export const makeClient = (account: Account, chain: Chain) => {
     ...makeErc721Client(viemClient),
     ...makeErc1155Client(viemClient),
     ...makeTokenBundleClient(viemClient),
+    ...makeAttestationClient(viemClient), // Add the new client
 
     // Helper Functions
     waitForFulfillment: async (
