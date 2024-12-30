@@ -74,7 +74,10 @@ describe("ERC20 Functions", () => {
 
     const buyResult = await aliceClient.buyWithErc20(
       { token: TOKEN_A, amount },
-      { arbiter: bobAccount.address, demand: "0x1234" as `0x${string}` },
+      {
+        arbiter: bobAccount.address,
+        demand: "0x00000000000000000000000000000000" as `0x${string}`,
+      },
     );
 
     expect(buyResult.hash).toBeDefined();
