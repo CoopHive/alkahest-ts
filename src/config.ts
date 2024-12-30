@@ -18,6 +18,7 @@ export const contractAddresses: Record<string, ChainAddresses> = {
     attestationEscrowObligation2: "0x",
     attestationBarterUtils: "0x",
     usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+    eurc: "0x808456652fdb597867f38412077A9182bf77359F",
   },
 } as const;
 
