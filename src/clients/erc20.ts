@@ -1,12 +1,19 @@
 import { getAttestationFromTxHash, type ViemClient } from "../utils";
 import { contractAddresses } from "../config";
 import type { TokenBundle } from "../types";
-import { type Hex, hexToNumber, slice, type TypedDataDomain } from "viem";
+import {
+  decodeAbiParameters,
+  type Hex,
+  hexToNumber,
+  slice,
+  type TypedDataDomain,
+} from "viem";
 
 import { abi as erc20BarterUtilsAbi } from "../contracts/ERC20BarterCrossToken";
 import { abi as erc20EscrowAbi } from "../contracts/ERC20EscrowObligation";
 import { abi as erc20PaymentAbi } from "../contracts/ERC20PaymentObligation";
 import { abi as erc20Abi } from "../contracts/ERC20Permit";
+import { abi as easAbi } from "../contracts/IEAS";
 
 export type PermitSignature = {
   r: Hex;
@@ -191,6 +198,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       ask: { token: `0x${string}`; amount: bigint },
       expiration: bigint = 0n,
     ) => {
+      const deadline = BigInt(Math.floor(Date.now() / 1000)) + 3600n;
       const permit = await signPermit({
         ownerAddress: viemClient.account.address,
         spenderAddress:
@@ -202,7 +210,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
-        deadline: BigInt(Math.floor(Date.now() / 1000)) + 3600n,
+        deadline,
         erc20Name: await viemClient.readContract({
           address: bid.token,
           abi: erc20Abi.abi,
@@ -222,6 +230,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
           ask.token,
           ask.amount,
           expiration,
+          deadline,
           permit.v,
           permit.r,
           permit.s,
@@ -254,6 +263,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       nft: { token: `0x${string}`; tokenId: bigint },
       expiration: bigint = 0n,
     ) => {
+      const deadline = BigInt(Math.floor(Date.now() / 1000)) + 3600n;
       const permit = await signPermit({
         ownerAddress: viemClient.account.address,
         spenderAddress:
@@ -265,7 +275,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
-        deadline: BigInt(Math.floor(Date.now() / 1000)) + 3600n,
+        deadline,
         erc20Name: await viemClient.readContract({
           address: bid.token,
           abi: erc20Abi.abi,
@@ -285,6 +295,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
           nft.token,
           nft.tokenId,
           expiration,
+          deadline,
           permit.v,
           permit.r,
           permit.s,
@@ -324,6 +335,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       nft: { token: `0x${string}`; tokenId: bigint; amount: bigint },
       expiration: bigint = 0n,
     ) => {
+      const deadline = BigInt(Math.floor(Date.now() / 1000)) + 3600n;
       const permit = await signPermit({
         ownerAddress: viemClient.account.address,
         spenderAddress:
@@ -335,7 +347,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
-        deadline: BigInt(Math.floor(Date.now() / 1000)) + 3600n,
+        deadline,
         erc20Name: await viemClient.readContract({
           address: bid.token,
           abi: erc20Abi.abi,
@@ -356,6 +368,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
           nft.tokenId,
           nft.amount,
           expiration,
+          deadline,
           permit.v,
           permit.r,
           permit.s,
@@ -388,6 +401,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       bundle: TokenBundle,
       expiration: bigint = 0n,
     ) => {
+      const deadline = BigInt(Math.floor(Date.now() / 1000)) + 3600n;
       const permit = await signPermit({
         ownerAddress: viemClient.account.address,
         spenderAddress:
@@ -399,7 +413,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
-        deadline: BigInt(Math.floor(Date.now() / 1000)) + 3600n,
+        deadline,
         erc20Name: await viemClient.readContract({
           address: bid.token,
           abi: erc20Abi.abi,
@@ -418,6 +432,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
           bid.amount,
           bundle,
           expiration,
+          deadline,
           permit.v,
           permit.r,
           permit.s,
@@ -440,19 +455,70 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       return { hash, attested };
     },
 
-    payErc20ForErc20WithPermit: async (
-      buyAttestation: `0x${string}`,
-      permit: {
-        v: number;
-        r: `0x${string}`;
-        s: `0x${string}`;
-      },
-    ) => {
+    payErc20ForErc20WithPermit: async (buyAttestation: `0x${string}`) => {
+      const deadline = BigInt(Math.floor(Date.now() / 1000)) + 3600n;
+
+      const buyAttestationData = await viemClient.readContract({
+        address: contractAddresses[viemClient.chain.name].eas,
+        abi: easAbi.abi,
+        functionName: "getAttestation",
+        args: [buyAttestation],
+      });
+      const buyAttestationStatementData = decodeAbiParameters(
+        [
+          {
+            type: "tuple",
+            components: [
+              { name: "token", type: "address" },
+              { name: "tokenId", type: "uint256" },
+              { name: "amount", type: "uint256" },
+              { name: "arbiter", type: "address" },
+              { name: "demand", type: "bytes" },
+            ],
+          },
+        ],
+        buyAttestationData.data,
+      )[0];
+      const demandData = decodeAbiParameters(
+        [
+          {
+            type: "tuple",
+            components: [
+              { name: "token", type: "address" },
+              { name: "amount", type: "uint256" },
+              { name: "payee", type: "address" },
+            ],
+          },
+        ],
+        buyAttestationStatementData.demand,
+      )[0];
+
+      const permit = await signPermit({
+        ownerAddress: viemClient.account.address,
+        spenderAddress:
+          contractAddresses[viemClient.chain.name].erc20PaymentObligation,
+        value: demandData.amount,
+        nonce: await viemClient.readContract({
+          address: demandData.token,
+          abi: erc20Abi.abi,
+          functionName: "nonces",
+          args: [viemClient.account.address],
+        }),
+        deadline,
+        erc20Name: await viemClient.readContract({
+          address: demandData.token,
+          abi: erc20Abi.abi,
+          functionName: "name",
+        }),
+        contractAddress: demandData.token,
+        chainId: viemClient.chain.id,
+      });
+
       const hash = await viemClient.writeContract({
         address: contractAddresses[viemClient.chain.name].erc20BarterUtils,
         abi: erc20BarterUtilsAbi.abi,
         functionName: "permitAndPayErc20ForErc20",
-        args: [buyAttestation, permit.v, permit.r, permit.s],
+        args: [buyAttestation, deadline, permit.v, permit.r, permit.s],
       });
 
       const attested = await getAttestationFromTxHash(viemClient, hash);
@@ -463,14 +529,30 @@ export const makeErc20Client = (viemClient: ViemClient) => {
     buyWithErc20WithPermit: async (
       price: { token: `0x${string}`; amount: bigint },
       item: { arbiter: `0x${string}`; demand: `0x${string}` },
-      permit: {
-        deadline: bigint;
-        v: number;
-        r: `0x${string}`;
-        s: `0x${string}`;
-      },
       expiration: bigint = 0n,
     ) => {
+      const deadline = BigInt(Math.floor(Date.now() / 1000)) + 3600n;
+      const permit = await signPermit({
+        ownerAddress: viemClient.account.address,
+        spenderAddress:
+          contractAddresses[viemClient.chain.name].erc20EscrowObligation,
+        value: price.amount,
+        nonce: await viemClient.readContract({
+          address: price.token,
+          abi: erc20Abi.abi,
+          functionName: "nonces",
+          args: [viemClient.account.address],
+        }),
+        deadline,
+        erc20Name: await viemClient.readContract({
+          address: price.token,
+          abi: erc20Abi.abi,
+          functionName: "name",
+        }),
+        contractAddress: price.token,
+        chainId: viemClient.chain.id,
+      });
+
       const hash = await viemClient.writeContract({
         address: contractAddresses[viemClient.chain.name].erc20BarterUtils,
         abi: erc20BarterUtilsAbi.abi,
@@ -481,6 +563,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
           item.arbiter,
           item.demand,
           expiration,
+          deadline,
           permit.v,
           permit.r,
           permit.s,
@@ -495,17 +578,41 @@ export const makeErc20Client = (viemClient: ViemClient) => {
     payWithErc20WithPermit: async (
       price: { token: `0x${string}`; amount: bigint },
       payee: `0x${string}`,
-      permit: {
-        v: number;
-        r: `0x${string}`;
-        s: `0x${string}`;
-      },
     ) => {
+      const deadline = BigInt(Math.floor(Date.now() / 1000)) + 3600n;
+      const permit = await signPermit({
+        ownerAddress: viemClient.account.address,
+        spenderAddress:
+          contractAddresses[viemClient.chain.name].erc20PaymentObligation,
+        value: price.amount,
+        nonce: await viemClient.readContract({
+          address: price.token,
+          abi: erc20Abi.abi,
+          functionName: "nonces",
+          args: [viemClient.account.address],
+        }),
+        deadline,
+        erc20Name: await viemClient.readContract({
+          address: price.token,
+          abi: erc20Abi.abi,
+          functionName: "name",
+        }),
+        contractAddress: price.token,
+        chainId: viemClient.chain.id,
+      });
       const hash = await viemClient.writeContract({
         address: contractAddresses[viemClient.chain.name].erc20BarterUtils,
         abi: erc20BarterUtilsAbi.abi,
         functionName: "permitAndPayWithErc20",
-        args: [price.token, price.amount, payee, permit.v, permit.r, permit.s],
+        args: [
+          price.token,
+          price.amount,
+          payee,
+          deadline,
+          permit.v,
+          permit.r,
+          permit.s,
+        ],
       });
 
       const attested = await getAttestationFromTxHash(viemClient, hash);
