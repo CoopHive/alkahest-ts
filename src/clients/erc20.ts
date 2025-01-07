@@ -147,7 +147,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       return { hash, attested };
     },
 
-    buyWithErc20WithPermit: async (
+    permitAndBuyWithErc20: async (
       price: { token: `0x${string}`; amount: bigint },
       item: { arbiter: `0x${string}`; demand: `0x${string}` },
       expiration: bigint = 0n,
@@ -217,7 +217,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       return { hash, attested };
     },
 
-    payWithErc20WithPermit: async (
+    permitAndPayWithErc20: async (
       price: { token: `0x${string}`; amount: bigint },
       payee: `0x${string}`,
     ) => {
@@ -277,7 +277,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       return { hash, attested };
     },
 
-    buyErc20ForErc20WithPermit: async (
+    permitAndBuyErc20ForErc20: async (
       bid: { token: `0x${string}`; amount: bigint },
       ask: { token: `0x${string}`; amount: bigint },
       expiration: bigint = 0n,
@@ -337,7 +337,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       return { hash, attested };
     },
 
-    payErc20ForErc20WithPermit: async (buyAttestation: `0x${string}`) => {
+    permitAndpayErc20ForErc20: async (buyAttestation: `0x${string}`) => {
       const deadline = BigInt(Math.floor(Date.now() / 1000)) + 3600n;
 
       const buyAttestationData = await viemClient.readContract({
@@ -423,7 +423,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       return { hash, attested };
     },
 
-    buyErc721WithErc20WithPermit: async (
+    permitAndbuyErc721WithErc20: async (
       bid: { token: `0x${string}`; amount: bigint },
       nft: { token: `0x${string}`; tokenId: bigint },
       expiration: bigint = 0n,
@@ -494,7 +494,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       return { hash, attested };
     },
 
-    buyErc1155WithErc20WithPermit: async (
+    permitAndBuyErc1155WithErc20: async (
       bid: { token: `0x${string}`; amount: bigint },
       nft: { token: `0x${string}`; tokenId: bigint; amount: bigint },
       expiration: bigint = 0n,
@@ -559,7 +559,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       return { hash, attested };
     },
 
-    buyBundleWithErc20WithPermit: async (
+    permitAndBuyBundleWithErc20: async (
       bid: { token: `0x${string}`; amount: bigint },
       bundle: TokenBundle,
       expiration: bigint = 0n,
