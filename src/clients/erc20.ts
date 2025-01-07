@@ -1,13 +1,7 @@
 import { getAttestationFromTxHash, type ViemClient } from "../utils";
 import { contractAddresses } from "../config";
 import type { TokenBundle } from "../types";
-import {
-  decodeAbiParameters,
-  type Hex,
-  hexToNumber,
-  slice,
-  type TypedDataDomain,
-} from "viem";
+import { decodeAbiParameters, type Hex, hexToNumber, slice } from "viem";
 
 import { abi as erc20BarterUtilsAbi } from "../contracts/ERC20BarterCrossToken";
 import { abi as erc20EscrowAbi } from "../contracts/ERC20EscrowObligation";
