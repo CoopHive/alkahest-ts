@@ -23,6 +23,7 @@ export const makeClient = (account: Account, chain: Chain) => {
 
     // Helper Functions
     waitForFulfillment: async (
+      contractAddress: `0x${string}`,
       buyAttestation: `0x${string}`,
       fromBlock?: bigint,
       toBlock?: bigint,
@@ -32,7 +33,7 @@ export const makeClient = (account: Account, chain: Chain) => {
       fulfiller?: `0x${string}` | undefined;
     }> => {
       const logs = await viemClient.getLogs({
-        address: contractAddresses[chain.name].erc20PaymentObligation,
+        address: contractAddress,
         event: parseAbiItem(
           "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
         ),
@@ -48,7 +49,7 @@ export const makeClient = (account: Account, chain: Chain) => {
 
       return new Promise((resolve) => {
         const unwatch = viemClient.watchEvent({
-          address: contractAddresses[chain.name].erc20PaymentObligation,
+          address: contractAddress,
           event: parseAbiItem(
             "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
           ),
