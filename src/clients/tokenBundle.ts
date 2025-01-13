@@ -1,90 +1,82 @@
-import { getAttestationFromTxHash, type ViemClient } from "../utils";
+import {
+  flattenTokenBundle,
+  getAttestationFromTxHash,
+  type ViemClient,
+} from "../utils";
 import { contractAddresses } from "../config";
+import type { Demand, TokenBundle } from "../types";
 
 import { abi as tokenBundleBarterUtilsAbi } from "../contracts/TokenBundleBarterUtils";
+import { abi as tokenBundleEscrowAbi } from "../contracts/TokenBundleEscrowObligation";
+import { abi as tokenBundlePaymentAbi } from "../contracts/TokenBundlePaymentObligation";
 
 export const makeTokenBundleClient = (viemClient: ViemClient) => ({
-  buyBundleForBundle: async (
-    bid: {
-      erc20Tokens: readonly `0x${string}`[];
-      erc20Amounts: readonly bigint[];
-      erc721Tokens: readonly `0x${string}`[];
-      erc721TokenIds: readonly bigint[];
-      erc1155Tokens: readonly `0x${string}`[];
-      erc1155TokenIds: readonly bigint[];
-      erc1155Amounts: readonly bigint[];
-    },
-    ask: {
-      erc20Tokens: readonly `0x${string}`[];
-      erc20Amounts: readonly bigint[];
-      erc721Tokens: readonly `0x${string}`[];
-      erc721TokenIds: readonly bigint[];
-      erc1155Tokens: readonly `0x${string}`[];
-      erc1155TokenIds: readonly bigint[];
-      erc1155Amounts: readonly bigint[];
-    },
-    permits: Array<{
-      deadline: bigint;
-      v: number;
-      r: `0x${string}`;
-      s: `0x${string}`;
-    }>,
-    expiration: bigint = 0n,
+  buyWithBundle: async (
+    price: TokenBundle,
+    item: Demand,
+    expiration: bigint,
   ) => {
-    const bidData = {
-      ...bid,
-      arbiter: contractAddresses[viemClient.chain.name]
-        .tokenBundleBarterUtils as `0x${string}`,
-      demand: "0x" as `0x${string}`, // This will be encoded by the contract
-    };
+    const hash = await viemClient.writeContract({
+      address:
+        contractAddresses[viemClient.chain.name].tokenBundleEscrowObligation,
+      abi: tokenBundleEscrowAbi.abi,
+      functionName: "makeStatement",
+      args: [
+        {
+          ...flattenTokenBundle(price),
+          ...item,
+        },
+        expiration,
+      ],
+    });
 
-    const askData = {
-      ...ask,
-      payee: viemClient.account.address as `0x${string}`,
-    };
+    const attested = await getAttestationFromTxHash(viemClient, hash);
+    return { hash, attested };
+  },
 
+  payWithErc721: async (price: TokenBundle, payee: `0x${string}`) => {
+    const hash = await viemClient.writeContract({
+      address:
+        contractAddresses[viemClient.chain.name].tokenBundlePaymentObligation,
+      abi: tokenBundlePaymentAbi.abi,
+      functionName: "makeStatement",
+      args: [
+        {
+          ...flattenTokenBundle(price),
+          payee,
+        },
+      ],
+    });
+
+    const attested = await getAttestationFromTxHash(viemClient, hash);
+    return { hash, attested };
+  },
+
+  buyBundleForBundle: async (
+    bid: TokenBundle,
+    ask: TokenBundle,
+    expiration: bigint,
+  ) => {
     const hash = await viemClient.writeContract({
       address: contractAddresses[viemClient.chain.name].tokenBundleBarterUtils,
       abi: tokenBundleBarterUtilsAbi.abi,
-      functionName: "permitAndEscrowBundleForBundle",
+      functionName: "buyBundleForBundle",
       args: [
-        bidData,
-        askData,
+        { ...flattenTokenBundle(bid), arbiter: "0x", demand: "0x" },
+        { ...flattenTokenBundle(ask), payee: viemClient.account.address },
         expiration,
-        permits.map((p) => ({
-          v: p.v,
-          r: p.r,
-          s: p.s,
-          deadline: p.deadline,
-        })),
       ],
     });
     const attested = await getAttestationFromTxHash(viemClient, hash);
     return { hash, attested };
   },
 
-  payBundleForBundle: async (
-    buyAttestation: `0x${string}`,
-    permits: Array<{
-      deadline: bigint;
-      v: number;
-      r: `0x${string}`;
-      s: `0x${string}`;
-    }>,
-  ) => {
+  payBundleForBundle: async (buyAttestation: `0x${string}`) => {
     const hash = await viemClient.writeContract({
       address: contractAddresses[viemClient.chain.name].tokenBundleBarterUtils,
       abi: tokenBundleBarterUtilsAbi.abi,
-      functionName: "permitAndPayBundleForBundle",
-      args: [
-        buyAttestation,
-        permits.map((p) => ({
-          v: p.v,
-          r: p.r,
-          s: p.s,
-          deadline: p.deadline,
-        })),
-      ],
+      functionName: "payBundleForBundle",
+      args: [buyAttestation],
     });
     const tx = await viemClient.waitForTransactionReceipt({ hash });
     return { hash };
