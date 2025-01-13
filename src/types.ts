@@ -61,14 +61,14 @@ export type Erc20 = {
 };
 
 export type Erc721 = {
-  token: `0x${string}`;
-  tokenId: bigint;
+  address: `0x${string}`;
+  id: bigint;
 };
 
 export type Erc1155 = {
-  token: `0x${string}`;
-  tokenId: bigint;
-  amount: bigint;
+  address: `0x${string}`;
+  id: bigint;
+  value: bigint;
 };
 
 export type Demand = {
