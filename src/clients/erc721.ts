@@ -4,14 +4,19 @@ import {
   type ViemClient,
 } from "../utils";
 import { contractAddresses } from "../config";
+import type {
+  ApprovalPurpose,
+  Demand,
+  Erc1155,
+  Erc20,
+  Erc721,
+  TokenBundle,
+} from "../types";
 
 import { abi as erc721BarterUtilsAbi } from "../contracts/ERC721BarterCrossToken";
 import { abi as erc721EscrowAbi } from "../contracts/ERC721EscrowObligation";
 import { abi as erc721PaymentAbi } from "../contracts/ERC721PaymentObligation";
 import { abi as erc721Abi } from "../contracts/IERC721";
-import type { Demand, Erc1155, Erc20, Erc721, TokenBundle } from "../types";
-
-type ApprovalPurpose = "escrow" | "payment";
 
 export const makeErc721Client = (viemClient: ViemClient) => ({
   approve: async (token: Erc721, purpose: ApprovalPurpose) => {
@@ -28,6 +33,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
 
     return hash;
   },
+
   approveAll: async (
     token_contract: `0x${string}`,
     purpose: ApprovalPurpose,
@@ -45,6 +51,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
 
     return hash;
   },
+
   revokeAll: async (
     token_contract: `0x${string}`,
     purpose: ApprovalPurpose,
@@ -62,6 +69,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
 
     return hash;
   },
+
   buyWithErc721: async (price: Erc721, item: Demand, expiration: bigint) => {
     const hash = await viemClient.writeContract({
       address: contractAddresses[viemClient.chain.name].erc721EscrowObligation,
@@ -81,6 +89,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
     const attested = await getAttestationFromTxHash(viemClient, hash);
     return { hash, attested };
   },
+
   payWithErc721: async (price: Erc721, payee: `0x${string}`) => {
     const hash = await viemClient.writeContract({
       address: contractAddresses[viemClient.chain.name].erc721PaymentObligation,
@@ -98,6 +107,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
     const attested = await getAttestationFromTxHash(viemClient, hash);
     return { hash, attested };
   },
+
   buyErc721ForErc721: async (bid: Erc721, ask: Erc721, expiration: bigint) => {
     const hash = await viemClient.writeContract({
       address: contractAddresses[viemClient.chain.name].erc721BarterUtils,
@@ -108,6 +118,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
     const attested = await getAttestationFromTxHash(viemClient, hash);
     return { hash, attested };
   },
+
   payErc721ForErc721: async (buyAttestation: `0x${string}`) => {
     const hash = await viemClient.writeContract({
       address: contractAddresses[viemClient.chain.name].erc721BarterUtils,
@@ -118,6 +129,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
     const tx = await viemClient.waitForTransactionReceipt({ hash });
     return { hash };
   },
+
   buyErc20WithErc721: async (bid: Erc721, ask: Erc20, expiration: bigint) => {
     const hash = await viemClient.writeContract({
       address: contractAddresses[viemClient.chain.name].erc721BarterUtils,
@@ -129,6 +141,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
     const attested = await getAttestationFromTxHash(viemClient, hash);
     return { hash, attested };
   },
+
   buyErc1155WithErc721: async (
     bid: Erc721,
     ask: Erc1155,
@@ -144,6 +157,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
     const attested = await getAttestationFromTxHash(viemClient, hash);
     return { hash, attested };
   },
+
   buyBundleWithErc721: async (
     bid: Erc721,
     ask: TokenBundle,

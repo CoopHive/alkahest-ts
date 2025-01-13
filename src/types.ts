@@ -93,3 +93,5 @@ export type TokenBundleFlat = {
   erc1155TokenIds: bigint[];
   erc1155Amounts: bigint[];
 };
+
+export type ApprovalPurpose = "escrow" | "payment";
