@@ -3,12 +3,16 @@ export type ChainAddresses = {
   easSchemaRegistry: `0x${string}`;
   erc20EscrowObligation: `0x${string}`;
   erc20PaymentObligation: `0x${string}`;
-  erc20PaymentFulfillmentArbiter: `0x${string}`;
+  // erc20PaymentFulfillmentArbiter: `0x${string}`;
   erc20BarterUtils: `0x${string}`;
   erc721EscrowObligation: `0x${string}`;
+  erc721PaymentObligation: `0x${string}`;
   erc721BarterUtils: `0x${string}`;
   erc1155EscrowObligation: `0x${string}`;
   erc1155BarterUtils: `0x${string}`;
+  erc1155PaymentObligation: `0x${string}`;
+  tokenBundleEscrowObligation: `0x${string}`;
+  tokenBundlePaymentObligation: `0x${string}`;
   tokenBundleBarterUtils: `0x${string}`;
   attestationEscrowObligation: `0x${string}`;
   attestationEscrowObligation2: `0x${string}`;
@@ -36,4 +40,25 @@ export type TokenBundle = {
   erc1155Amounts: bigint[];
 
   payee: `0x${string}`;
+};
+
+export type Erc20 = {
+  token: `0x${string}`;
+  amount: bigint;
+};
+
+export type Erc721 = {
+  token: `0x${string}`;
+  tokenId: bigint;
+};
+
+export type Erc1155 = {
+  token: `0x${string}`;
+  tokenId: bigint;
+  amount: bigint;
+};
+
+export type Demand = {
+  arbiter: `0x${string}`;
+  demand: `0x${string}`;
 };
