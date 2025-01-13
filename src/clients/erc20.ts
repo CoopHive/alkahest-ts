@@ -370,7 +370,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         address: contractAddresses[viemClient.chain.name].erc20BarterUtils,
         abi: erc20BarterUtilsAbi.abi,
         functionName: "buyErc721WithErc20",
-        args: [bid.address, bid.value, ask.token, ask.tokenId, expiration],
+        args: [bid.address, bid.value, ask.address, ask.id, expiration],
       });
 
       const attested = await getAttestationFromTxHash(viemClient, hash);
@@ -411,8 +411,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         args: [
           bid.address,
           bid.value,
-          ask.token,
-          ask.tokenId,
+          ask.address,
+          ask.id,
           expiration,
           deadline,
           permit.v,
@@ -437,9 +437,9 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         args: [
           bid.address,
           bid.value,
-          ask.token,
-          ask.tokenId,
-          ask.amount,
+          ask.address,
+          ask.id,
+          ask.value,
           expiration,
         ],
       });
@@ -482,9 +482,9 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         args: [
           bid.address,
           bid.value,
-          ask.token,
-          ask.tokenId,
-          ask.amount,
+          ask.address,
+          ask.id,
+          ask.value,
           expiration,
           deadline,
           permit.v,
