@@ -68,28 +68,28 @@ export const makeErc20Client = (viemClient: ViemClient) => {
     // Approval functions
     approve: async (token: Erc20, spender: `0x${string}`) => {
       const hash = await viemClient.writeContract({
-        address: token.token,
+        address: token.address,
         abi: erc20Abi.abi,
         functionName: "approve",
-        args: [spender, token.amount],
+        args: [spender, token.value],
       });
       return hash;
     },
 
     approveIfLess: async (token: Erc20, spender: `0x${string}`) => {
       const currentAllowance = await viemClient.readContract({
-        address: token.token,
+        address: token.address,
         abi: erc20Abi.abi,
         functionName: "allowance",
         args: [viemClient.account.address, spender],
       });
 
-      if (currentAllowance < token.amount) {
+      if (currentAllowance < token.value) {
         return viemClient.writeContract({
-          address: token.token,
+          address: token.address,
           abi: erc20Abi.abi,
           functionName: "approve",
-          args: [spender, token.amount],
+          args: [spender, token.value],
         });
       }
       return null;
@@ -102,8 +102,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         functionName: "makeStatement",
         args: [
           {
-            token: price.token,
-            amount: price.amount,
+            token: price.address,
+            amount: price.value,
             arbiter: item.arbiter,
             demand: item.demand,
           },
@@ -125,20 +125,20 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         ownerAddress: viemClient.account.address,
         spenderAddress:
           contractAddresses[viemClient.chain.name].erc20EscrowObligation,
-        value: price.amount,
+        value: price.value,
         nonce: await viemClient.readContract({
-          address: price.token,
+          address: price.address,
           abi: erc20Abi.abi,
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
         deadline,
         erc20Name: await viemClient.readContract({
-          address: price.token,
+          address: price.address,
           abi: erc20Abi.abi,
           functionName: "name",
         }),
-        contractAddress: price.token,
+        contractAddress: price.address,
         chainId: viemClient.chain.id,
       });
 
@@ -147,8 +147,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         abi: erc20BarterUtilsAbi.abi,
         functionName: "permitAndBuyWithErc20",
         args: [
-          price.token,
-          price.amount,
+          price.address,
+          price.value,
           item.arbiter,
           item.demand,
           expiration,
@@ -171,8 +171,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         functionName: "makeStatement",
         args: [
           {
-            token: price.token,
-            amount: price.amount,
+            token: price.address,
+            amount: price.value,
             payee,
           },
         ],
@@ -188,20 +188,20 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         ownerAddress: viemClient.account.address,
         spenderAddress:
           contractAddresses[viemClient.chain.name].erc20PaymentObligation,
-        value: price.amount,
+        value: price.value,
         nonce: await viemClient.readContract({
-          address: price.token,
+          address: price.address,
           abi: erc20Abi.abi,
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
         deadline,
         erc20Name: await viemClient.readContract({
-          address: price.token,
+          address: price.address,
           abi: erc20Abi.abi,
           functionName: "name",
         }),
-        contractAddress: price.token,
+        contractAddress: price.address,
         chainId: viemClient.chain.id,
       });
       const hash = await viemClient.writeContract({
@@ -209,8 +209,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         abi: erc20BarterUtilsAbi.abi,
         functionName: "permitAndPayWithErc20",
         args: [
-          price.token,
-          price.amount,
+          price.address,
+          price.value,
           payee,
           deadline,
           permit.v,
@@ -228,7 +228,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         address: contractAddresses[viemClient.chain.name].erc20BarterUtils,
         abi: erc20BarterUtilsAbi.abi,
         functionName: "buyErc20ForErc20",
-        args: [bid.token, bid.amount, ask.token, ask.amount, expiration],
+        args: [bid.address, bid.value, ask.address, ask.value, expiration],
       });
 
       const attested = await getAttestationFromTxHash(viemClient, hash);
@@ -245,20 +245,20 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         ownerAddress: viemClient.account.address,
         spenderAddress:
           contractAddresses[viemClient.chain.name].erc20EscrowObligation,
-        value: bid.amount,
+        value: bid.value,
         nonce: await viemClient.readContract({
-          address: bid.token,
+          address: bid.address,
           abi: erc20Abi.abi,
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
         deadline,
         erc20Name: await viemClient.readContract({
-          address: bid.token,
+          address: bid.address,
           abi: erc20Abi.abi,
           functionName: "name",
         }),
-        contractAddress: bid.token,
+        contractAddress: bid.address,
         chainId: viemClient.chain.id,
       });
 
@@ -267,10 +267,10 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         abi: erc20BarterUtilsAbi.abi,
         functionName: "permitAndBuyErc20ForErc20",
         args: [
-          bid.token,
-          bid.amount,
-          ask.token,
-          ask.amount,
+          bid.address,
+          bid.value,
+          ask.address,
+          ask.value,
           expiration,
           deadline,
           permit.v,
@@ -370,7 +370,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         address: contractAddresses[viemClient.chain.name].erc20BarterUtils,
         abi: erc20BarterUtilsAbi.abi,
         functionName: "buyErc721WithErc20",
-        args: [bid.token, bid.amount, ask.token, ask.tokenId, expiration],
+        args: [bid.address, bid.value, ask.token, ask.tokenId, expiration],
       });
 
       const attested = await getAttestationFromTxHash(viemClient, hash);
@@ -387,20 +387,20 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         ownerAddress: viemClient.account.address,
         spenderAddress:
           contractAddresses[viemClient.chain.name].erc20EscrowObligation,
-        value: bid.amount,
+        value: bid.value,
         nonce: await viemClient.readContract({
-          address: bid.token,
+          address: bid.address,
           abi: erc20Abi.abi,
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
         deadline,
         erc20Name: await viemClient.readContract({
-          address: bid.token,
+          address: bid.address,
           abi: erc20Abi.abi,
           functionName: "name",
         }),
-        contractAddress: bid.token,
+        contractAddress: bid.address,
         chainId: viemClient.chain.id,
       });
 
@@ -409,8 +409,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         abi: erc20BarterUtilsAbi.abi,
         functionName: "permitAndBuyErc721WithErc20",
         args: [
-          bid.token,
-          bid.amount,
+          bid.address,
+          bid.value,
           ask.token,
           ask.tokenId,
           expiration,
@@ -435,8 +435,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         abi: erc20BarterUtilsAbi.abi,
         functionName: "buyErc1155WithErc20",
         args: [
-          bid.token,
-          bid.amount,
+          bid.address,
+          bid.value,
           ask.token,
           ask.tokenId,
           ask.amount,
@@ -458,20 +458,20 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         ownerAddress: viemClient.account.address,
         spenderAddress:
           contractAddresses[viemClient.chain.name].erc20EscrowObligation,
-        value: bid.amount,
+        value: bid.value,
         nonce: await viemClient.readContract({
-          address: bid.token,
+          address: bid.address,
           abi: erc20Abi.abi,
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
         deadline,
         erc20Name: await viemClient.readContract({
-          address: bid.token,
+          address: bid.address,
           abi: erc20Abi.abi,
           functionName: "name",
         }),
-        contractAddress: bid.token,
+        contractAddress: bid.address,
         chainId: viemClient.chain.id,
       });
 
@@ -480,8 +480,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         abi: erc20BarterUtilsAbi.abi,
         functionName: "permitAndBuyErc1155WithErc20",
         args: [
-          bid.token,
-          bid.amount,
+          bid.address,
+          bid.value,
           ask.token,
           ask.tokenId,
           ask.amount,
@@ -508,8 +508,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         abi: erc20BarterUtilsAbi.abi,
         functionName: "buyBundleWithErc20",
         args: [
-          bid.token,
-          bid.amount,
+          bid.address,
+          bid.value,
           { ...flattenTokenBundle(bundle), payee },
           expiration,
         ],
@@ -530,20 +530,20 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         ownerAddress: viemClient.account.address,
         spenderAddress:
           contractAddresses[viemClient.chain.name].erc20EscrowObligation,
-        value: bid.amount,
+        value: bid.value,
         nonce: await viemClient.readContract({
-          address: bid.token,
+          address: bid.address,
           abi: erc20Abi.abi,
           functionName: "nonces",
           args: [viemClient.account.address],
         }),
         deadline,
         erc20Name: await viemClient.readContract({
-          address: bid.token,
+          address: bid.address,
           abi: erc20Abi.abi,
           functionName: "name",
         }),
-        contractAddress: bid.token,
+        contractAddress: bid.address,
         chainId: viemClient.chain.id,
       });
 
@@ -552,8 +552,8 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         abi: erc20BarterUtilsAbi.abi,
         functionName: "permitAndBuyBundleWithErc20",
         args: [
-          bid.token,
-          bid.amount,
+          bid.address,
+          bid.value,
           { ...flattenTokenBundle(bundle), payee },
           expiration,
           deadline,

@@ -119,7 +119,7 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
       address: contractAddresses[viemClient.chain.name].erc721BarterUtils,
       abi: erc721BarterUtilsAbi.abi,
       functionName: "buyErc20WithErc721",
-      args: [bid.token, bid.tokenId, ask.token, ask.amount, expiration],
+      args: [bid.token, bid.tokenId, ask.address, ask.value, expiration],
     });
 
     const attested = await getAttestationFromTxHash(viemClient, hash);

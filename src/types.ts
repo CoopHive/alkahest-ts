@@ -56,8 +56,8 @@ export type Eip2612Props = SignPermitProps & {
 };
 
 export type Erc20 = {
-  token: `0x${string}`;
-  amount: bigint;
+  address: `0x${string}`;
+  value: bigint;
 };
 
 export type Erc721 = {
