@@ -1,28 +1,28 @@
-import { type ChainAddresses } from "./types";
+import type { ChainAddresses } from "./types";
 
 export const contractAddresses: Record<string, ChainAddresses> = {
-  "Base Sepolia": {
-    eas: "0x4200000000000000000000000000000000000021",
-    easSchemaRegistry: "0x4200000000000000000000000000000000000020",
-    erc20EscrowObligation: "0x248cd93922eBDf962c9ea10286E6566C75081948",
-    erc20PaymentObligation: "0x702fab66515b3313dFd41E7CE70C2aF0033E2356",
-    // erc20PaymentFulfillmentArbiter: "0xF2C2705F8aD552aCA7e8d4d5d33b9E6f91636cfA",
-    erc20BarterUtils: "0xdF3eA58dceCbF2cb58b2b020e700c2E85ae2C4e6",
-    erc721EscrowObligation: "0x345Ea2bA59a76c21e6b813Ee94aee64853a021dF",
-    erc721PaymentObligation: "0x",
-    erc721BarterUtils: "0xC801A1DD4E11EC6d0f36Fa39c3A31e61D39e27F9",
-    erc1155EscrowObligation: "0x528BCf69D6BE4b3Dc0667C14077B6422d8009ad2",
-    erc1155PaymentObligation: "0x",
-    erc1155BarterUtils: "0xe45f7E15A86015098f72f5B1179b3130B4480E3b",
-    tokenBundleEscrowObligation: "0x",
-    tokenBundlePaymentObligation: "0x",
-    tokenBundleBarterUtils: "0x5cB936d0f508C69DE4860f54f2c02d6b5aBCfb3d",
-    attestationEscrowObligation: "0x",
-    attestationEscrowObligation2: "0x",
-    attestationBarterUtils: "0x",
-    usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
-    eurc: "0x808456652fdb597867f38412077A9182bf77359F",
-  },
+	"Base Sepolia": {
+		eas: "0x4200000000000000000000000000000000000021",
+		easSchemaRegistry: "0x4200000000000000000000000000000000000020",
+		erc20EscrowObligation: "0x66F9e3Fa7CFc472fB61a3F61bE42558c80C0FC72",
+		erc20PaymentObligation: "0x417b73fF013c5E47639816c037e89aE053FD4A63",
+		// erc20PaymentFulfillmentArbiter: "0xF2C2705F8aD552aCA7e8d4d5d33b9E6f91636cfA",
+		erc20BarterUtils: "0xE352c64993D891719873a36B4225e31085794fde",
+		erc721EscrowObligation: "0x868e59ecd79067087Cac7447061b1436eD6C9417",
+		erc721PaymentObligation: "0x0F13f5c62D88BE6C85205A1A010511BF54269615",
+		erc721BarterUtils: "0xAfBaacEA69961C892797ceA7A8457dBA57568Ebb",
+		erc1155EscrowObligation: "0x93B7D9cdD97887a8f7603c77F12938bf3d1331F6",
+		erc1155PaymentObligation: "0x1395A7b129503E23eDAa7823b5F5994D65a26BF0",
+		erc1155BarterUtils: "0x12D8bF4F01bF011859f6184ffDe3f01f4F568Fe8",
+		tokenBundleEscrowObligation: "0x7cCE97b9552dFf0105eC96A46f5721764a24D9AC",
+		tokenBundlePaymentObligation: "0x678f5601fe66485CEeD3d41D7385983881411c70",
+		tokenBundleBarterUtils: "0x95E18d489c60404e6D659584f51457c3744ba8f8",
+		attestationEscrowObligation: "0xD181642bccb8D74c18C15cCd308Bd5618F7dE528",
+		attestationEscrowObligation2: "0xA4F18f0aa351DD2FF67CA29b1329bd21a9Ee0C92",
+		attestationBarterUtils: "0x907b9cf8faA5d1cBF052bCE82DFA22eB8E1431c9",
+		usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
+		eurc: "0x808456652fdb597867f38412077A9182bf77359F",
+	},
 } as const;
 
 export const supportedChains = ["Base Sepolia"];
