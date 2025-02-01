@@ -47,43 +47,35 @@ export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
     waitForFulfillment: async (
       contractAddress: `0x${string}`,
       buyAttestation: `0x${string}`,
-      fromBlock?: bigint,
-      toBlock?: bigint,
     ): Promise<{
       payment?: `0x${string}` | undefined;
       fulfillment?: `0x${string}` | undefined;
       fulfiller?: `0x${string}` | undefined;
     }> => {
+      const fulfillmentEvent = parseAbiItem(
+        "event EscrowClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
+      );
       const logs = await viemClient.getLogs({
         address: contractAddress,
-        event: parseAbiItem(
-          "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
-        ),
-        args: {
-          payment: buyAttestation,
-        },
-        fromBlock,
-        toBlock,
+        event: fulfillmentEvent,
+        args: { payment: buyAttestation },
+        fromBlock: "earliest",
+        toBlock: "latest",
       });
-      if (logs.length) {
-        return logs[0].args;
-      } else {
-        console.log("collection not found; waiting");
-      }
+
+      if (logs.length) return logs[0].args;
 
       return new Promise((resolve) => {
         const unwatch = viemClient.watchEvent({
           address: contractAddress,
-          event: parseAbiItem(
-            "event EscrowClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
-          ),
-          args: {
-            payment: buyAttestation,
-          },
+          event: fulfillmentEvent,
+          args: { payment: buyAttestation },
+          pollingInterval: 1000,
           onLogs: (logs) => {
-            unwatch();
             resolve(logs[0].args);
+            unwatch();
           },
+          fromBlock: 1n,
         });
       });
     },
