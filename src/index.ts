@@ -7,19 +7,19 @@ import { makeErc1155Client } from "./clients/erc1155";
 import { makeTokenBundleClient } from "./clients/tokenBundle";
 import { makeAttestationClient } from "./clients/attestation";
 
-export const makeClient = (account: Account, chain: Chain) => {
+export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
   if (!supportedChains.includes(chain.name)) {
     throw new Error("unsupported chain");
   }
 
-  const viemClient = createViemClient(account, chain);
+  const viemClient = createViemClient(account, chain, rpcUrl);
 
   return {
-    ...makeErc20Client(viemClient),
-    ...makeErc721Client(viemClient),
-    ...makeErc1155Client(viemClient),
-    ...makeTokenBundleClient(viemClient),
-    ...makeAttestationClient(viemClient), // Add the new client
+    erc20: makeErc20Client(viemClient),
+    erc721: makeErc721Client(viemClient),
+    erc1155: makeErc1155Client(viemClient),
+    bundle: makeTokenBundleClient(viemClient),
+    attestation: makeAttestationClient(viemClient), // Add the new client
 
     // Helper Functions
     waitForFulfillment: async (
@@ -67,3 +67,4 @@ export const makeClient = (account: Account, chain: Chain) => {
 };
 
 export * from "./types";
+export * from "./config";
