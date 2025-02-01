@@ -14,10 +14,14 @@ import type { TokenBundle, TokenBundleFlat } from "./types";
 export type ViemClient = WalletClient<Transport, Chain, Account> &
   PublicActions;
 
-export const createViemClient = (account: Account, chain: Chain) => {
+export const createViemClient = (
+  account: Account,
+  chain: Chain,
+  rpcUrl: string,
+) => {
   return createWalletClient({
     chain,
-    transport: http(),
+    transport: http(rpcUrl),
     account,
   }).extend(publicActions);
 };
@@ -37,9 +41,9 @@ export const getAttestationFromTxHash = async (
 export const flattenTokenBundle = (bundle: TokenBundle): TokenBundleFlat => ({
   erc20Tokens: bundle.erc20s.map((x) => x.address),
   erc20Amounts: bundle.erc20s.map((x) => x.value),
-  erc721Tokens: bundle.erc721s.map((x) => x.token),
-  erc721TokenIds: bundle.erc721s.map((x) => x.tokenId),
-  erc1155Tokens: bundle.erc1155s.map((x) => x.token),
-  erc1155TokenIds: bundle.erc1155s.map((x) => x.tokenId),
-  erc1155Amounts: bundle.erc1155s.map((x) => x.amount),
+  erc721Tokens: bundle.erc721s.map((x) => x.address),
+  erc721TokenIds: bundle.erc721s.map((x) => x.id),
+  erc1155Tokens: bundle.erc1155s.map((x) => x.address),
+  erc1155TokenIds: bundle.erc1155s.map((x) => x.id),
+  erc1155Amounts: bundle.erc1155s.map((x) => x.value),
 });
