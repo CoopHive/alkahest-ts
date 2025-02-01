@@ -249,5 +249,5 @@ test("tradeErc20ForCustom", async () => {
     fulfillmentData.data,
   )[0];
   console.log(decodedResult);
-  expect(decodedResult).toBe({ result: "HELLO WORLD" });
+  expect(decodedResult).toEqual({ result: "HELLO WORLD" });
 });
