@@ -1,4 +1,4 @@
-import { parseAbiItem, type Account, type Chain } from "viem";
+import { parseAbiItem, parseEventLogs, type Account, type Chain } from "viem";
 import { contractAddresses, supportedChains } from "./config";
 import { createViemClient } from "./utils";
 import { makeErc20Client } from "./clients/erc20";
@@ -34,6 +34,16 @@ export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
       });
       return attestation;
     },
+
+    getAttestationFromTxHash: async (hash: `0x${string}`) => {
+      const tx = await viemClient.waitForTransactionReceipt({ hash });
+      return parseEventLogs({
+        abi: easAbi.abi,
+        eventName: "Attested",
+        logs: tx.logs,
+      })[0].args;
+    },
+
     waitForFulfillment: async (
       contractAddress: `0x${string}`,
       buyAttestation: `0x${string}`,
@@ -57,13 +67,15 @@ export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
       });
       if (logs.length) {
         return logs[0].args;
+      } else {
+        console.log("collection not found; waiting");
       }
 
       return new Promise((resolve) => {
         const unwatch = viemClient.watchEvent({
           address: contractAddress,
           event: parseAbiItem(
-            "event PaymentClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
+            "event EscrowClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
           ),
           args: {
             payment: buyAttestation,
