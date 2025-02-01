@@ -115,6 +115,29 @@ export const makeErc20Client = (viemClient: ViemClient) => {
 			return { hash, attested };
 		},
 
+		collectPayment: async (
+			buyAttestation: `0x${string}`,
+			fulfillment: `0x${string}`,
+		) => {
+			const hash = await viemClient.writeContract({
+				address: contractAddresses[viemClient.chain.name].erc20EscrowObligation,
+				abi: erc20EscrowAbi.abi,
+				functionName: "collectPayment",
+				args: [buyAttestation, fulfillment],
+			});
+			return hash;
+		},
+
+		collectExpired: async (buyAttestation: `0x${string}`) => {
+			const hash = await viemClient.writeContract({
+				address: contractAddresses[viemClient.chain.name].erc20EscrowObligation,
+				abi: erc20EscrowAbi.abi,
+				functionName: "collectExpired",
+				args: [buyAttestation],
+			});
+			return hash;
+		},
+
 		permitAndBuyWithErc20: async (
 			price: Erc20,
 			item: Demand,

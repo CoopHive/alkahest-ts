@@ -55,6 +55,29 @@ export const makeErc1155Client = (viemClient: ViemClient) => ({
 		return hash;
 	},
 
+	collectPayment: async (
+		buyAttestation: `0x${string}`,
+		fulfillment: `0x${string}`,
+	) => {
+		const hash = await viemClient.writeContract({
+			address: contractAddresses[viemClient.chain.name].erc1155EscrowObligation,
+			abi: erc1155EscrowAbi.abi,
+			functionName: "collectPayment",
+			args: [buyAttestation, fulfillment],
+		});
+		return hash;
+	},
+
+	collectExpired: async (buyAttestation: `0x${string}`) => {
+		const hash = await viemClient.writeContract({
+			address: contractAddresses[viemClient.chain.name].erc1155EscrowObligation,
+			abi: erc1155EscrowAbi.abi,
+			functionName: "collectExpired",
+			args: [buyAttestation],
+		});
+		return hash;
+	},
+
 	buyWithErc1155: async (price: Erc1155, item: Demand, expiration: bigint) => {
 		const hash = await viemClient.writeContract({
 			address: contractAddresses[viemClient.chain.name].erc1155EscrowObligation,

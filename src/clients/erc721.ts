@@ -70,6 +70,29 @@ export const makeErc721Client = (viemClient: ViemClient) => ({
 		return hash;
 	},
 
+	collectPayment: async (
+		buyAttestation: `0x${string}`,
+		fulfillment: `0x${string}`,
+	) => {
+		const hash = await viemClient.writeContract({
+			address: contractAddresses[viemClient.chain.name].erc721EscrowObligation,
+			abi: erc721EscrowAbi.abi,
+			functionName: "collectPayment",
+			args: [buyAttestation, fulfillment],
+		});
+		return hash;
+	},
+
+	collectExpired: async (buyAttestation: `0x${string}`) => {
+		const hash = await viemClient.writeContract({
+			address: contractAddresses[viemClient.chain.name].erc721EscrowObligation,
+			abi: erc721EscrowAbi.abi,
+			functionName: "collectExpired",
+			args: [buyAttestation],
+		});
+		return hash;
+	},
+
 	buyWithErc721: async (price: Erc721, item: Demand, expiration: bigint) => {
 		const hash = await viemClient.writeContract({
 			address: contractAddresses[viemClient.chain.name].erc721EscrowObligation,
