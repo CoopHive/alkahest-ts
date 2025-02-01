@@ -3,6 +3,7 @@ import type { Hex } from "viem";
 export type ChainAddresses = {
   eas: `0x${string}`;
   easSchemaRegistry: `0x${string}`;
+
   erc20EscrowObligation: `0x${string}`;
   erc20PaymentObligation: `0x${string}`;
   // erc20PaymentFulfillmentArbiter: `0x${string}`;
@@ -19,8 +20,15 @@ export type ChainAddresses = {
   attestationEscrowObligation: `0x${string}`;
   attestationEscrowObligation2: `0x${string}`;
   attestationBarterUtils: `0x${string}`;
+
+  jobResultObligation: `0x${string}`;
+
   usdc: `0x${string}`;
   eurc: `0x${string}`;
+
+  trustedPartyArbiter: `0x${string}`;
+  trivialArbiter: `0x${string}`;
+  specificAttestationArbiter: `0x${string}`;
 };
 
 export type PermitSignature = {
