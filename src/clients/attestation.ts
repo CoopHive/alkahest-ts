@@ -142,11 +142,14 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
   attestAndCreateEscrow: async (
     attestation: {
       schema: `0x${string}`;
-      recipient: `0x${string}`;
-      expirationTime: bigint;
-      revocable: boolean;
-      refUID: `0x${string}`;
-      data: `0x${string}`;
+      data: {
+        recipient: `0x${string}`;
+        expirationTime: bigint;
+        revocable: boolean;
+        refUID: `0x${string}`;
+        data: `0x${string}`;
+        value: bigint;
+      };
     },
     escrow: {
       arbiter: `0x${string}`;
@@ -158,65 +161,10 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
       address: contractAddresses[viemClient.chain.name].attestationBarterUtils,
       abi: attestationBarterUtilsAbi.abi,
       functionName: "attestAndCreateEscrow",
-      args: [
-        attestation.schema,
-        attestation.recipient,
-        attestation.expirationTime,
-        attestation.revocable,
-        attestation.refUID,
-        attestation.data,
-        escrow.arbiter,
-        escrow.demand,
-        escrow.expirationTime,
-      ],
+      args: [attestation, escrow.arbiter, escrow.demand, escrow.expirationTime],
     });
 
     const attested = await getAttestationFromTxHash(viemClient, hash);
     return { hash, attested };
-  },
-
-  // Helper function to wait for escrow fulfillment
-  waitForEscrowFulfillment: async (
-    escrowAttestation: `0x${string}`,
-    fromBlock?: bigint,
-    toBlock?: bigint,
-  ): Promise<{
-    escrow?: `0x${string}` | undefined;
-    fulfillment?: `0x${string}` | undefined;
-    fulfiller?: `0x${string}` | undefined;
-  }> => {
-    const logs = await viemClient.getLogs({
-      address:
-        contractAddresses[viemClient.chain.name].attestationEscrowObligation2,
-      event: parseAbiItem(
-        "event AttestationValidated(bytes32 indexed escrow, bytes32 indexed fulfillment, bytes32 indexed attestationUid, address fulfiller)",
-      ),
-      args: {
-        escrow: escrowAttestation,
-      },
-      fromBlock,
-      toBlock,
-    });
-
-    if (logs.length) {
-      return logs[0].args;
-    }
-
-    return new Promise((resolve) => {
-      const unwatch = viemClient.watchEvent({
-        address:
-          contractAddresses[viemClient.chain.name].attestationEscrowObligation2,
-        event: parseAbiItem(
-          "event AttestationValidated(bytes32 indexed escrow, bytes32 indexed fulfillment, bytes32 indexed attestationUid, address fulfiller)",
-        ),
-        args: {
-          escrow: escrowAttestation,
-        },
-        onLogs: (logs) => {
-          unwatch();
-          resolve(logs[0].args);
-        },
-      });
-    });
   },
 });
