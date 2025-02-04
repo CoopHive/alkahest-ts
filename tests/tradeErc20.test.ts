@@ -3,7 +3,6 @@ import { contractAddresses, makeClient } from "../src";
 import { privateKeyToAccount, nonceManager } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 import {
-  createClient,
   createWalletClient,
   decodeAbiParameters,
   encodeAbiParameters,
@@ -23,18 +22,18 @@ let clientSeller: ReturnType<typeof makeClient>;
 beforeAll(() => {
   // create clients
   clientBuyer = makeClient(
-    privateKeyToAccount(process.env["PRIVKEY_ALICE"] as `0x${string}`, {
+    privateKeyToAccount(process.env.PRIVKEY_ALICE as `0x${string}`, {
       nonceManager, // automatic nonce management
     }),
     baseSepolia,
-    process.env["RPC_URL"] as string, // RPC url for Base Sepolia
+    process.env.RPC_URL as string, // RPC url for Base Sepolia
   );
   clientSeller = makeClient(
-    privateKeyToAccount(process.env["PRIVKEY_BOB"] as `0x${string}`, {
+    privateKeyToAccount(process.env.PRIVKEY_BOB as `0x${string}`, {
       nonceManager,
     }),
     baseSepolia,
-    process.env["RPC_URL"] as string,
+    process.env.RPC_URL as string,
   );
 });
 
@@ -124,8 +123,9 @@ test("tradeErc20ForCustom", async () => {
     { address: usdc, value: 10n },
     contractAddresses["Base Sepolia"].erc20EscrowObligation,
   );
-  console.log(escrowApproval);
   expect(escrowApproval).toBeString();
+  clientBuyer.viemClient.waitForTransactionReceipt({ hash: escrowApproval });
+  console.log("escrow approval: ", escrowApproval);
 
   // make escrow with generic escrow function,
   // passing in TrustedPartyArbiter's address and our custom demand,
@@ -135,7 +135,7 @@ test("tradeErc20ForCustom", async () => {
     { arbiter: contractAddresses["Base Sepolia"].trustedPartyArbiter, demand },
     0n,
   );
-  console.log(escrow);
+  console.log("escrow: ", escrow);
 
   // now the seller manually decodes the statement and demand
   // and creates a StringResultObligation
@@ -173,16 +173,7 @@ test("tradeErc20ForCustom", async () => {
   // as long as the job "spec" is agreed upon between buyer and seller,
   // and the "query" is contained in the demand
   const result = decodedBaseDemand.query.toUpperCase();
-  console.log(result);
-
-  // make a Viem client
-  const viemClient = createWalletClient({
-    chain: baseSepolia,
-    account: privateKeyToAccount(process.env["PRIVKEY_BOB"] as `0x${string}`, {
-      nonceManager, // automatic nonce management
-    }),
-    transport: http(process.env["RPC_URL"] as string),
-  }).extend(publicActions);
+  console.log("result: ", result);
 
   // manually make result statement
 
@@ -196,7 +187,7 @@ test("tradeErc20ForCustom", async () => {
   //     StatementData calldata data,
   //     bytes32 refUID
   // ) public returns (bytes32)
-  const resultHash = await viemClient.writeContract({
+  const resultHash = await clientSeller.viemClient.writeContract({
     address: contractAddresses["Base Sepolia"].jobResultObligation,
     abi: jobResultObligationAbi.abi,
     functionName: "makeStatement",
@@ -208,7 +199,7 @@ test("tradeErc20ForCustom", async () => {
   console.log(resultHash);
   const resultStatement =
     await clientSeller.getAttestationFromTxHash(resultHash);
-  console.log(resultStatement);
+  console.log("result statement: ", resultStatement);
 
   // and collect the payment from escrow
   const collection = await clientSeller.erc20.collectPayment(
@@ -216,7 +207,7 @@ test("tradeErc20ForCustom", async () => {
     resultStatement.uid,
   );
 
-  console.log(collection);
+  console.log("collection: ", collection);
 
   // meanwhile, the buyer can wait for fulfillment of her escrow.
   // if called after fulfillment, like in this case, it will
@@ -225,7 +216,7 @@ test("tradeErc20ForCustom", async () => {
     contractAddresses["Base Sepolia"].erc20EscrowObligation,
     escrow.attested.uid,
   );
-  console.log(fulfillment);
+  console.log("fulfillment: ", fulfillment);
 
   // and extract the result from the fulfillment statement
   if (!fulfillment.fulfillment) throw new Error("invalid fulfillment");
@@ -236,6 +227,6 @@ test("tradeErc20ForCustom", async () => {
     parseAbiParameters("(string result)"),
     fulfillmentData.data,
   )[0];
-  console.log(decodedResult);
+  console.log("decoded result: ", decodedResult);
   expect(decodedResult).toEqual({ result: "HELLO WORLD" });
 });
