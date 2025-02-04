@@ -23,6 +23,7 @@ export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
     erc1155: makeErc1155Client(viemClient),
     bundle: makeTokenBundleClient(viemClient),
     attestation: makeAttestationClient(viemClient), // Add the new client
+    viemClient,
 
     // Helper Functions
     getAttestation: async (uid: `0x${string}`) => {
