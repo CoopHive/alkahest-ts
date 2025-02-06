@@ -11,6 +11,12 @@ import { abi as tokenBundleEscrowAbi } from "../contracts/TokenBundleEscrowOblig
 import { abi as tokenBundlePaymentAbi } from "../contracts/TokenBundlePaymentObligation";
 
 export const makeTokenBundleClient = (viemClient: ViemClient) => ({
+	/**
+	 * Collects payment from an escrow after fulfillment
+	 * @param buyAttestation - UID of the buy attestation
+	 * @param fulfillment - UID of the fulfillment attestation
+	 * @returns Transaction hash
+	 */
 	collectPayment: async (
 		buyAttestation: `0x${string}`,
 		fulfillment: `0x${string}`,
@@ -25,6 +31,11 @@ export const makeTokenBundleClient = (viemClient: ViemClient) => ({
 		return hash;
 	},
 
+	/**
+	 * Collects expired escrow funds
+	 * @param buyAttestation - UID of the expired buy attestation
+	 * @returns Transaction hash
+	 */
 	collectExpired: async (buyAttestation: `0x${string}`) => {
 		const hash = await viemClient.writeContract({
 			address:
@@ -36,6 +47,22 @@ export const makeTokenBundleClient = (viemClient: ViemClient) => ({
 		return hash;
 	},
 
+	/**
+	 * Creates an escrow with a bundle of tokens for a custom demand
+	 * @param price - Bundle of tokens for payment
+	 * @param item - Custom demand details including arbiter and demand data
+	 * @param expiration - Escrow expiration time (0 for no expiration)
+	 * @returns Transaction hash and attestation
+	 * 
+	 * @example
+	 * ```ts
+	 * const escrow = await client.tokenBundle.buyWithBundle(
+	 *   tokenBundle,
+	 *   { arbiter: arbitratorAddress, demand: encodedDemand },
+	 *   0n,
+	 * );
+	 * ```
+	 */
 	buyWithBundle: async (
 		price: TokenBundle,
 		item: Demand,
@@ -59,6 +86,20 @@ export const makeTokenBundleClient = (viemClient: ViemClient) => ({
 		return { hash, attested };
 	},
 
+	/**
+	 * Creates a direct payment obligation with a bundle of tokens
+	 * @param price - Bundle of tokens for payment
+	 * @param payee - Address to receive the payment
+	 * @returns Transaction hash and attestation
+	 * 
+	 * @example
+	 * ```ts
+	 * const payment = await client.tokenBundle.payWithBundle(
+	 *   tokenBundle,
+	 *   receiverAddress,
+	 * );
+	 * ```
+	 */
 	payWithBundle: async (price: TokenBundle, payee: `0x${string}`) => {
 		const hash = await viemClient.writeContract({
 			address:
@@ -77,6 +118,22 @@ export const makeTokenBundleClient = (viemClient: ViemClient) => ({
 		return { hash, attested };
 	},
 
+	/**
+	 * Creates an escrow for trading one bundle of tokens for another
+	 * @param bid - Bundle of tokens offered
+	 * @param ask - Bundle of tokens requested
+	 * @param expiration - Escrow expiration time (0 for no expiration)
+	 * @returns Transaction hash and attestation
+	 * 
+	 * @example
+	 * ```ts
+	 * const escrow = await client.tokenBundle.buyBundleForBundle(
+	 *   myTokenBundle,
+	 *   theirTokenBundle,
+	 *   0n,
+	 * );
+	 * ```
+	 */
 	buyBundleForBundle: async (
 		bid: TokenBundle,
 		ask: TokenBundle,
@@ -96,6 +153,18 @@ export const makeTokenBundleClient = (viemClient: ViemClient) => ({
 		return { hash, attested };
 	},
 
+	/**
+	 * Fulfills a bundle-bundle trade
+	 * @param buyAttestation - UID of the buy attestation to fulfill
+	 * @returns Transaction hash
+	 * 
+	 * @example
+	 * ```ts
+	 * const payment = await client.tokenBundle.payBundleForBundle(
+	 *   escrow.attested.uid,
+	 * );
+	 * ```
+	 */
 	payBundleForBundle: async (buyAttestation: `0x${string}`) => {
 		const hash = await viemClient.writeContract({
 			address: contractAddresses[viemClient.chain.name].tokenBundleBarterUtils,
