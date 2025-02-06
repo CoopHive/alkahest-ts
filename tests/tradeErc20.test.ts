@@ -3,12 +3,9 @@ import { contractAddresses, makeClient } from "../src";
 import { privateKeyToAccount, nonceManager } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 import {
-  createWalletClient,
   decodeAbiParameters,
   encodeAbiParameters,
-  http,
   parseAbiParameters,
-  publicActions,
 } from "viem";
 
 import { abi as jobResultObligationAbi } from "../src/contracts/JobResultObligation";
