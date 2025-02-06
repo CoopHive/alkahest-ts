@@ -3,7 +3,6 @@ import { contractAddresses } from "../config";
 import { abi as attestationEscrowAbi } from "../contracts/AttestationEscrowObligation";
 import { abi as attestationEscrow2Abi } from "../contracts/AttestationEscrowObligation2";
 import { abi as attestationBarterUtilsAbi } from "../contracts/AttestationBarterUtils";
-import { parseAbiItem } from "viem";
 
 export const makeAttestationClient = (viemClient: ViemClient) => ({
   /**
