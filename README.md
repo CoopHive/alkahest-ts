@@ -161,15 +161,6 @@ const decodedBaseDemand = decodeAbiParameters(
 const result = decodedBaseDemand.query.toUpperCase();
 console.log(result);
 
-// make a Viem client
-const viemClient = createWalletClient({
-    chain: baseSepolia,
-    account: privateKeyToAccount(process.env["PRIVKEY_BOB"] as `0x${string}`, {
-        nonceManager, // automatic nonce management
-    }),
-    transport: http(process.env["RPC_URL"] as string),
-}).extend(publicActions);
-
 // manually make result statement
 
 // JobResultObligation.StatementData:
@@ -182,7 +173,7 @@ const viemClient = createWalletClient({
 //     StatementData calldata data,
 //     bytes32 refUID
 // ) public returns (bytes32)
-const resultHash = await viemClient.writeContract({
+const resultHash = await clientSeller.viemClient.writeContract({
     address: contractAddresses["Base Sepolia"].jobResultObligation,
     abi: jobResultObligationAbi.abi,
     functionName: "makeStatement",
