@@ -6,17 +6,20 @@ export type ChainAddresses = {
 
   erc20EscrowObligation: `0x${string}`;
   erc20PaymentObligation: `0x${string}`;
-  // erc20PaymentFulfillmentArbiter: `0x${string}`;
   erc20BarterUtils: `0x${string}`;
+
   erc721EscrowObligation: `0x${string}`;
   erc721PaymentObligation: `0x${string}`;
   erc721BarterUtils: `0x${string}`;
+
   erc1155EscrowObligation: `0x${string}`;
   erc1155BarterUtils: `0x${string}`;
   erc1155PaymentObligation: `0x${string}`;
+
   tokenBundleEscrowObligation: `0x${string}`;
   tokenBundlePaymentObligation: `0x${string}`;
   tokenBundleBarterUtils: `0x${string}`;
+
   attestationEscrowObligation: `0x${string}`;
   attestationEscrowObligation2: `0x${string}`;
   attestationBarterUtils: `0x${string}`;
