@@ -20,11 +20,6 @@ import { abi as erc20PaymentAbi } from "../contracts/ERC20PaymentObligation";
 import { abi as erc20Abi } from "../contracts/ERC20Permit";
 import { abi as easAbi } from "../contracts/IEAS";
 
-/**
- * Creates an ERC20 client for token trading and payments
- * @param viemClient - Configured Viem client instance
- * @returns Object with methods for ERC20 token operations
- */
 export const makeErc20Client = (viemClient: ViemClient) => {
   /**
    * Signs an EIP-2612 permit for token approval
