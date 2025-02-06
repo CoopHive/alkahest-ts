@@ -9,6 +9,25 @@ import { makeAttestationClient } from "./clients/attestation";
 
 import { abi as easAbi } from "./contracts/IEAS";
 
+/**
+ * Creates an Alkahest client for interacting with the protocol
+ * @param account - Viem account object (viem's automatic nonce management recommended)
+ * @param chain - Viem chain object (only Base Sepolia supported currently)
+ * @param rpcUrl - RPC URL for the chain
+ * @returns Client object with methods for interacting with different token standards and attestations
+ * @throws Error if chain is not supported
+ * 
+ * @example
+ * ```ts
+ * const client = makeClient(
+ *   privateKeyToAccount(process.env.PRIVKEY as `0x${string}`, {
+ *     nonceManager, // automatic nonce management
+ *   }),
+ *   baseSepolia,
+ *   process.env.RPC_URL as string,
+ * );
+ * ```
+ */
 export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
   if (!supportedChains.includes(chain.name)) {
     throw new Error("unsupported chain");
@@ -17,15 +36,32 @@ export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
   const viemClient = createViemClient(account, chain, rpcUrl);
 
   return {
+    /** Address of the account used to create this client */
     address: account.address,
+
+    /** Methods for interacting with ERC20 tokens */
     erc20: makeErc20Client(viemClient),
+
+    /** Methods for interacting with ERC721 tokens */
     erc721: makeErc721Client(viemClient),
+
+    /** Methods for interacting with ERC1155 tokens */
     erc1155: makeErc1155Client(viemClient),
+
+    /** Methods for interacting with token bundles */
     bundle: makeTokenBundleClient(viemClient),
-    attestation: makeAttestationClient(viemClient), // Add the new client
+
+    /** Methods for interacting with attestations */
+    attestation: makeAttestationClient(viemClient),
+
+    /** The underlying Viem client */
     viemClient,
 
-    // Helper Functions
+    /**
+     * Retrieves an attestation by its UID
+     * @param uid - The unique identifier of the attestation
+     * @returns The attestation data
+     */
     getAttestation: async (uid: `0x${string}`) => {
       const attestation = await viemClient.readContract({
         address: contractAddresses[viemClient.chain.name].eas,
@@ -36,6 +72,11 @@ export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
       return attestation;
     },
 
+    /**
+     * Gets an attestation from a transaction hash
+     * @param hash - The transaction hash
+     * @returns The attestation event args
+     */
     getAttestationFromTxHash: async (hash: `0x${string}`) => {
       const tx = await viemClient.waitForTransactionReceipt({ hash });
       return parseEventLogs({
@@ -45,6 +86,21 @@ export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
       })[0].args;
     },
 
+    /**
+     * Waits for an escrow to be fulfilled
+     * @param contractAddress - The address of the escrow contract
+     * @param buyAttestation - The UID of the buy attestation
+     * @returns Object containing payment, fulfillment and fulfiller details
+     * 
+     * @example
+     * ```ts
+     * // Wait for fulfillment of an escrow
+     * const fulfillment = await client.waitForFulfillment(
+     *   contractAddresses["Base Sepolia"].erc20EscrowObligation,
+     *   escrow.attested.uid,
+     * );
+     * ```
+     */
     waitForFulfillment: async (
       contractAddress: `0x${string}`,
       buyAttestation: `0x${string}`,
