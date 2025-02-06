@@ -8,7 +8,8 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
   /**
    * Creates an escrow using an attestation as the escrowed item.
    * This function uses the original AttestationEscrowObligation contract where the full attestation
-   * data is stored in the escrow statement.
+   * data is stored in the escrow statement. When collecting payment, this contract creates a new
+   * attestation as the collection event, requiring the contract to have attestation rights.
    * 
    * @param attestation - The attestation data to be escrowed
    * @param item - The arbiter and demand data for the escrow
@@ -78,8 +79,10 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
 
   /**
    * Creates an escrow using an attestation UID as reference.
-   * This function uses AttestationEscrowObligation2 which stores only the attestation UID
-   * instead of the full attestation data, making it more gas efficient.
+   * This function uses AttestationEscrowObligation2 which references the attestation by UID
+   * instead of storing the full attestation data, making it more gas efficient. When collecting
+   * payment, this contract creates a validation attestation that references the original attestation,
+   * allowing it to work with any schema implementation without requiring attestation rights.
    * 
    * @param attestationUid - The UID of the attestation to be escrowed
    * @param item - The arbiter and demand data for the escrow
