@@ -8,6 +8,7 @@
 
 ```ts
 import { makeClient } from "alkahest-ts";
+import { createWalletClient, http } from "viem";
 import { privateKeyToAccount, nonceManager } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 
