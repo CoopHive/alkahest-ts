@@ -1,6 +1,13 @@
-import { parseAbiItem, parseEventLogs, type Account, type Chain } from "viem";
+import {
+  parseAbiItem,
+  parseEventLogs,
+  publicActions,
+  type Account,
+  type Chain,
+  type Transport,
+  type WalletClient,
+} from "viem";
 import { contractAddresses, supportedChains } from "./config";
-import { createViemClient } from "./utils";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
 import { makeErc1155Client } from "./clients/erc1155";
@@ -16,7 +23,7 @@ import { abi as easAbi } from "./contracts/IEAS";
  * @param rpcUrl - RPC URL for the chain
  * @returns Client object with methods for interacting with different token standards and attestations
  * @throws Error if chain is not supported
- * 
+ *
  * @example
  * ```ts
  * const client = makeClient(
@@ -28,16 +35,18 @@ import { abi as easAbi } from "./contracts/IEAS";
  * );
  * ```
  */
-export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
-  if (!supportedChains.includes(chain.name)) {
+export const makeClient = (
+  walletClient: WalletClient<Transport, Chain, Account>,
+) => {
+  if (!supportedChains.includes(walletClient.chain.name)) {
     throw new Error("unsupported chain");
   }
 
-  const viemClient = createViemClient(account, chain, rpcUrl);
+  const viemClient = walletClient.extend(publicActions);
 
   return {
     /** Address of the account used to create this client */
-    address: account.address,
+    address: viemClient.account.address,
 
     /** Methods for interacting with ERC20 tokens */
     erc20: makeErc20Client(viemClient),
@@ -91,7 +100,7 @@ export const makeClient = (account: Account, chain: Chain, rpcUrl: string) => {
      * @param contractAddress - The address of the escrow contract
      * @param buyAttestation - The UID of the buy attestation
      * @returns Object containing payment, fulfillment and fulfiller details
-     * 
+     *
      * @example
      * ```ts
      * // Wait for fulfillment of an escrow

@@ -1,7 +1,4 @@
 import {
-  createWalletClient,
-  http,
-  publicActions,
   parseEventLogs,
   type PublicActions,
   type WalletClient,
@@ -13,18 +10,6 @@ import type { TokenBundle, TokenBundleFlat } from "./types";
 
 export type ViemClient = WalletClient<Transport, Chain, Account> &
   PublicActions;
-
-export const createViemClient = (
-  account: Account,
-  chain: Chain,
-  rpcUrl: string,
-) => {
-  return createWalletClient({
-    chain,
-    transport: http(rpcUrl),
-    account,
-  }).extend(publicActions);
-};
 
 export const getAttestationFromTxHash = async (
   client: ViemClient,
