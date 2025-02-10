@@ -3,8 +3,10 @@ import { contractAddresses, makeClient } from "../src";
 import { privateKeyToAccount, nonceManager } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
 import {
+  createWalletClient,
   decodeAbiParameters,
   encodeAbiParameters,
+  http,
   parseAbiParameters,
 } from "viem";
 
@@ -19,18 +21,22 @@ let clientSeller: ReturnType<typeof makeClient>;
 beforeAll(() => {
   // create clients
   clientBuyer = makeClient(
-    privateKeyToAccount(process.env.PRIVKEY_ALICE as `0x${string}`, {
-      nonceManager, // automatic nonce management
+    createWalletClient({
+      account: privateKeyToAccount(process.env.PRIVKEY_ALICE as `0x${string}`, {
+        nonceManager, // automatic nonce management
+      }),
+      chain: baseSepolia,
+      transport: http(process.env.RPC_URL as string),
     }),
-    baseSepolia,
-    process.env.RPC_URL as string, // RPC url for Base Sepolia
   );
   clientSeller = makeClient(
-    privateKeyToAccount(process.env.PRIVKEY_BOB as `0x${string}`, {
-      nonceManager,
+    createWalletClient({
+      account: privateKeyToAccount(process.env.PRIVKEY_BOB as `0x${string}`, {
+        nonceManager, // automatic nonce management
+      }),
+      chain: baseSepolia,
+      transport: http(process.env.RPC_URL as string),
     }),
-    baseSepolia,
-    process.env.RPC_URL as string,
   );
 });
 
