@@ -3,14 +3,57 @@ import { contractAddresses } from "../config";
 import { abi as attestationEscrowAbi } from "../contracts/AttestationEscrowObligation";
 import { abi as attestationEscrow2Abi } from "../contracts/AttestationEscrowObligation2";
 import { abi as attestationBarterUtilsAbi } from "../contracts/AttestationBarterUtils";
+import { decodeAbiParameters, parseAbiParameters } from "viem";
 
 export const makeAttestationClient = (viemClient: ViemClient) => ({
+  decodeEscrowStatement: (statementData: `0x${string}`) => {
+    return decodeAbiParameters(
+      [
+        {
+          name: "attestation",
+          type: "tuple",
+          internalType: "struct AttestationRequest",
+          components: [
+            { name: "schema", type: "bytes32", internalType: "bytes32" },
+            {
+              name: "data",
+              type: "tuple",
+              internalType: "struct AttestationRequestData",
+              components: [
+                { name: "recipient", type: "address", internalType: "address" },
+                {
+                  name: "expirationTime",
+                  type: "uint64",
+                  internalType: "uint64",
+                },
+                { name: "revocable", type: "bool", internalType: "bool" },
+                { name: "refUID", type: "bytes32", internalType: "bytes32" },
+                { name: "data", type: "bytes", internalType: "bytes" },
+                { name: "value", type: "uint256", internalType: "uint256" },
+              ],
+            },
+          ],
+        },
+        { name: "arbiter", type: "address", internalType: "address" },
+        { name: "demand", type: "bytes", internalType: "bytes" },
+      ],
+      statementData,
+    )[0];
+  },
+  decodeEscrow2Statement: (statementData: `0x${string}`) => {
+    return decodeAbiParameters(
+      parseAbiParameters(
+        "(bytes32 attestationUid, address arbiter, bytes demand)",
+      ),
+      statementData,
+    )[0];
+  },
   /**
    * Creates an escrow using an attestation as the escrowed item.
    * This function uses the original AttestationEscrowObligation contract where the full attestation
    * data is stored in the escrow statement. When collecting payment, this contract creates a new
    * attestation as the collection event, requiring the contract to have attestation rights.
-   * 
+   *
    * @param attestation - The attestation data to be escrowed
    * @param item - The arbiter and demand data for the escrow
    * @param expiration - Optional expiration time for the escrow (default: 0 = no expiration)
@@ -56,7 +99,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
   /**
    * Collects payment from an attestation escrow by providing a fulfillment attestation.
    * This function is used with the original AttestationEscrowObligation contract.
-   * 
+   *
    * @param escrowAttestation - The UID of the escrow attestation
    * @param fulfillmentAttestation - The UID of the fulfillment attestation
    * @returns The transaction hash and validation attestation data
@@ -83,7 +126,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
    * instead of storing the full attestation data, making it more gas efficient. When collecting
    * payment, this contract creates a validation attestation that references the original attestation,
    * allowing it to work with any schema implementation without requiring attestation rights.
-   * 
+   *
    * @param attestationUid - The UID of the attestation to be escrowed
    * @param item - The arbiter and demand data for the escrow
    * @param expiration - Optional expiration time for the escrow (default: 0 = no expiration)
@@ -120,7 +163,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
    * Collects payment from an attestation escrow by providing a fulfillment attestation.
    * This function is used with AttestationEscrowObligation2 and creates a validation
    * attestation referencing the original attestation.
-   * 
+   *
    * @param escrowAttestation - The UID of the escrow attestation
    * @param fulfillmentAttestation - The UID of the fulfillment attestation
    * @returns The transaction hash and validation attestation data
@@ -143,7 +186,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
 
   /**
    * Registers a new schema in the EAS Schema Registry.
-   * 
+   *
    * @param schema - The schema string defining the attestation structure
    * @param resolver - The address of the resolver contract
    * @param revocable - Whether attestations using this schema can be revoked
@@ -166,7 +209,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
 
   /**
    * Creates a new attestation using the AttestationBarterUtils contract.
-   * 
+   *
    * @param schema - The schema UID for the attestation
    * @param recipient - The recipient address of the attestation
    * @param expirationTime - The expiration time for the attestation
@@ -197,7 +240,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => ({
   /**
    * Creates an attestation and immediately escrows it in a single transaction.
    * This is a convenience function that combines createAttestation and createEscrow.
-   * 
+   *
    * @param attestation - The attestation data to create and escrow
    * @param escrow - The escrow parameters including arbiter, demand, and expiration
    * @returns The transaction hash and attested data
