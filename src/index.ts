@@ -15,6 +15,7 @@ import { makeTokenBundleClient } from "./clients/tokenBundle";
 import { makeAttestationClient } from "./clients/attestation";
 
 import { abi as easAbi } from "./contracts/IEAS";
+import { makeArbitersClient } from "./clients/arbiters";
 
 /**
  * Creates an Alkahest client for interacting with the protocol
@@ -45,8 +46,8 @@ export const makeClient = (
   const viemClient = walletClient.extend(publicActions);
 
   return {
-    /** Address of the account used to create this client */
-    address: viemClient.account.address,
+    /** Methods for interacting with Arbiters */
+    arbiters: makeArbitersClient(viemClient),
 
     /** Methods for interacting with ERC20 tokens */
     erc20: makeErc20Client(viemClient),
@@ -65,6 +66,9 @@ export const makeClient = (
 
     /** The underlying Viem client */
     viemClient,
+
+    /** Address of the account used to create this client */
+    address: viemClient.account.address,
 
     /**
      * Retrieves an attestation by its UID
