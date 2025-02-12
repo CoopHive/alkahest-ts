@@ -12,7 +12,12 @@ import type {
   Erc721,
   TokenBundle,
 } from "../types";
-import { decodeAbiParameters, hexToNumber, slice } from "viem";
+import {
+  decodeAbiParameters,
+  hexToNumber,
+  parseAbiParameters,
+  slice,
+} from "viem";
 
 import { abi as erc20BarterUtilsAbi } from "../contracts/ERC20BarterCrossToken";
 import { abi as erc20EscrowAbi } from "../contracts/ERC20EscrowObligation";
@@ -71,6 +76,20 @@ export const makeErc20Client = (viemClient: ViemClient) => {
   };
 
   return {
+    decodeEscrowStatement: (statementData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters(
+          "(address token, uint256 amount, address arbiter, bytes demand)",
+        ),
+        statementData,
+      )[0];
+    },
+    decodePaymentStatement: (statementData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(address token, uint256 amount, address payee)"),
+        statementData,
+      )[0];
+    },
     /**
      * Approves the spender to use tokens
      * @param token - Token details including address and amount
@@ -152,7 +171,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param item - Custom demand details including arbiter and demand data
      * @param expiration - Escrow expiration time (0 for no expiration)
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const escrow = await client.erc20.buyWithErc20(
@@ -188,7 +207,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param item - Custom demand details including arbiter and demand data
      * @param expiration - Escrow expiration time (0 for no expiration)
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const escrow = await client.erc20.permitAndBuyWithErc20(
@@ -251,7 +270,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param price - ERC20 token details for payment
      * @param payee - Address to receive the payment
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const payment = await client.erc20.payWithErc20(
@@ -284,7 +303,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param price - ERC20 token details for payment
      * @param payee - Address to receive the payment
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const payment = await client.erc20.permitAndPayWithErc20(
@@ -340,7 +359,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param ask - ERC20 token requested
      * @param expiration - Escrow expiration time (0 for no expiration)
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const escrow = await client.erc20.buyErc20ForErc20(
@@ -368,7 +387,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param ask - ERC20 token requested
      * @param expiration - Escrow expiration time (0 for no expiration)
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const escrow = await client.erc20.permitAndBuyErc20ForErc20(
@@ -430,7 +449,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * Fulfills an ERC20-ERC20 trade
      * @param buyAttestation - UID of the buy attestation to fulfill
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const payment = await client.erc20.payErc20ForErc20(
@@ -455,7 +474,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param price - ERC20 token details for payment
      * @param payee - Address to receive the payment
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const payment = await client.erc20.permitAndPayWithErc20(
@@ -539,7 +558,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param ask - ERC721 token requested
      * @param expiration - Escrow expiration time (0 for no expiration)
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const escrow = await client.erc20.buyErc721WithErc20(
@@ -712,7 +731,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param ask - ERC1155 token requested including token ID and amount
      * @param expiration - Escrow expiration time (0 for no expiration)
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const escrow = await client.erc20.buyErc1155WithErc20(
@@ -898,7 +917,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
      * @param payee - Address to receive the payment
      * @param expiration - Escrow expiration time (0 for no expiration)
      * @returns Transaction hash and attestation
-     * 
+     *
      * @example
      * ```ts
      * const escrow = await client.erc20.buyBundleWithErc20(
