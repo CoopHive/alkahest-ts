@@ -5,13 +5,13 @@ import {
 } from "viem";
 import type { ViemClient } from "../utils";
 
-export const makeAttestationClient = (viemClient: ViemClient) => ({
+export const makeArbitersClient = (viemClient: ViemClient) => ({
   encodeTrustedPartyDemand: (demand: {
     creator: `0x${string}`;
     baseArbiter: `0x${string}`;
     baseDemand: `0x${string}`;
   }) => {
-    encodeAbiParameters(
+    return encodeAbiParameters(
       parseAbiParameters(
         "(address creator, address baseArbiter, bytes baseDemand)",
       ),
