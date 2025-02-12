@@ -93,35 +93,31 @@ const baseDemand = encodeAbiParameters(parseAbiParameters("(string query)"), [
 //     address baseArbiter;
 //     bytes baseDemand;
 // }
-const demand = encodeAbiParameters(
-  parseAbiParameters(
-    "(address creator, address baseArbiter, bytes baseDemand)",
-  ),
-  [
-    {
-      creator: clientSeller.address,
-      baseArbiter: contractAddresses["Base Sepolia"].trivialArbiter,
-      baseDemand,
-    },
-  ],
-);
+// if using a custom Arbiter not supported by the SDK, you can use encodeAbiParameters directly,
+// like we did for the baseDemand
+const demand = clientBuyer.arbiters.encodeTrustedPartyDemand({
+  creator: clientSeller.address,
+  baseArbiter: contractAddresses["Base Sepolia"].trivialArbiter,
+  baseDemand,
+});
 
 // approve escrow contract to spend tokens
 const escrowApproval = await clientBuyer.erc20.approve(
   { address: usdc, value: 10n },
   contractAddresses["Base Sepolia"].erc20EscrowObligation,
 );
-console.log(escrowApproval);
+clientBuyer.viemClient.waitForTransactionReceipt({ hash: escrowApproval });
+console.log("escrow approval: ", escrowApproval);
 
 // make escrow with generic escrow function,
 // passing in TrustedPartyArbiter's address and our custom demand,
-// and no expiration
+// and no expiration (would be a future unix timstamp in seconds if used)
 const escrow = await clientBuyer.erc20.buyWithErc20(
   { address: usdc, value: 10n },
   { arbiter: contractAddresses["Base Sepolia"].trustedPartyArbiter, demand },
   0n,
 );
-console.log(escrow);
+console.log("escrow: ", escrow);
 
 // now the seller manually decodes the statement and demand
 // and creates a StringResultObligation
@@ -134,19 +130,14 @@ const buyStatement = await clientSeller.getAttestation(escrow.attested.uid);
 //     address arbiter;
 //     bytes demand;
 // }
-const decodedStatement = decodeAbiParameters(
-  parseAbiParameters(
-    "(address token, uint256 amount, address arbiter, bytes demand)",
-  ),
+const decodedStatement = clientSeller.erc20.decodeEscrowStatement(
   buyStatement.data,
-)[0];
+);
 // TrustedPartyArbiter.DemandData
-const decodedDemand = decodeAbiParameters(
-  parseAbiParameters(
-    "(address creator, address baseArbiter, bytes baseDemand)",
-  ),
+// if using a custom arbiter, you can instead use decodeAbiParameters directly like below
+const decodedDemand = clientSeller.arbiters.decodeTrustedPartyDemand(
   decodedStatement.demand,
-)[0];
+);
 // custom base demand described above
 const decodedBaseDemand = decodeAbiParameters(
   parseAbiParameters("(string query)"),
@@ -159,7 +150,7 @@ const decodedBaseDemand = decodeAbiParameters(
 // as long as the job "spec" is agreed upon between buyer and seller,
 // and the "query" is contained in the demand
 const result = decodedBaseDemand.query.toUpperCase();
-console.log(result);
+console.log("result: ", result);
 
 // manually make result statement
 
@@ -184,7 +175,7 @@ const resultHash = await clientSeller.viemClient.writeContract({
 });
 console.log(resultHash);
 const resultStatement = await clientSeller.getAttestationFromTxHash(resultHash);
-console.log(resultStatement);
+console.log("result statement: ", resultStatement);
 
 // and collect the payment from escrow
 const collection = await clientSeller.erc20.collectPayment(
@@ -192,7 +183,7 @@ const collection = await clientSeller.erc20.collectPayment(
   resultStatement.uid,
 );
 
-console.log(collection);
+console.log("collection: ", collection);
 
 // meanwhile, the buyer can wait for fulfillment of her escrow.
 // if called after fulfillment, like in this case, it will
@@ -201,7 +192,7 @@ const fulfillment = await clientBuyer.waitForFulfillment(
   contractAddresses["Base Sepolia"].erc20EscrowObligation,
   escrow.attested.uid,
 );
-console.log(fulfillment);
+console.log("fulfillment: ", fulfillment);
 
 // and extract the result from the fulfillment statement
 if (!fulfillment.fulfillment) throw new Error("invalid fulfillment");
@@ -212,7 +203,7 @@ const decodedResult = decodeAbiParameters(
   parseAbiParameters("(string result)"),
   fulfillmentData.data,
 )[0];
-console.log(decodedResult);
+console.log("decoded result: ", decodedResult);
 ```
 
 see [tests](https://github.com/CoopHive/alkahest-ts/blob/main/tests/tradeErc20.test.ts) for full example.

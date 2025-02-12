@@ -108,18 +108,13 @@ test("tradeErc20ForCustom", async () => {
   //     address baseArbiter;
   //     bytes baseDemand;
   // }
-  const demand = encodeAbiParameters(
-    parseAbiParameters(
-      "(address creator, address baseArbiter, bytes baseDemand)",
-    ),
-    [
-      {
-        creator: clientSeller.address,
-        baseArbiter: contractAddresses["Base Sepolia"].trivialArbiter,
-        baseDemand,
-      },
-    ],
-  );
+  // if using a custom Arbiter not supported by the SDK, you can use encodeAbiParameters directly,
+  // like we did for the baseDemand
+  const demand = clientBuyer.arbiters.encodeTrustedPartyDemand({
+    creator: clientSeller.address,
+    baseArbiter: contractAddresses["Base Sepolia"].trivialArbiter,
+    baseDemand,
+  });
 
   // approve escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve(
@@ -132,7 +127,7 @@ test("tradeErc20ForCustom", async () => {
 
   // make escrow with generic escrow function,
   // passing in TrustedPartyArbiter's address and our custom demand,
-  // and no expiration
+  // and no expiration (would be a future unix timstamp in seconds if used)
   const escrow = await clientBuyer.erc20.buyWithErc20(
     { address: usdc, value: 10n },
     { arbiter: contractAddresses["Base Sepolia"].trustedPartyArbiter, demand },
@@ -151,19 +146,14 @@ test("tradeErc20ForCustom", async () => {
   //     address arbiter;
   //     bytes demand;
   // }
-  const decodedStatement = decodeAbiParameters(
-    parseAbiParameters(
-      "(address token, uint256 amount, address arbiter, bytes demand)",
-    ),
+  const decodedStatement = clientSeller.erc20.decodeEscrowStatement(
     buyStatement.data,
-  )[0];
+  );
   // TrustedPartyArbiter.DemandData
-  const decodedDemand = decodeAbiParameters(
-    parseAbiParameters(
-      "(address creator, address baseArbiter, bytes baseDemand)",
-    ),
+  // if using a custom arbiter, you can instead use decodeAbiParameters directly like below
+  const decodedDemand = clientSeller.arbiters.decodeTrustedPartyDemand(
     decodedStatement.demand,
-  )[0];
+  );
   // custom base demand described above
   const decodedBaseDemand = decodeAbiParameters(
     parseAbiParameters("(string query)"),
