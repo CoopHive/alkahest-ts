@@ -76,6 +76,11 @@ export const makeErc20Client = (viemClient: ViemClient) => {
   };
 
   return {
+    /**
+     * Decodes ERC20EscrowObligation.StatementData from bytes.
+     * @param statementData - StatementData as abi encoded bytes
+     * @returns the decoded StatementData object
+     */
     decodeEscrowStatement: (statementData: `0x${string}`) => {
       return decodeAbiParameters(
         parseAbiParameters(
@@ -84,6 +89,11 @@ export const makeErc20Client = (viemClient: ViemClient) => {
         statementData,
       )[0];
     },
+    /**
+     * Decodes ERC20PaymentObligation.StatementData from bytes.
+     * @param statementData - StatementData as abi encoded bytes
+     * @returns the decoded StatementData object
+     */
     decodePaymentStatement: (statementData: `0x${string}`) => {
       return decodeAbiParameters(
         parseAbiParameters("(address token, uint256 amount, address payee)"),
