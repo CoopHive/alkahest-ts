@@ -33,6 +33,7 @@ export const contractAddresses: Record<string, ChainAddresses> = {
 		trustedPartyArbiter: "0x82FaE516dE4912C382FBF7D9D6d0194b7f532738",
 		trivialArbiter: "0x8fdbf9C22Ce0B83aFEe8da63F14467663D150b5d",
 		specificAttestationArbiter: "0x056034D1D432dD9eA0B7fC20A4375b3A54Ce2e48",
+		trustedOracleArbiter: "0x8441e4c9eD25C1F2c4d7d191099B6726ADa2D517",
 	},
 } as const;
 
