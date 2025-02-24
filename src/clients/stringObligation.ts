@@ -14,6 +14,18 @@ export const makeStringObligationClient = (viemClient: ViemClient) => {
     )[0];
   };
 
+  const makeStatement = async (item: string, refUid?: `0x${string}`) =>
+    await viemClient.writeContract({
+      address: contractAddresses["Base Sepolia"].stringObligation,
+      abi: stringObligationAbi.abi,
+      functionName: "makeStatement",
+      args: [
+        { item },
+        refUid ??
+          "0x0000000000000000000000000000000000000000000000000000000000000000", // bytes32 0
+      ],
+    });
+
   const getZodParseFunc = (opts: { async: boolean; safe: boolean }) => {
     let command = opts.safe ? "safeParse" : "parse";
     if (opts.async) {
@@ -48,17 +60,9 @@ export const makeStringObligationClient = (viemClient: ViemClient) => {
     ): Schema["inferOut"] => {
       return schema(decode(statementData));
     },
-    makeStatement: async (item: string, refUid?: `0x${string}`) => {
-      return await viemClient.writeContract({
-        address: contractAddresses["Base Sepolia"].stringObligation,
-        abi: stringObligationAbi.abi,
-        functionName: "makeStatement",
-        args: [
-          { item },
-          refUid ??
-            "0x0000000000000000000000000000000000000000000000000000000000000000", // bytes32 0
-        ],
-      });
+    makeStatement,
+    makeStatementJson: async <T>(item: T, refUid?: `0x${string}`) => {
+      return await makeStatement(JSON.stringify(item), refUid);
     },
   };
 };
