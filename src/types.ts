@@ -24,7 +24,7 @@ export type ChainAddresses = {
 	attestationEscrowObligation2: `0x${string}`;
 	attestationBarterUtils: `0x${string}`;
 
-	jobResultObligation: `0x${string}`;
+	stringObligation: `0x${string}`;
 
 	usdc: `0x${string}`;
 	eurc: `0x${string}`;

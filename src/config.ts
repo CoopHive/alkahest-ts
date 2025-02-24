@@ -25,7 +25,7 @@ export const contractAddresses: Record<string, ChainAddresses> = {
 		attestationEscrowObligation: "0x63E8031DA08f6852Abe7bDc4C056903C7863cb7c",
 		attestationEscrowObligation2: "0x4200637A112ba709Fe4a5fe315128879a8Bf4082",
 
-		jobResultObligation: "0x823a06994B4e817a5127c042dBd2742CcFdF2076",
+		stringObligation: "0xb4692f27f3Ef6968394F12eb5843e7C494a0Ed72",
 
 		usdc: "0x036CbD53842c5426634e7929541eC2318f3dCF7e",
 		eurc: "0x808456652fdb597867f38412077A9182bf77359F",
