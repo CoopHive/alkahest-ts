@@ -6,7 +6,13 @@ import {
   parseAbiParameters,
 } from "viem";
 import { abi as jobResultObligationAbi } from "../src/contracts/JobResultObligation";
-import { ANVIL_ACCOUNTS, createTestClient, MOCK_TOKENS, advanceTime } from "./utils/anvil";
+import {
+  ANVIL_ACCOUNTS,
+  createTestClient,
+  createWalletClient,
+  MOCK_TOKENS,
+  advanceTime,
+} from "./utils/anvil";
 import { abi as erc20Abi } from "../src/contracts/IERC20";
 import { abi as erc721Abi } from "../src/contracts/IERC721";
 import { abi as erc1155Abi } from "../src/contracts/IERC1155";
@@ -15,16 +21,18 @@ const usdc = contractAddresses["Base Sepolia"].usdc;
 const eurc = contractAddresses["Base Sepolia"].eurc;
 
 // Mock NFT addresses
-const mockErc721 = "0x0000000000000000000000000000000000000721" as `0x${string}`;
-const mockErc1155 = "0x0000000000000000000000000000000000001155" as `0x${string}`;
+const mockErc721 =
+  "0x6AA9Fa7A3E3529Ee5F566D4c5c2528BE6D7E2eB4" as `0x${string}`;
+const mockErc1155 =
+  "0x7CAA519f345B4128612cD19F1C8C7Bd76A744B71" as `0x${string}`;
 
 let clientBuyer: ReturnType<typeof makeClient>;
 let clientSeller: ReturnType<typeof makeClient>;
 
 beforeAll(() => {
-  // create clients using Anvil default accounts
-  clientBuyer = makeClient(createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey));
-  clientSeller = makeClient(createTestClient(ANVIL_ACCOUNTS.BOB.privateKey));
+  // create clients using Anvil default accounts with walletClient instead of testClient
+  clientBuyer = makeClient(createWalletClient(ANVIL_ACCOUNTS.ALICE.privateKey));
+  clientSeller = makeClient(createWalletClient(ANVIL_ACCOUNTS.BOB.privateKey));
 });
 
 // Before each test, make sure accounts have enough tokens
@@ -32,7 +40,7 @@ beforeEach(async () => {
   // Create test clients for direct blockchain interactions
   const testClientBuyer = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
   const testClientSeller = createTestClient(ANVIL_ACCOUNTS.BOB.privateKey);
-  
+
   // Fund test accounts with tokens by impersonating accounts that have tokens
   // Get token balances
   const buyerUsdcBalance = await testClientBuyer.readContract({
@@ -199,7 +207,7 @@ test("tradeErc20ForCustom", async () => {
 
   // Create a test client for transaction handling
   const testClientA = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
-  
+
   // approve escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve(
     { address: usdc, value: 10n },
@@ -261,7 +269,7 @@ test("tradeErc20ForCustom", async () => {
   //
   // Create a test client for direct contract interaction
   const testClientB = createTestClient(ANVIL_ACCOUNTS.BOB.privateKey);
-  
+
   // JobResultObligation.makeStatement
   // function makeStatement(
   //     StatementData calldata data,
@@ -314,32 +322,42 @@ test("tradeErc20ForCustom", async () => {
 test("decodeEscrowStatement and decodePaymentStatement", async () => {
   // Create mock statement data for testing decode functions
   const escrowStatementData = encodeAbiParameters(
-    parseAbiParameters("(address token, uint256 amount, address arbiter, bytes demand)"),
-    [{
-      token: usdc,
-      amount: 10n,
-      arbiter: contractAddresses["Base Sepolia"].trivialArbiter,
-      demand: "0x1234" as `0x${string}`,
-    }]
+    parseAbiParameters(
+      "(address token, uint256 amount, address arbiter, bytes demand)",
+    ),
+    [
+      {
+        token: usdc,
+        amount: 10n,
+        arbiter: contractAddresses["Base Sepolia"].trivialArbiter,
+        demand: "0x1234" as `0x${string}`,
+      },
+    ],
   );
 
   const paymentStatementData = encodeAbiParameters(
     parseAbiParameters("(address token, uint256 amount, address payee)"),
-    [{
-      token: eurc,
-      amount: 15n,
-      payee: clientSeller.address,
-    }]
+    [
+      {
+        token: eurc,
+        amount: 15n,
+        payee: clientSeller.address,
+      },
+    ],
   );
 
   // Test decode functions
-  const decodedEscrow = clientBuyer.erc20.decodeEscrowStatement(escrowStatementData);
+  const decodedEscrow =
+    clientBuyer.erc20.decodeEscrowStatement(escrowStatementData);
   expect(decodedEscrow.token).toBe(usdc);
   expect(decodedEscrow.amount).toBe(10n);
-  expect(decodedEscrow.arbiter).toBe(contractAddresses["Base Sepolia"].trivialArbiter);
+  expect(decodedEscrow.arbiter).toBe(
+    contractAddresses["Base Sepolia"].trivialArbiter,
+  );
   expect(decodedEscrow.demand).toBe("0x1234");
 
-  const decodedPayment = clientBuyer.erc20.decodePaymentStatement(paymentStatementData);
+  const decodedPayment =
+    clientBuyer.erc20.decodePaymentStatement(paymentStatementData);
   expect(decodedPayment.token).toBe(eurc);
   expect(decodedPayment.amount).toBe(15n);
   expect(decodedPayment.payee).toBe(clientSeller.address);
@@ -348,7 +366,7 @@ test("decodeEscrowStatement and decodePaymentStatement", async () => {
 test("approveIfLess", async () => {
   // Create a test client for setting up approvals
   const testClient = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
-  
+
   // Set initial allowance to 5
   await testClient.writeContract({
     address: usdc,
@@ -360,7 +378,7 @@ test("approveIfLess", async () => {
   // When allowance is less than requested value, should approve
   const approveResult1 = await clientBuyer.erc20.approveIfLess(
     { address: usdc, value: 10n },
-    contractAddresses["Base Sepolia"].erc20EscrowObligation
+    contractAddresses["Base Sepolia"].erc20EscrowObligation,
   );
   expect(approveResult1).toBeString();
 
@@ -374,7 +392,7 @@ test("approveIfLess", async () => {
 
   const approveResult2 = await clientBuyer.erc20.approveIfLess(
     { address: usdc, value: 10n },
-    contractAddresses["Base Sepolia"].erc20EscrowObligation
+    contractAddresses["Base Sepolia"].erc20EscrowObligation,
   );
   expect(approveResult2).toBeNull();
 });
@@ -382,11 +400,11 @@ test("approveIfLess", async () => {
 test("collectExpired", async () => {
   // Create a test client for blockchain interactions
   const testClient = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
-  
+
   // Create an escrow with a short expiration time (5 seconds)
   const escrowApproval = await clientBuyer.erc20.approve(
     { address: usdc, value: 10n },
-    contractAddresses["Base Sepolia"].erc20EscrowObligation
+    contractAddresses["Base Sepolia"].erc20EscrowObligation,
   );
   expect(escrowApproval).toBeString();
 
@@ -394,11 +412,11 @@ test("collectExpired", async () => {
   const block = await testClient.getBlock();
   // Create an escrow that expires in 5 seconds
   const expirationTime = BigInt(Number(block.timestamp) + 5);
-  
+
   const escrow = await clientBuyer.erc20.buyErc20ForErc20(
     { address: usdc, value: 10n },
     { address: eurc, value: 10n },
-    expirationTime
+    expirationTime,
   );
   expect(escrow.hash).toBeString();
   expect(escrow.attested.uid).toBeString();
@@ -427,7 +445,7 @@ test("collectExpired", async () => {
     functionName: "balanceOf",
     args: [clientBuyer.address],
   });
-  
+
   // Balance should be higher now that the funds were returned
   expect(buyerBalance).toBeGreaterThan(0n);
 });
@@ -437,7 +455,7 @@ test("buyErc721WithErc20", async () => {
   // Approve the escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve(
     { address: usdc, value: 10n },
-    contractAddresses["Base Sepolia"].erc20EscrowObligation
+    contractAddresses["Base Sepolia"].erc20EscrowObligation,
   );
   expect(escrowApproval).toBeString();
 
@@ -446,14 +464,17 @@ test("buyErc721WithErc20", async () => {
     const escrow = await clientBuyer.erc20.buyErc721WithErc20(
       { address: usdc, value: 10n },
       { address: mockErc721, id: 1n },
-      0n
+      0n,
     );
     expect(escrow.hash).toBeString();
     expect(escrow.attested.uid).toBeString();
   } catch (err) {
     // This might fail if the mock contracts aren't fully set up
     // In a production environment, we'd have proper mock contracts deployed
-    console.log("ERC721 trading test failed (expected if mocks not deployed):", err);
+    console.log(
+      "ERC721 trading test failed (expected if mocks not deployed):",
+      err,
+    );
   }
 });
 
@@ -461,21 +482,23 @@ test("payWithErc20", async () => {
   // Test creating a direct payment with ERC20
   const paymentApproval = await clientSeller.erc20.approve(
     { address: eurc, value: 10n },
-    contractAddresses["Base Sepolia"].erc20PaymentObligation
+    contractAddresses["Base Sepolia"].erc20PaymentObligation,
   );
   expect(paymentApproval).toBeString();
 
   // Create a direct payment to buyer
   const payment = await clientSeller.erc20.payWithErc20(
     { address: eurc, value: 10n },
-    clientBuyer.address
+    clientBuyer.address,
   );
   expect(payment.hash).toBeString();
   expect(payment.attested.uid).toBeString();
 
   // Verify the payment statement data
   const attestation = await clientSeller.getAttestation(payment.attested.uid);
-  const decodedPayment = clientSeller.erc20.decodePaymentStatement(attestation.data);
+  const decodedPayment = clientSeller.erc20.decodePaymentStatement(
+    attestation.data,
+  );
   expect(decodedPayment.token).toBe(eurc);
   expect(decodedPayment.amount).toBe(10n);
   expect(decodedPayment.payee).toBe(clientBuyer.address);
@@ -486,7 +509,7 @@ test("buyErc1155WithErc20", async () => {
   // Approve the escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve(
     { address: usdc, value: 10n },
-    contractAddresses["Base Sepolia"].erc20EscrowObligation
+    contractAddresses["Base Sepolia"].erc20EscrowObligation,
   );
   expect(escrowApproval).toBeString();
 
@@ -495,14 +518,17 @@ test("buyErc1155WithErc20", async () => {
     const escrow = await clientBuyer.erc20.buyErc1155WithErc20(
       { address: usdc, value: 10n },
       { address: mockErc1155, id: 1n, value: 5n },
-      0n
+      0n,
     );
     expect(escrow.hash).toBeString();
     expect(escrow.attested.uid).toBeString();
   } catch (err) {
     // This might fail if the mock contracts aren't fully set up
     // In a production environment, we'd have proper mock contracts deployed
-    console.log("ERC1155 trading test failed (expected if mocks not deployed):", err);
+    console.log(
+      "ERC1155 trading test failed (expected if mocks not deployed):",
+      err,
+    );
   }
 });
 
@@ -511,7 +537,7 @@ test("buyBundleWithErc20", async () => {
   // Approve the escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve(
     { address: usdc, value: 20n },
-    contractAddresses["Base Sepolia"].erc20EscrowObligation
+    contractAddresses["Base Sepolia"].erc20EscrowObligation,
   );
   expect(escrowApproval).toBeString();
 
@@ -528,13 +554,16 @@ test("buyBundleWithErc20", async () => {
       { address: usdc, value: 20n },
       bundle,
       clientSeller.address,
-      0n
+      0n,
     );
     expect(escrow.hash).toBeString();
     expect(escrow.attested.uid).toBeString();
   } catch (err) {
     // This might fail if the mock contracts aren't fully set up
     // In a production environment, we'd have proper mock contracts deployed
-    console.log("Bundle trading test failed (expected if mocks not deployed):", err);
+    console.log(
+      "Bundle trading test failed (expected if mocks not deployed):",
+      err,
+    );
   }
 });

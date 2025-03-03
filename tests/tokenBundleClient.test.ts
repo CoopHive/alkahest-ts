@@ -1,15 +1,12 @@
 import { beforeAll, beforeEach, expect, test } from "bun:test";
 import { contractAddresses, makeClient, type TokenBundle } from "../src";
-import {
-  decodeAbiParameters,
-  encodeAbiParameters,
-  parseAbiParameters,
-} from "viem";
+import { encodeAbiParameters, parseAbiParameters } from "viem";
 import {
   ANVIL_ACCOUNTS,
   MOCK_TOKENS,
   MOCK_ABIS,
   createTestClient,
+  createWalletClient,
   mintERC1155,
   mintERC721,
   advanceTime,
@@ -17,13 +14,7 @@ import {
   mockErc1155,
 } from "./utils/anvil";
 import { abi as erc20Abi } from "../src/contracts/IERC20";
-import { privateKeyToAccount, nonceManager } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
-import {
-  createWalletClient,
-  http,
-  parseAbi,
-} from "viem";
+import { parseAbi } from "viem";
 
 const usdc = contractAddresses["Base Sepolia"].usdc;
 const eurc = contractAddresses["Base Sepolia"].eurc;
@@ -31,8 +22,10 @@ const eurc = contractAddresses["Base Sepolia"].eurc;
 // Real mock NFT and ERC1155 addresses from our deployment
 const mockNft1 = "0x6AA9Fa7A3E3529Ee5F566D4c5c2528BE6D7E2eB4" as `0x${string}`; // MockNFT1
 const mockNft2 = "0x0895b774eB8a8b69Ca2DCe1897636d7e79f98d78" as `0x${string}`; // MockNFT2
-const mockMultiToken1 = "0x7CAA519f345B4128612cD19F1C8C7Bd76A744B71" as `0x${string}`; // MockMultiToken1
-const mockMultiToken2 = "0xD3e4a076131bE79940c19Dd721aDEED6516aDb7A" as `0x${string}`; // MockMultiToken2
+const mockMultiToken1 =
+  "0x7CAA519f345B4128612cD19F1C8C7Bd76A744B71" as `0x${string}`; // MockMultiToken1
+const mockMultiToken2 =
+  "0xD3e4a076131bE79940c19Dd721aDEED6516aDb7A" as `0x${string}`; // MockMultiToken2
 
 // ABIs for minting
 const mockErc721Abi = parseAbi([
@@ -59,7 +52,7 @@ async function mintBundleTokens() {
   const bobNftId = BigInt(Math.floor(Math.random() * 1000000) + 2010000);
   const aliceMultiTokenId = BigInt(Math.floor(Math.random() * 1000000) + 10000);
   const bobMultiTokenId = BigInt(Math.floor(Math.random() * 1000000) + 2010000);
-  
+
   // Mint NFTs
   const mintAliceNft = await clientBuyer.viemClient.writeContract({
     address: mockNft1,
@@ -67,14 +60,14 @@ async function mintBundleTokens() {
     functionName: "mint",
     args: [clientBuyer.address, aliceNftId],
   });
-  
+
   const mintBobNft = await clientSeller.viemClient.writeContract({
     address: mockNft2,
     abi: mockErc721Abi,
     functionName: "mint",
     args: [clientSeller.address, bobNftId],
   });
-  
+
   // Mint ERC1155 tokens
   const mintAliceMultiToken = await clientBuyer.viemClient.writeContract({
     address: mockMultiToken1,
@@ -82,32 +75,46 @@ async function mintBundleTokens() {
     functionName: "mint",
     args: [clientBuyer.address, aliceMultiTokenId, 5n],
   });
-  
+
   const mintBobMultiToken = await clientSeller.viemClient.writeContract({
     address: mockMultiToken2,
     abi: mockErc1155Abi,
     functionName: "mint",
     args: [clientSeller.address, bobMultiTokenId, 10n],
   });
-  
+
   // Wait for transactions to be mined
-  await clientBuyer.viemClient.waitForTransactionReceipt({ hash: mintAliceNft });
+  await clientBuyer.viemClient.waitForTransactionReceipt({
+    hash: mintAliceNft,
+  });
   await clientSeller.viemClient.waitForTransactionReceipt({ hash: mintBobNft });
-  await clientBuyer.viemClient.waitForTransactionReceipt({ hash: mintAliceMultiToken });
-  await clientSeller.viemClient.waitForTransactionReceipt({ hash: mintBobMultiToken });
-  
+  await clientBuyer.viemClient.waitForTransactionReceipt({
+    hash: mintAliceMultiToken,
+  });
+  await clientSeller.viemClient.waitForTransactionReceipt({
+    hash: mintBobMultiToken,
+  });
+
   return {
     aliceNft: { address: mockNft1, id: aliceNftId },
     bobNft: { address: mockNft2, id: bobNftId },
-    aliceMultiToken: { address: mockMultiToken1, id: aliceMultiTokenId, value: 5n },
-    bobMultiToken: { address: mockMultiToken2, id: bobMultiTokenId, value: 10n },
+    aliceMultiToken: {
+      address: mockMultiToken1,
+      id: aliceMultiTokenId,
+      value: 5n,
+    },
+    bobMultiToken: {
+      address: mockMultiToken2,
+      id: bobMultiTokenId,
+      value: 10n,
+    },
   };
 }
 
 beforeAll(() => {
-  // create clients using Anvil default accounts
-  clientBuyer = makeClient(createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey));
-  clientSeller = makeClient(createTestClient(ANVIL_ACCOUNTS.BOB.privateKey));
+  // create clients using Anvil default accounts with walletClient instead of testClient
+  clientBuyer = makeClient(createWalletClient(ANVIL_ACCOUNTS.ALICE.privateKey));
+  clientSeller = makeClient(createWalletClient(ANVIL_ACCOUNTS.BOB.privateKey));
 });
 
 // Before each test, make sure accounts have enough tokens and NFTs
@@ -115,7 +122,7 @@ beforeEach(async () => {
   // Create test clients for direct blockchain interactions
   const testClientBuyer = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
   const testClientSeller = createTestClient(ANVIL_ACCOUNTS.BOB.privateKey);
-  
+
   // Fund test accounts with USDC and EURC
   const buyerUsdcBalance = await testClientBuyer.readContract({
     address: usdc,
@@ -142,7 +149,7 @@ beforeEach(async () => {
 
     await testClientBuyer.request({
       method: "anvil_stopImpersonatingAccount",
-      params: ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"], 
+      params: ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"],
     });
   }
 
@@ -213,7 +220,7 @@ beforeEach(async () => {
 test("tradeBundleForBundle", async () => {
   // Mint fresh tokens for bundle test
   const tokens = await mintBundleTokens();
-  
+
   // Create token bundles for trading
   const myBundle: TokenBundle = {
     erc20s: [{ address: usdc, value: 100n }],
@@ -232,10 +239,7 @@ test("tradeBundleForBundle", async () => {
     { address: usdc, value: 100n },
     contractAddresses["Base Sepolia"].erc20EscrowObligation,
   );
-  await clientBuyer.erc721.approve(
-    tokens.aliceNft,
-    "escrow",
-  );
+  await clientBuyer.erc721.approve(tokens.aliceNft, "escrow");
   await clientBuyer.erc1155.approveAll(
     tokens.aliceMultiToken.address,
     "escrow",
@@ -255,10 +259,7 @@ test("tradeBundleForBundle", async () => {
     { address: eurc, value: 200n },
     contractAddresses["Base Sepolia"].erc20PaymentObligation,
   );
-  await clientSeller.erc721.approve(
-    tokens.bobNft,
-    "payment",
-  );
+  await clientSeller.erc721.approve(tokens.bobNft, "payment");
   await clientSeller.erc1155.approveAll(
     tokens.bobMultiToken.address,
     "payment",
@@ -274,7 +275,7 @@ test("tradeBundleForBundle", async () => {
 test("bundleWithCustomDemand", async () => {
   // Mint fresh tokens for this test
   const tokens = await mintBundleTokens();
-  
+
   // Create a token bundle for trading
   const myBundle: TokenBundle = {
     erc20s: [{ address: usdc, value: 50n }],
@@ -312,10 +313,12 @@ test("bundleWithCustomDemand", async () => {
   const decodedStatement = clientSeller.bundle.decodeEscrowStatement(
     buyStatement.data,
   );
-  
+
   // Create result statement
-  const resultHash = await clientSeller.stringResult.makeStatement("Bundle fulfillment");
-  const resultStatement = await clientSeller.getAttestationFromTxHash(resultHash);
+  const resultHash =
+    await clientSeller.stringResult.makeStatement("Bundle fulfillment");
+  const resultStatement =
+    await clientSeller.getAttestationFromTxHash(resultHash);
   console.log("result statement: ", resultStatement);
 
   // Collect payment from escrow
@@ -407,7 +410,7 @@ test("collectExpired", async () => {
 
   // Create a test client for blockchain interactions
   const testClient = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
-  
+
   // Get current block timestamp
   const block = await testClient.getBlock();
   // Create an escrow that expires in 5 seconds
