@@ -29,10 +29,11 @@ test("makeStringStatement", async () => {
   const hash = await client.stringResult.makeStatement(stringValue);
   expect(hash).toBeString();
   
-  const statement = await client.getAttestationFromTxHash(hash);
-  expect(statement).toBeDefined();
+  const attestation = await client.getAttestationFromTxHash(hash);
+  expect(attestation).toBeDefined();
   
-  const decodedValue = client.stringResult.decode(statement.data);
+  // The decoded value comes from the attestation uid
+  const decodedValue = client.stringResult.decode(attestation.uid);
   expect(decodedValue.item).toBe(stringValue);
 });
 
@@ -48,10 +49,10 @@ test("makeJsonStatement", async () => {
   const hash = await client.stringResult.makeStatementJson(jsonObject);
   expect(hash).toBeString();
   
-  const statement = await client.getAttestationFromTxHash(hash);
-  expect(statement).toBeDefined();
+  const attestation = await client.getAttestationFromTxHash(hash);
+  expect(attestation).toBeDefined();
   
-  const decodedJson = client.stringResult.decodeJson<typeof jsonObject>(statement.data);
+  const decodedJson = client.stringResult.decodeJson<typeof jsonObject>(attestation.uid);
   expect(decodedJson).toEqual(jsonObject);
   expect(decodedJson.name).toBe("Test Object");
   expect(decodedJson.value).toBe(123);
@@ -74,11 +75,11 @@ test("decodeWithZod", async () => {
   
   // Create statement with JSON data
   const hash = await client.stringResult.makeStatementJson(testData);
-  const statement = await client.getAttestationFromTxHash(hash);
+  const attestation = await client.getAttestationFromTxHash(hash);
   
   // Decode with Zod schema
   const decodedWithZod = client.stringResult.decodeZod(
-    statement.data, 
+    attestation.uid, 
     TestSchema,
     undefined,
     { async: false, safe: false }
@@ -103,12 +104,12 @@ test("decodeWithArktype", async () => {
   
   // Create statement with JSON data
   const hash = await client.stringResult.makeStatementJson(testData);
-  const statement = await client.getAttestationFromTxHash(hash);
+  const attestation = await client.getAttestationFromTxHash(hash);
   
   // Decode with Arktype schema
   const decodedWithArktype = client.stringResult.decodeArkType(
-    statement.data,
-    TestType
+    attestation.uid,
+    TestType as unknown as arktype.Type<unknown, unknown>
   );
   
   expect(decodedWithArktype).toEqual(testData);
