@@ -95,7 +95,7 @@ test("attestationEscrow", async () => {
     "Attestation fulfilled",
   );
   const fulfillment =
-    await clientSeller.getAttestationFromTxHash(fulfillmentHash);
+    await clientSeller.getAttestedEventFromTxHash(fulfillmentHash);
 
   // Collect payment from escrow
   const collection = await clientSeller.attestation.collectEscrow2(
@@ -245,7 +245,7 @@ test("createEscrow and collectEscrow", async () => {
     "Original escrow fulfilled",
   );
   const fulfillment =
-    await clientSeller.getAttestationFromTxHash(fulfillmentHash);
+    await clientSeller.getAttestedEventFromTxHash(fulfillmentHash);
 
   // Collect payment from escrow using original collectEscrow method
   const collection = await clientSeller.attestation.collectEscrow(

@@ -209,7 +209,8 @@ test("tradeErc721ForCustom", async () => {
   // Create a result statement (e.g., JobResultObligation)
   const resultHash =
     await clientBob.stringResult.makeStatement("Result completed");
-  const resultStatement = await clientBob.getAttestationFromTxHash(resultHash);
+  const resultStatement =
+    await clientBob.getAttestedEventFromTxHash(resultHash);
   console.log("result statement: ", resultStatement);
 
   // collect the payment from escrow

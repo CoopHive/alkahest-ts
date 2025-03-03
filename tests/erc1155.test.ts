@@ -259,7 +259,8 @@ test("customDemandWithErc1155", async () => {
   const resultHash = await clientBob.stringResult.makeStatement(
     "ERC1155 fulfillment",
   );
-  const resultStatement = await clientBob.getAttestationFromTxHash(resultHash);
+  const resultStatement =
+    await clientBob.getAttestedEventFromTxHash(resultHash);
   console.log("result statement: ", resultStatement);
 
   // collect the payment from escrow

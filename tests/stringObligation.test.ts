@@ -26,7 +26,7 @@ test("makeStringStatement", async () => {
   const hash = await client.stringResult.makeStatement(stringValue);
   expect(hash).toBeString();
 
-  const attestation = await client.getAttestationFromTxHash(hash);
+  const attestation = await client.getAttestedEventFromTxHash(hash);
   expect(attestation).toBeDefined();
 
   // The decoded value comes from the attestation uid
@@ -46,7 +46,7 @@ test("makeJsonStatement", async () => {
   const hash = await client.stringResult.makeStatementJson(jsonObject);
   expect(hash).toBeString();
 
-  const attestation = await client.getAttestationFromTxHash(hash);
+  const attestation = await client.getAttestedEventFromTxHash(hash);
   expect(attestation).toBeDefined();
 
   const decodedJson = client.stringResult.decodeJson<typeof jsonObject>(
@@ -74,7 +74,7 @@ test("decodeWithZod", async () => {
 
   // Create statement with JSON data
   const hash = await client.stringResult.makeStatementJson(testData);
-  const attestation = await client.getAttestationFromTxHash(hash);
+  const attestation = await client.getAttestedEventFromTxHash(hash);
 
   // Decode with Zod schema
   const decodedWithZod = client.stringResult.decodeZod(
@@ -103,7 +103,7 @@ test("decodeWithArktype", async () => {
 
   // Create statement with JSON data
   const hash = await client.stringResult.makeStatementJson(testData);
-  const attestation = await client.getAttestationFromTxHash(hash);
+  const attestation = await client.getAttestedEventFromTxHash(hash);
 
   // Decode with Arktype schema
   const decodedWithArktype = client.stringResult.decodeArkType(

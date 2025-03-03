@@ -286,7 +286,7 @@ test("tradeErc20ForCustom", async () => {
   });
   console.log(resultHash);
   const resultStatement =
-    await clientSeller.getAttestationFromTxHash(resultHash);
+    await clientSeller.getAttestedEventFromTxHash(resultHash);
   console.log("result statement: ", resultStatement);
 
   // and collect the payment from escrow

@@ -94,7 +94,7 @@ test("oracleArbitration", async () => {
   const statementHash = await clientUser.stringResult.makeStatement(
     "Statement to arbitrate",
   );
-  const statement = await clientUser.getAttestationFromTxHash(statementHash);
+  const statement = await clientUser.getAttestedEventFromTxHash(statementHash);
 
   // Oracle arbitrates the statement (approves it)
   const arbitrationHash = await clientOracle.arbiters.arbitrateAsTrustedOracle(

@@ -95,7 +95,7 @@ export const makeClient = (
      * @param hash - The transaction hash
      * @returns The attestation event args
      */
-    getAttestationFromTxHash: async (hash: `0x${string}`) => {
+    getAttestedEventFromTxHash: async (hash: `0x${string}`) => {
       const tx = await viemClient.waitForTransactionReceipt({ hash });
       return parseEventLogs({
         abi: easAbi.abi,

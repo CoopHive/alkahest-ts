@@ -318,7 +318,7 @@ test("bundleWithCustomDemand", async () => {
   const resultHash =
     await clientSeller.stringResult.makeStatement("Bundle fulfillment");
   const resultStatement =
-    await clientSeller.getAttestationFromTxHash(resultHash);
+    await clientSeller.getAttestedEventFromTxHash(resultHash);
   console.log("result statement: ", resultStatement);
 
   // Collect payment from escrow
