@@ -4,6 +4,7 @@ import {
   decodeAbiParameters,
   encodeAbiParameters,
   parseAbiParameters,
+  parseAbi,
 } from "viem";
 import {
   ANVIL_ACCOUNTS,

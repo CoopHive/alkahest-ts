@@ -1,6 +1,6 @@
 import { beforeAll, beforeEach, expect, test } from "bun:test";
 import { contractAddresses, makeClient } from "../src";
-import { decodeAbiParameters, encodeAbiParameters, parseAbiParameters } from "viem";
+import { decodeAbiParameters, encodeAbiParameters, parseAbiParameters, parseAbi } from "viem";
 import { ANVIL_ACCOUNTS, MOCK_TOKENS, MOCK_ABIS, createTestClient, mintERC721, mintERC1155, advanceTime, mockErc721, mockErc1155 } from "./utils/anvil";
 import { abi as erc20Abi } from "../src/contracts/IERC20";
 
