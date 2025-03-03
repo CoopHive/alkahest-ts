@@ -207,3 +207,51 @@ console.log("decoded result: ", decodedResult);
 ```
 
 see [tests](https://github.com/CoopHive/alkahest-ts/blob/main/tests/tradeErc20.test.ts) for full example.
+
+## Development
+
+### Running Tests with Anvil
+
+Tests can be run using an Anvil fork of Base Sepolia instead of connecting directly to the network. This makes tests faster and more reliable.
+
+1. Set up your environment:
+   ```
+   export RPC_URL=<your-base-sepolia-rpc-url>
+   ```
+
+2. Run tests using Anvil fork:
+   ```
+   npm run test:anvil
+   ```
+
+3. Run a specific test file:
+   ```
+   npm run test:anvil:single tests/tradeErc20.test.ts
+   ```
+
+4. Start Anvil fork in a separate terminal (for debugging):
+   ```
+   npm run anvil
+   ```
+   
+### Local Development Client
+
+When developing locally with Anvil, you can create a client that connects to the local Anvil instance:
+
+```ts
+import { createWalletClient, http } from "viem";
+import { privateKeyToAccount, nonceManager } from "viem/accounts";
+import { makeClient } from "alkahest-ts";
+import { anvilChain, ANVIL_ACCOUNTS } from "./path/to/anvil";
+
+// Connect using Anvil's default accounts
+const client = makeClient(
+  createWalletClient({
+    account: privateKeyToAccount(ANVIL_ACCOUNTS.ALICE.privateKey, {
+      nonceManager,
+    }),
+    chain: anvilChain,
+    transport: http("http://localhost:8545"),
+  }),
+);
+```

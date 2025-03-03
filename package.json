@@ -13,7 +13,10 @@
 	},
 	"files": ["dist"],
 	"scripts": {
-		"build": "tsup src/index.ts --dts --format esm,cjs"
+		"build": "tsup src/index.ts --dts --format esm,cjs",
+		"anvil": "scripts/anvil-fork.sh",
+		"test:anvil": "scripts/test-with-anvil.sh",
+		"test:anvil:single": "scripts/test-with-anvil.sh"
 	},
 	"devDependencies": {
 		"@types/bun": "latest",
