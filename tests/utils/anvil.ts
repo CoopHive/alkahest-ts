@@ -1,5 +1,6 @@
 import {
   createClient,
+  createWalletClient as viemCreateWalletClient,
   http,
   parseAbi,
   publicActions,
@@ -61,6 +62,18 @@ export const MOCK_ABIS = {
     "function balanceOf(address account, uint256 id) view returns (uint256)",
     "function balanceOfBatch(address[] memory accounts, uint256[] memory ids) view returns (uint256[] memory)",
   ]),
+};
+
+// Create wallet client for alkahest initialization
+export const createWalletClient = (privateKey: string) => {
+  const account = privateKeyToAccount(privateKey as `0x${string}`);
+
+  // Create wallet client with the account
+  return viemCreateWalletClient({
+    account,
+    chain: baseSepolia,
+    transport: http("http://localhost:8545"),
+  }).extend(publicActions);
 };
 
 // Create test client for tests with all required actions
