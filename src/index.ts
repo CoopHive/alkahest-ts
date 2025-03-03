@@ -4,6 +4,7 @@ import {
   publicActions,
   type Account,
   type Chain,
+  type TestClient,
   type Transport,
   type WalletClient,
 } from "viem";
