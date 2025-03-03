@@ -1,11 +1,8 @@
 import { beforeAll, expect, test } from "bun:test";
-import { contractAddresses, makeClient } from "../src";
+import { makeClient } from "../src";
 import { privateKeyToAccount, nonceManager } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
-import {
-  createWalletClient,
-  http,
-} from "viem";
+import { createWalletClient, http } from "viem";
 import { z } from "zod";
 import * as arktype from "arktype";
 
@@ -28,31 +25,33 @@ test("makeStringStatement", async () => {
   const stringValue = "Test string statement";
   const hash = await client.stringResult.makeStatement(stringValue);
   expect(hash).toBeString();
-  
+
   const attestation = await client.getAttestationFromTxHash(hash);
   expect(attestation).toBeDefined();
-  
+
   // The decoded value comes from the attestation uid
   const decodedValue = client.stringResult.decode(attestation.uid);
   expect(decodedValue.item).toBe(stringValue);
 });
 
 test("makeJsonStatement", async () => {
-  const jsonObject = { 
-    name: "Test Object", 
-    value: 123, 
-    nested: { 
-      property: true 
-    }
+  const jsonObject = {
+    name: "Test Object",
+    value: 123,
+    nested: {
+      property: true,
+    },
   };
-  
+
   const hash = await client.stringResult.makeStatementJson(jsonObject);
   expect(hash).toBeString();
-  
+
   const attestation = await client.getAttestationFromTxHash(hash);
   expect(attestation).toBeDefined();
-  
-  const decodedJson = client.stringResult.decodeJson<typeof jsonObject>(attestation.uid);
+
+  const decodedJson = client.stringResult.decodeJson<typeof jsonObject>(
+    attestation.uid,
+  );
   expect(decodedJson).toEqual(jsonObject);
   expect(decodedJson.name).toBe("Test Object");
   expect(decodedJson.value).toBe(123);
@@ -64,27 +63,27 @@ test("decodeWithZod", async () => {
   const TestSchema = z.object({
     id: z.number(),
     name: z.string(),
-    active: z.boolean()
+    active: z.boolean(),
   });
-  
+
   const testData = {
     id: 42,
     name: "Zod test",
-    active: true
+    active: true,
   };
-  
+
   // Create statement with JSON data
   const hash = await client.stringResult.makeStatementJson(testData);
   const attestation = await client.getAttestationFromTxHash(hash);
-  
+
   // Decode with Zod schema
   const decodedWithZod = client.stringResult.decodeZod(
-    attestation.uid, 
+    attestation.uid,
     TestSchema,
     undefined,
-    { async: false, safe: false }
+    { async: false, safe: false },
   );
-  
+
   expect(decodedWithZod).toEqual(testData);
 });
 
@@ -93,24 +92,24 @@ test("decodeWithArktype", async () => {
   const TestType = arktype.type({
     id: "number",
     name: "string",
-    active: "boolean"
+    active: "boolean",
   });
-  
+
   const testData = {
     id: 99,
     name: "Arktype test",
-    active: true
+    active: true,
   };
-  
+
   // Create statement with JSON data
   const hash = await client.stringResult.makeStatementJson(testData);
   const attestation = await client.getAttestationFromTxHash(hash);
-  
+
   // Decode with Arktype schema
   const decodedWithArktype = client.stringResult.decodeArkType(
     attestation.uid,
-    TestType as unknown as arktype.Type<unknown, unknown>
+    TestType as unknown as arktype.Type<unknown, unknown>,
   );
-  
+
   expect(decodedWithArktype).toEqual(testData);
 });
