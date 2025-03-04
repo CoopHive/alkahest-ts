@@ -7,8 +7,8 @@
       "contractAddress": "0x2de644714a0443752c95a02a5ac3afd50a0c15a9",
       "function": null,
       "arguments": [
-        "MockNFT1",
-        "MNFT1"
+        "MockERC721_1",
+        "MERC721_1"
       ],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
@@ -28,8 +28,8 @@
       "contractAddress": "0xecaa92438732cac4ad1e1f905ad64f309084a8ce",
       "function": null,
       "arguments": [
-        "MockNFT2",
-        "MNFT2"
+        "MockERC721_2",
+        "MERC721_2"
       ],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
