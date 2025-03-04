@@ -1,33 +1,35 @@
 {
-	"name": "alkahest-ts",
-	"version": "0.3.1",
-	"type": "module",
-	"main": "./dist/index.js",
-	"module": "./dist/index.js",
-	"types": "./dist/index.d.ts",
-	"exports": {
-		".": {
-			"import": "./dist/index.js",
-			"types": "./dist/index.d.ts"
-		}
-	},
-	"files": ["dist"],
-	"scripts": {
-		"build": "tsup src/index.ts --dts --format esm,cjs",
-		"anvil": "scripts/anvil-fork.sh",
-		"test:anvil": "scripts/test-with-anvil.sh",
-		"test:anvil:single": "scripts/test-with-anvil.sh"
-	},
-	"devDependencies": {
-		"@types/bun": "latest",
-		"tsup": "^8.3.6"
-	},
-	"peerDependencies": {
-		"typescript": "^5.0.0"
-	},
-	"dependencies": {
-		"arktype": "^2.1.0",
-		"viem": "^2.21.54",
-		"zod": "^3.24.2"
-	}
+  "name": "alkahest-ts",
+  "version": "0.4.0",
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --dts --format esm,cjs",
+    "anvil": "scripts/anvil-fork.sh",
+    "test:anvil": "scripts/test-with-anvil.sh",
+    "test:anvil:single": "scripts/test-with-anvil.sh"
+  },
+  "devDependencies": {
+    "@types/bun": "latest",
+    "tsup": "^8.3.6"
+  },
+  "peerDependencies": {
+    "typescript": "^5.0.0"
+  },
+  "dependencies": {
+    "arktype": "^2.1.0",
+    "viem": "^2.21.54",
+    "zod": "^3.24.2"
+  }
 }
