@@ -40,18 +40,38 @@ export const ANVIL_ACCOUNTS = {
 
 // Real mock token addresses from deployment
 export const MOCK_TOKENS = {
-  NFT1: "0x6AA9Fa7A3E3529Ee5F566D4c5c2528BE6D7E2eB4" as `0x${string}`, // MockNFT1
-  NFT2: "0x0895b774eB8a8b69Ca2DCe1897636d7e79f98d78" as `0x${string}`, // MockNFT2
-  MULTI_TOKEN1: "0x7CAA519f345B4128612cD19F1C8C7Bd76A744B71" as `0x${string}`, // MockMultiToken1
-  MULTI_TOKEN2: "0xD3e4a076131bE79940c19Dd721aDEED6516aDb7A" as `0x${string}`, // MockMultiToken2
+  // ERC20 tokens
+  ERC20_1: "0x28478AAEcA61D3D7E7e2525491b6255F745476A4" as `0x${string}`, // MockToken1
+  ERC20_2: "0x03B8179CF21eFD1f0debD293F0992fC33AF52086" as `0x${string}`, // MockToken2
+  
+  // ERC721 tokens
+  ERC721_1: "0x88185A3ea40806c2f2A98D47BCA67318C856FA31" as `0x${string}`, // MockERC721_1
+  ERC721_2: "0xcc68456E23d256F35C4bb84E1f71029D314610d8" as `0x${string}`, // MockERC721_2
+  
+  // ERC1155 tokens
+  ERC1155_1: "0x5bD6f569A4448c43df2c51648DCd2BdbD3288A6C" as `0x${string}`, // MockMultiToken1
+  ERC1155_2: "0x4B0478B13834962b9b1F60f125b952E70F83F1Ad" as `0x${string}`, // MockMultiToken2
 };
 
 // Export commonly used addresses as variables for easy access in tests
-export const mockErc721 = MOCK_TOKENS.NFT1;
-export const mockErc1155 = MOCK_TOKENS.MULTI_TOKEN1;
+export const mockErc20 = MOCK_TOKENS.ERC20_1;
+export const mockErc721 = MOCK_TOKENS.ERC721_1;
+export const mockErc1155 = MOCK_TOKENS.ERC1155_1;
 
 // ABIs for mock contracts
 export const MOCK_ABIS = {
+  ERC20: parseAbi([
+    "function mint(address to, uint256 amount) public",
+    "function balanceOf(address owner) view returns (uint256)",
+    "function transfer(address to, uint256 amount) returns (bool)",
+    "function approve(address spender, uint256 amount) returns (bool)",
+    "function allowance(address owner, address spender) view returns (uint256)",
+    "function transferFrom(address from, address to, uint256 amount) returns (bool)",
+    "function name() view returns (string)",
+    "function symbol() view returns (string)",
+    "function decimals() view returns (uint8)",
+    "function totalSupply() view returns (uint256)",
+  ]),
   ERC721: parseAbi([
     "function mint(address to, uint256 tokenId) public",
     "function ownerOf(uint256 tokenId) view returns (address)",
@@ -132,6 +152,24 @@ export const mintERC1155 = async (
     abi: MOCK_ABIS.ERC1155,
     functionName: "mint",
     args: [to, tokenId, amount],
+  });
+
+  const receipt = await client.waitForTransactionReceipt({ hash: tx });
+  return receipt;
+};
+
+// Helper to mint ERC20 tokens
+export const mintERC20 = async (
+  client: ReturnType<typeof createTestClient>,
+  token: `0x${string}`,
+  to: `0x${string}`,
+  amount: bigint,
+) => {
+  const tx = await client.writeContract({
+    address: token,
+    abi: MOCK_ABIS.ERC20,
+    functionName: "mint",
+    args: [to, amount],
   });
 
   const receipt = await client.waitForTransactionReceipt({ hash: tx });
