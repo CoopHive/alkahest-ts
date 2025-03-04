@@ -12,22 +12,24 @@ import {
   createWalletClient,
   MOCK_TOKENS,
   advanceTime,
+  mockErc20,
+  mockErc721,
+  mockErc1155,
+  mintERC20,
 } from "./utils/anvil";
 import { abi as erc20Abi } from "../src/contracts/IERC20";
 import { abi as erc721Abi } from "../src/contracts/IERC721";
 import { abi as erc1155Abi } from "../src/contracts/IERC1155";
 
-const usdc = contractAddresses["Base Sepolia"].usdc;
-const eurc = contractAddresses["Base Sepolia"].eurc;
-
-// Mock NFT addresses
-const mockErc721 =
-  "0x6AA9Fa7A3E3529Ee5F566D4c5c2528BE6D7E2eB4" as `0x${string}`;
-const mockErc1155 =
-  "0x7CAA519f345B4128612cD19F1C8C7Bd76A744B71" as `0x${string}`;
+// Use our own mock tokens instead of the Base Sepolia tokens
+const buyerToken = MOCK_TOKENS.ERC20_1;
+const sellerToken = MOCK_TOKENS.ERC20_2;
 
 let clientBuyer: ReturnType<typeof makeClient>;
 let clientSeller: ReturnType<typeof makeClient>;
+
+let usdc = contractAddresses["Base Sepolia"].usdc;
+let eurc = contractAddresses["Base Sepolia"].eurc;
 
 beforeAll(() => {
   // create clients using Anvil default accounts with walletClient instead of testClient
@@ -41,124 +43,190 @@ beforeEach(async () => {
   const testClientBuyer = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
   const testClientSeller = createTestClient(ANVIL_ACCOUNTS.BOB.privateKey);
 
-  // Fund test accounts with tokens by impersonating accounts that have tokens
-  // Get token balances
-  const buyerUsdcBalance = await testClientBuyer.readContract({
-    address: usdc,
+  // Get token balances for our mock tokens
+  const buyerTokenBalance = await testClientBuyer.readContract({
+    address: buyerToken,
     abi: erc20Abi.abi,
     functionName: "balanceOf",
     args: [clientBuyer.address],
   });
 
-  const sellerEurcBalance = await testClientSeller.readContract({
-    address: eurc,
+  const sellerTokenBalance = await testClientSeller.readContract({
+    address: sellerToken,
     abi: erc20Abi.abi,
     functionName: "balanceOf",
     args: [clientSeller.address],
   });
 
-  // Ensure buyer has at least 100 USDC
-  if (buyerUsdcBalance < 100n) {
-    console.log("Funding buyer with USDC");
-    await testClientBuyer.request({
-      method: "anvil_impersonateAccount",
-      params: ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"], // USDC contract
-    });
-
-    await testClientBuyer.writeContract({
-      address: usdc,
-      abi: erc20Abi.abi,
-      functionName: "transfer",
-      args: [clientBuyer.address, 1000n],
-      account: "0x036CbD53842c5426634e7929541eC2318f3dCF7e" as `0x${string}`,
-    });
-
-    await testClientBuyer.request({
-      method: "anvil_stopImpersonatingAccount",
-      params: ["0x036CbD53842c5426634e7929541eC2318f3dCF7e"],
-    });
+  // Ensure buyer has at least 100 tokens
+  if (buyerTokenBalance < 100n) {
+    console.log("Funding buyer with mock tokens");
+    // Mint more tokens for the buyer if needed
+    await mintERC20(
+      testClientBuyer,
+      buyerToken,
+      clientBuyer.address,
+      1000n * 10n ** 18n,
+    );
   }
 
-  // Ensure seller has at least 100 EURC
-  if (sellerEurcBalance < 100n) {
-    console.log("Funding seller with EURC");
-    await testClientSeller.request({
-      method: "anvil_impersonateAccount",
-      params: ["0x808456652fdb597867f38412077A9182bf77359F"], // EURC contract
-    });
-
-    await testClientSeller.writeContract({
-      address: eurc,
-      abi: erc20Abi.abi,
-      functionName: "transfer",
-      args: [clientSeller.address, 1000n],
-      account: "0x808456652fdb597867f38412077A9182bf77359F" as `0x${string}`,
-    });
-
-    await testClientSeller.request({
-      method: "anvil_stopImpersonatingAccount",
-      params: ["0x808456652fdb597867f38412077A9182bf77359F"],
-    });
+  // Ensure seller has at least 100 tokens
+  if (sellerTokenBalance < 100n) {
+    console.log("Funding seller with mock tokens");
+    // Mint more tokens for the seller if needed
+    await mintERC20(
+      testClientSeller,
+      sellerToken,
+      clientSeller.address,
+      1000n * 10n ** 18n,
+    );
   }
 
-  // Deploy mock ERC721 if needed
-  // This is simplified for test purposes - in reality you would use the contract deployment scripts
+  // Verify the mock tokens and other tokens are available
   try {
     await testClientBuyer.readContract({
       address: mockErc721,
       abi: erc721Abi.abi,
-      functionName: "supportsInterface",
-      args: ["0x80ac58cd"], // ERC721 interface ID
+      functionName: "balanceOf",
+      args: [clientBuyer.address],
     });
   } catch {
-    console.log("Using mock ERC721 contract");
-    // In real testing, you would deploy a mock ERC721 contract here
+    console.log("Mock ERC721 not available, tests requiring it may fail");
   }
 
-  // Deploy mock ERC1155 if needed
   try {
     await testClientBuyer.readContract({
       address: mockErc1155,
       abi: erc1155Abi.abi,
-      functionName: "supportsInterface",
-      args: ["0xd9b67a26"], // ERC1155 interface ID
+      functionName: "balanceOf",
+      args: [clientBuyer.address, 1n],
     });
   } catch {
-    console.log("Using mock ERC1155 contract");
-    // In real testing, you would deploy a mock ERC1155 contract here
+    console.log("Mock ERC1155 not available, tests requiring it may fail");
   }
 });
 
 test("tradeErc20ForErc20", async () => {
+  // Create test clients for waiting on transactions
+  const testClientBuyer = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
+  const testClientSeller = createTestClient(ANVIL_ACCOUNTS.BOB.privateKey);
+
+  // Check initial token balances
+  const initialBuyerTokenBalance = await testClientBuyer.readContract({
+    address: buyerToken,
+    abi: erc20Abi.abi,
+    functionName: "balanceOf",
+    args: [clientBuyer.address],
+  });
+
+  const initialSellerTokenBalance = await testClientSeller.readContract({
+    address: sellerToken,
+    abi: erc20Abi.abi,
+    functionName: "balanceOf",
+    args: [clientSeller.address],
+  });
+
+  console.log(`Initial buyer token balance: ${initialBuyerTokenBalance}`);
+  console.log(`Initial seller token balance: ${initialSellerTokenBalance}`);
+
+  // The amount we'll use for trading
+  const tradeAmount = 10n * 10n ** 18n; // 10 tokens with 18 decimals
+
   // approve escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve(
-    { address: usdc, value: 10n },
+    { address: buyerToken, value: tradeAmount },
     contractAddresses["Base Sepolia"].erc20EscrowObligation,
   );
-  console.log(escrowApproval);
+  console.log("Escrow approval hash:", escrowApproval);
   expect(escrowApproval).toBeString();
 
-  // deposit 10usdc into escrow, demanding 10eurc, with no expiration
+  // Wait for the approval transaction to be mined
+  await testClientBuyer.waitForTransactionReceipt({ hash: escrowApproval });
+
+  // deposit buyer tokens into escrow, demanding seller tokens, with no expiration
   const escrow = await clientBuyer.erc20.buyErc20ForErc20(
-    { address: usdc, value: 10n },
-    { address: eurc, value: 10n },
+    { address: buyerToken, value: tradeAmount },
+    { address: sellerToken, value: tradeAmount },
     0n,
   );
-  console.log(escrow);
+  console.log("Escrow:", escrow);
+
+  // Wait for the escrow transaction to be mined
+  await testClientBuyer.waitForTransactionReceipt({ hash: escrow.hash });
+
+  // Check buyer's token balance after escrow
+  const afterEscrowBuyerTokenBalance = await testClientBuyer.readContract({
+    address: buyerToken,
+    abi: erc20Abi.abi,
+    functionName: "balanceOf",
+    args: [clientBuyer.address],
+  });
+  console.log(
+    `Buyer token balance after escrow: ${afterEscrowBuyerTokenBalance}`,
+  );
+  expect(afterEscrowBuyerTokenBalance).toBe(
+    initialBuyerTokenBalance - tradeAmount,
+  );
 
   // approve payment contract to spend tokens
   const paymentApproval = await clientSeller.erc20.approve(
-    { address: eurc, value: 10n },
+    { address: sellerToken, value: tradeAmount },
     contractAddresses["Base Sepolia"].erc20PaymentObligation,
   );
-  console.log(paymentApproval);
+  console.log("Payment approval hash:", paymentApproval);
   expect(paymentApproval).toBeString();
 
-  // pay 10eurc for 10usdc (fulfill the buy order)
+  // Wait for the approval transaction to be mined
+  await testClientSeller.waitForTransactionReceipt({ hash: paymentApproval });
+
+  // pay seller tokens for buyer tokens (fulfill the buy order)
   const payment = await clientSeller.erc20.payErc20ForErc20(
     escrow.attested.uid,
   );
-  console.log(payment);
+  console.log("Payment:", payment);
+
+  // Wait for the payment transaction to be mined
+  await testClientSeller.waitForTransactionReceipt({ hash: payment.hash });
+
+  // Check final token balances
+  const finalBuyerTokenBalance = await testClientBuyer.readContract({
+    address: buyerToken,
+    abi: erc20Abi.abi,
+    functionName: "balanceOf",
+    args: [clientBuyer.address],
+  });
+
+  const finalSellerTokenBalance = await testClientSeller.readContract({
+    address: sellerToken,
+    abi: erc20Abi.abi,
+    functionName: "balanceOf",
+    args: [clientSeller.address],
+  });
+
+  const finalBuyerSellerTokenBalance = await testClientBuyer.readContract({
+    address: sellerToken,
+    abi: erc20Abi.abi,
+    functionName: "balanceOf",
+    args: [clientBuyer.address],
+  });
+
+  const finalSellerBuyerTokenBalance = await testClientSeller.readContract({
+    address: buyerToken,
+    abi: erc20Abi.abi,
+    functionName: "balanceOf",
+    args: [clientSeller.address],
+  });
+
+  console.log(`Final buyer token balance: ${finalBuyerTokenBalance}`);
+  console.log(`Final seller token balance: ${finalSellerTokenBalance}`);
+  console.log(`Buyer's seller token balance: ${finalBuyerSellerTokenBalance}`);
+  console.log(`Seller's buyer token balance: ${finalSellerBuyerTokenBalance}`);
+
+  // Verify the trade was completed successfully
+  expect(finalBuyerTokenBalance).toBe(initialBuyerTokenBalance - tradeAmount);
+  expect(finalSellerTokenBalance).toBe(initialSellerTokenBalance - tradeAmount);
+  expect(finalBuyerSellerTokenBalance).toBe(tradeAmount);
+  expect(finalSellerBuyerTokenBalance).toBe(tradeAmount);
 });
 
 test("tradeErc20ForCustom", async () => {
@@ -544,8 +612,8 @@ test("buyBundleWithErc20", async () => {
   // Create a bundle of tokens
   const bundle = {
     erc20s: [{ address: eurc, value: 5n }],
-    erc721s: [{ address: MOCK_TOKENS.NFT1, id: 1n }],
-    erc1155s: [{ address: MOCK_TOKENS.MULTI_TOKEN1, id: 1n, value: 3n }],
+    erc721s: [{ address: MOCK_TOKENS.ERC721_1, id: 1n }],
+    erc1155s: [{ address: MOCK_TOKENS.ERC1155_1, id: 1n, value: 3n }],
   };
 
   // Create an escrow for trading ERC20 for the bundle
