@@ -126,13 +126,13 @@ beforeEach(async () => {
   // Mint ERC721 tokens
   await mintERC721(
     testClientAlice,
-    MOCK_TOKENS.NFT1,
+    MOCK_TOKENS.ERC721_1,
     clientAlice.address,
     aliceTokenId,
   );
   await mintERC721(
     testClientBob,
-    MOCK_TOKENS.NFT2,
+    MOCK_TOKENS.ERC721_2,
     clientBob.address,
     bobTokenId,
   );
@@ -306,7 +306,7 @@ test("approveAll and revokeAll", async () => {
 test("collectExpired", async () => {
   // Create an escrow with a short expiration time (5 seconds)
   const escrowApproval = await clientAlice.erc721.approve(
-    { address: MOCK_TOKENS.NFT1, id: aliceTokenId },
+    { address: MOCK_TOKENS.ERC721_1, id: aliceTokenId },
     "escrow",
   );
   expect(escrowApproval).toBeString();
@@ -320,8 +320,8 @@ test("collectExpired", async () => {
   const expirationTime = BigInt(Number(block.timestamp) + 5);
 
   const escrow = await clientAlice.erc721.buyErc721ForErc721(
-    { address: MOCK_TOKENS.NFT1, id: aliceTokenId },
-    { address: MOCK_TOKENS.NFT2, id: bobTokenId },
+    { address: MOCK_TOKENS.ERC721_1, id: aliceTokenId },
+    { address: MOCK_TOKENS.ERC721_2, id: bobTokenId },
     expirationTime,
   );
   expect(escrow.hash).toBeString();
@@ -348,7 +348,7 @@ test("collectExpired", async () => {
 
   // Verify the ERC721 token was returned to Alice
   const erc721Owner = await testClient.readContract({
-    address: MOCK_TOKENS.NFT1,
+    address: MOCK_TOKENS.ERC721_1,
     abi: MOCK_ABIS.ERC721,
     functionName: "ownerOf",
     args: [aliceTokenId],
@@ -362,14 +362,14 @@ test("buyErc20WithErc721", async () => {
   // Test creating an escrow for trading ERC721 for ERC20
   // Approve the escrow contract to transfer the ERC721 token
   const escrowApproval = await clientAlice.erc721.approve(
-    { address: MOCK_TOKENS.NFT1, id: aliceTokenId },
+    { address: MOCK_TOKENS.ERC721_1, id: aliceTokenId },
     "escrow",
   );
   expect(escrowApproval).toBeString();
 
   // Create an escrow offering the ERC721 token and requesting USDC
   const escrow = await clientAlice.erc721.buyErc20WithErc721(
-    { address: MOCK_TOKENS.NFT1, id: aliceTokenId },
+    { address: MOCK_TOKENS.ERC721_1, id: aliceTokenId },
     { address: usdc, value: 10n },
     0n, // No expiration
   );
@@ -392,7 +392,7 @@ test("buyErc20WithErc721", async () => {
 
   // Verify the ERC721 token was transferred to Bob
   const erc721Owner = await testClient.readContract({
-    address: MOCK_TOKENS.NFT1,
+    address: MOCK_TOKENS.ERC721_1,
     abi: MOCK_ABIS.ERC721,
     functionName: "ownerOf",
     args: [aliceTokenId],

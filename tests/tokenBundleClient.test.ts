@@ -20,8 +20,8 @@ const usdc = contractAddresses["Base Sepolia"].usdc;
 const eurc = contractAddresses["Base Sepolia"].eurc;
 
 // Real mock NFT and ERC1155 addresses from our deployment
-const mockNft1 = "0x6AA9Fa7A3E3529Ee5F566D4c5c2528BE6D7E2eB4" as `0x${string}`; // MockNFT1
-const mockNft2 = "0x0895b774eB8a8b69Ca2DCe1897636d7e79f98d78" as `0x${string}`; // MockNFT2
+const mockNft1 = "0x6AA9Fa7A3E3529Ee5F566D4c5c2528BE6D7E2eB4" as `0x${string}`; // MockERC721_1
+const mockNft2 = "0x0895b774eB8a8b69Ca2DCe1897636d7e79f98d78" as `0x${string}`; // MockERC721_2
 const mockMultiToken1 =
   "0x7CAA519f345B4128612cD19F1C8C7Bd76A744B71" as `0x${string}`; // MockMultiToken1
 const mockMultiToken2 =
@@ -191,26 +191,26 @@ beforeEach(async () => {
   // Mint tokens
   await mintERC721(
     testClientBuyer,
-    MOCK_TOKENS.NFT1,
+    MOCK_TOKENS.ERC721_1,
     clientBuyer.address,
     aliceNftId,
   );
   await mintERC721(
     testClientSeller,
-    MOCK_TOKENS.NFT2,
+    MOCK_TOKENS.ERC721_2,
     clientSeller.address,
     bobNftId,
   );
   await mintERC1155(
     testClientBuyer,
-    MOCK_TOKENS.MULTI_TOKEN1,
+    MOCK_TOKENS.ERC1155_1,
     clientBuyer.address,
     aliceTokenId,
     10n,
   );
   await mintERC1155(
     testClientSeller,
-    MOCK_TOKENS.MULTI_TOKEN2,
+    MOCK_TOKENS.ERC1155_2,
     clientSeller.address,
     bobTokenId,
     10n,
@@ -380,18 +380,18 @@ test("collectExpired", async () => {
   // Create a bundle of tokens
   const offerBundle = {
     erc20s: [{ address: usdc, value: 10n }],
-    erc721s: [{ address: MOCK_TOKENS.NFT1, id: aliceNftId }],
+    erc721s: [{ address: MOCK_TOKENS.ERC721_1, id: aliceNftId }],
     erc1155s: [
-      { address: MOCK_TOKENS.MULTI_TOKEN1, id: aliceTokenId, value: 3n },
+      { address: MOCK_TOKENS.ERC1155_1, id: aliceTokenId, value: 3n },
     ],
   };
 
   // Create a bundle to request
   const requestBundle = {
     erc20s: [{ address: eurc, value: 15n }],
-    erc721s: [{ address: MOCK_TOKENS.NFT2, id: bobNftId }],
+    erc721s: [{ address: MOCK_TOKENS.ERC721_2, id: bobNftId }],
     erc1155s: [
-      { address: MOCK_TOKENS.MULTI_TOKEN2, id: bobTokenId, value: 5n },
+      { address: MOCK_TOKENS.ERC1155_2, id: bobTokenId, value: 5n },
     ],
   };
 
@@ -402,11 +402,11 @@ test("collectExpired", async () => {
   );
 
   await clientBuyer.erc721.approve(
-    { address: MOCK_TOKENS.NFT1, id: aliceNftId },
+    { address: MOCK_TOKENS.ERC721_1, id: aliceNftId },
     "escrow",
   );
 
-  await clientBuyer.erc1155.approveAll(MOCK_TOKENS.MULTI_TOKEN1, "escrow");
+  await clientBuyer.erc1155.approveAll(MOCK_TOKENS.ERC1155_1, "escrow");
 
   // Create a test client for blockchain interactions
   const testClient = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
@@ -452,7 +452,7 @@ test("collectExpired", async () => {
 
   // Verify assets were returned to the buyer
   const nftOwner = await testClient.readContract({
-    address: MOCK_TOKENS.NFT1,
+    address: MOCK_TOKENS.ERC721_1,
     abi: MOCK_ABIS.ERC721,
     functionName: "ownerOf",
     args: [aliceNftId],
@@ -580,9 +580,9 @@ test("payWithBundle", async () => {
   // Create a bundle of tokens to pay with
   const bundle = {
     erc20s: [{ address: usdc, value: 5n }],
-    erc721s: [{ address: MOCK_TOKENS.NFT1, id: aliceNftId }],
+    erc721s: [{ address: MOCK_TOKENS.ERC721_1, id: aliceNftId }],
     erc1155s: [
-      { address: MOCK_TOKENS.MULTI_TOKEN1, id: aliceTokenId, value: 3n },
+      { address: MOCK_TOKENS.ERC1155_1, id: aliceTokenId, value: 3n },
     ],
   };
 
@@ -593,11 +593,11 @@ test("payWithBundle", async () => {
   );
 
   await clientBuyer.erc721.approve(
-    { address: MOCK_TOKENS.NFT1, id: aliceNftId },
+    { address: MOCK_TOKENS.ERC721_1, id: aliceNftId },
     "payment",
   );
 
-  await clientBuyer.erc1155.approveAll(MOCK_TOKENS.MULTI_TOKEN1, "payment");
+  await clientBuyer.erc1155.approveAll(MOCK_TOKENS.ERC1155_1, "payment");
 
   // Make the bundle payment
   const payment = await clientBuyer.bundle.payWithBundle(
@@ -614,7 +614,7 @@ test("payWithBundle", async () => {
 
   // Verify ERC721 transfer
   const nftOwner = await testClientBuyer.readContract({
-    address: MOCK_TOKENS.NFT1,
+    address: MOCK_TOKENS.ERC721_1,
     abi: MOCK_ABIS.ERC721,
     functionName: "ownerOf",
     args: [aliceNftId],
@@ -625,7 +625,7 @@ test("payWithBundle", async () => {
 
   // Verify ERC1155 transfer
   const tokenBalance = await testClientSeller.readContract({
-    address: MOCK_TOKENS.MULTI_TOKEN1,
+    address: MOCK_TOKENS.ERC1155_1,
     abi: MOCK_ABIS.ERC1155,
     functionName: "balanceOf",
     args: [clientSeller.address, aliceTokenId],

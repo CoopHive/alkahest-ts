@@ -132,21 +132,21 @@ beforeEach(async () => {
   // Mint tokens
   await mintERC1155(
     testClientAlice,
-    MOCK_TOKENS.MULTI_TOKEN1,
+    MOCK_TOKENS.ERC1155_1,
     clientAlice.address,
     aliceTokenId,
     10n,
   ); // Mint 10 tokens
   await mintERC1155(
     testClientBob,
-    MOCK_TOKENS.MULTI_TOKEN2,
+    MOCK_TOKENS.ERC1155_2,
     clientBob.address,
     bobTokenId,
     5n,
   ); // Mint 5 tokens
   await mintERC721(
     testClientAlice,
-    MOCK_TOKENS.NFT1,
+    MOCK_TOKENS.ERC721_1,
     clientAlice.address,
     aliceErc721Id,
   );
@@ -355,7 +355,7 @@ test("approveAll and revokeAll", async () => {
 test("collectExpired", async () => {
   // Create an escrow with a short expiration time (5 seconds)
   const escrowApproval = await clientAlice.erc1155.approveAll(
-    MOCK_TOKENS.MULTI_TOKEN1,
+    MOCK_TOKENS.ERC1155_1,
     "escrow",
   );
   expect(escrowApproval).toBeString();
@@ -369,8 +369,8 @@ test("collectExpired", async () => {
   const expirationTime = BigInt(Number(block.timestamp) + 5);
 
   const escrow = await clientAlice.erc1155.buyErc1155ForErc1155(
-    { address: MOCK_TOKENS.MULTI_TOKEN1, id: aliceTokenId, value: 3n },
-    { address: MOCK_TOKENS.MULTI_TOKEN2, id: bobTokenId, value: 2n },
+    { address: MOCK_TOKENS.ERC1155_1, id: aliceTokenId, value: 3n },
+    { address: MOCK_TOKENS.ERC1155_2, id: bobTokenId, value: 2n },
     expirationTime,
   );
   expect(escrow.hash).toBeString();
@@ -397,7 +397,7 @@ test("collectExpired", async () => {
 
   // Verify the tokens were returned to Alice
   const balance = await testClient.readContract({
-    address: MOCK_TOKENS.MULTI_TOKEN1,
+    address: MOCK_TOKENS.ERC1155_1,
     abi: MOCK_ABIS.ERC1155,
     functionName: "balanceOf",
     args: [clientAlice.address, aliceTokenId],
@@ -435,14 +435,14 @@ test("buyErc721WithErc1155", async () => {
   const mintClient = createTestClient(ANVIL_ACCOUNTS.BOB.privateKey);
   await mintERC721(
     mintClient,
-    MOCK_TOKENS.NFT2,
+    MOCK_TOKENS.ERC721_2,
     clientBob.address,
     bobErc721Id,
   );
 
   // Approve the escrow contract to transfer ERC1155 tokens
   const escrowApproval = await clientAlice.erc1155.approveAll(
-    MOCK_TOKENS.MULTI_TOKEN1,
+    MOCK_TOKENS.ERC1155_1,
     "escrow",
   );
   expect(escrowApproval).toBeString();
@@ -452,8 +452,8 @@ test("buyErc721WithErc1155", async () => {
   const testClientAlice = createTestClient(ANVIL_ACCOUNTS.ALICE.privateKey);
 
   const escrow = await clientAlice.erc1155.buyErc721WithErc1155(
-    { address: MOCK_TOKENS.MULTI_TOKEN1, id: aliceTokenId, value: 3n },
-    { address: MOCK_TOKENS.NFT2, id: bobErc721Id },
+    { address: MOCK_TOKENS.ERC1155_1, id: aliceTokenId, value: 3n },
+    { address: MOCK_TOKENS.ERC721_2, id: bobErc721Id },
     0n, // No expiration
   );
   expect(escrow.hash).toBeString();
@@ -461,7 +461,7 @@ test("buyErc721WithErc1155", async () => {
 
   // Bob approves the ERC721 token for the trade
   const paymentApproval = await clientBob.erc721.approve(
-    { address: MOCK_TOKENS.NFT2, id: bobErc721Id },
+    { address: MOCK_TOKENS.ERC721_2, id: bobErc721Id },
     "payment",
   );
   expect(paymentApproval).toBeString();
@@ -481,7 +481,7 @@ test("buyErc721WithErc1155", async () => {
 
   // Verify the ERC721 token was transferred to Alice
   const erc721Owner = await verifyClientAlice.readContract({
-    address: MOCK_TOKENS.NFT2,
+    address: MOCK_TOKENS.ERC721_2,
     abi: MOCK_ABIS.ERC721,
     functionName: "ownerOf",
     args: [bobErc721Id],
@@ -492,7 +492,7 @@ test("buyErc721WithErc1155", async () => {
 
   // Verify the ERC1155 tokens were transferred to Bob
   const tokenBalance = await verifyClientBob.readContract({
-    address: MOCK_TOKENS.MULTI_TOKEN1,
+    address: MOCK_TOKENS.ERC1155_1,
     abi: MOCK_ABIS.ERC1155,
     functionName: "balanceOf",
     args: [clientBob.address, aliceTokenId],
