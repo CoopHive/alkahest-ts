@@ -4,6 +4,74 @@ pragma solidity ^0.8.20;
 import "forge-std/Script.sol";
 
 /**
+ * @title MockERC20
+ * @dev A minimal ERC20 token for testing purposes
+ */
+contract MockERC20 {
+    string public name;
+    string public symbol;
+    uint8 public decimals = 18;
+    uint256 public totalSupply;
+    
+    mapping(address => uint256) private _balances;
+    mapping(address => mapping(address => uint256)) private _allowances;
+    
+    event Transfer(address indexed from, address indexed to, uint256 value);
+    event Approval(address indexed owner, address indexed spender, uint256 value);
+    
+    constructor(string memory name_, string memory symbol_) {
+        name = name_;
+        symbol = symbol_;
+    }
+    
+    function mint(address to, uint256 amount) public {
+        require(to != address(0), "ERC20: mint to the zero address");
+        
+        totalSupply += amount;
+        _balances[to] += amount;
+        emit Transfer(address(0), to, amount);
+    }
+    
+    function balanceOf(address account) public view returns (uint256) {
+        return _balances[account];
+    }
+    
+    function transfer(address to, uint256 amount) public returns (bool) {
+        require(to != address(0), "ERC20: transfer to the zero address");
+        require(_balances[msg.sender] >= amount, "ERC20: transfer amount exceeds balance");
+        
+        _balances[msg.sender] -= amount;
+        _balances[to] += amount;
+        emit Transfer(msg.sender, to, amount);
+        return true;
+    }
+    
+    function allowance(address owner, address spender) public view returns (uint256) {
+        return _allowances[owner][spender];
+    }
+    
+    function approve(address spender, uint256 amount) public returns (bool) {
+        _allowances[msg.sender][spender] = amount;
+        emit Approval(msg.sender, spender, amount);
+        return true;
+    }
+    
+    function transferFrom(address from, address to, uint256 amount) public returns (bool) {
+        require(from != address(0), "ERC20: transfer from the zero address");
+        require(to != address(0), "ERC20: transfer to the zero address");
+        require(_balances[from] >= amount, "ERC20: transfer amount exceeds balance");
+        require(_allowances[from][msg.sender] >= amount, "ERC20: insufficient allowance");
+        
+        _balances[from] -= amount;
+        _balances[to] += amount;
+        _allowances[from][msg.sender] -= amount;
+        
+        emit Transfer(from, to, amount);
+        return true;
+    }
+}
+
+/**
  * @title MockERC721
  * @dev A minimal ERC721 token for testing purposes
  */
@@ -311,9 +379,13 @@ contract DeployMocks is Script {
     function run() public {
         vm.startBroadcast();
         
+        // Deploy mock ERC20 tokens
+        MockERC20 mockToken1 = new MockERC20("MockToken1", "MT1");
+        MockERC20 mockToken2 = new MockERC20("MockToken2", "MT2");
+        
         // Deploy mock ERC721 tokens
-        MockERC721 mockNft1 = new MockERC721("MockNFT1", "MNFT1");
-        MockERC721 mockNft2 = new MockERC721("MockNFT2", "MNFT2");
+        MockERC721 mockNft1 = new MockERC721("MockERC721_1", "MERC721_1");
+        MockERC721 mockNft2 = new MockERC721("MockERC721_2", "MERC721_2");
         
         // Deploy mock ERC1155 tokens
         MockERC1155 mockMultiToken1 = new MockERC1155("MockMultiToken1", "MMT1");
@@ -324,6 +396,12 @@ contract DeployMocks is Script {
         address bob = vm.addr(vm.envUint("PRIVKEY_BOB"));
         
         // Mint minimal tokens needed for tests
+        
+        // Alice ERC20 tokens for test
+        mockToken1.mint(alice, 1000 * 10**18);
+        
+        // Bob ERC20 tokens for test
+        mockToken2.mint(bob, 1000 * 10**18);
         
         // Alice NFTs for test
         mockNft1.mint(alice, 1);
@@ -339,6 +417,8 @@ contract DeployMocks is Script {
         // Bob MultiTokens for test
         mockMultiToken2.mint(bob, 2, 10);
         
+        console.log("Mock ERC20 #1 deployed at:", address(mockToken1));
+        console.log("Mock ERC20 #2 deployed at:", address(mockToken2));
         console.log("Mock ERC721 #1 deployed at:", address(mockNft1));
         console.log("Mock ERC721 #2 deployed at:", address(mockNft2));
         console.log("Mock ERC1155 #1 deployed at:", address(mockMultiToken1));
