@@ -1,5 +1,6 @@
 import { decodeAbiParameters, parseAbiParameters } from "viem";
 import type { ViemClient } from "../utils";
+import { getAttestation } from "../utils";
 
 import { abi as stringObligationAbi } from "../contracts/StringObligation";
 import { contractAddresses } from "../config";
@@ -34,6 +35,13 @@ export const makeStringObligationClient = (viemClient: ViemClient) => {
     return command as "parse" | "parseAsync" | "safeParse" | "safeParseAsync";
   };
 
+  const getSchema = async () =>
+    await viemClient.readContract({
+      address: contractAddresses["Base Sepolia"].stringObligation,
+      abi: stringObligationAbi.abi,
+      functionName: "ATTESTATION_SCHEMA",
+    });
+
   return {
     decode,
     decodeJson: <T>(statementData: `0x${string}`) => {
@@ -63,6 +71,52 @@ export const makeStringObligationClient = (viemClient: ViemClient) => {
     makeStatement,
     makeStatementJson: async <T>(item: T, refUid?: `0x${string}`) => {
       return await makeStatement(JSON.stringify(item), refUid);
+    },
+    getSchema,
+    /**
+     * Gets a complete obligation from its attestation UID, combining attestation metadata with decoded statement data
+     * @param uid - UID of the attestation
+     * @returns The complete obligation including attestation metadata and decoded statement data
+     */
+    getObligation: async (uid: `0x${string}`) => {
+      const [attestation, schema] = await Promise.all([
+        getAttestation(viemClient, uid),
+        getSchema(),
+      ]);
+
+      if (attestation.schema !== schema) {
+        throw new Error(`Unsupported schema: ${attestation.schema}`);
+      }
+      const data = decodeAbiParameters(
+        parseAbiParameters("(string item)"),
+        attestation.data,
+      )[0];
+
+      return {
+        ...attestation,
+        data,
+      };
+    },
+    getJsonObligation: async <T>(uid: `0x${string}`) => {
+      const [attestation, schema] = await Promise.all([
+        getAttestation(viemClient, uid),
+        getSchema(),
+      ]);
+
+      if (attestation.schema !== schema) {
+        throw new Error(`Unsupported schema: ${attestation.schema}`);
+      }
+      const data = decodeAbiParameters(
+        parseAbiParameters("(string item)"),
+        attestation.data,
+      )[0];
+
+      return {
+        ...attestation,
+        data: {
+          item: JSON.parse(data.item) as T,
+        },
+      };
     },
   };
 };
