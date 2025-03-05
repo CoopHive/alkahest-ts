@@ -18,6 +18,7 @@ import { makeStringObligationClient } from "./clients/stringObligation";
 
 import { abi as easAbi } from "./contracts/IEAS";
 import { makeArbitersClient } from "./clients/arbiters";
+import { getAttestation } from "./utils";
 
 /**
  * Creates an Alkahest client for interacting with the protocol
@@ -81,13 +82,7 @@ export const makeClient = (
      * @returns The attestation data
      */
     getAttestation: async (uid: `0x${string}`) => {
-      const attestation = await viemClient.readContract({
-        address: contractAddresses[viemClient.chain.name].eas,
-        abi: easAbi.abi,
-        functionName: "getAttestation",
-        args: [uid],
-      });
-      return attestation;
+      return await getAttestation(viemClient, uid);
     },
 
     /**
