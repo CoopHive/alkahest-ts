@@ -27,7 +27,7 @@ describe("ERC20 Tests", () => {
   });
 
   const chain = baseSepolia;
-  const transport = http("http://127.0.0.1:8545");
+  const transport = http("http://127.0.0.1:8545", { timeout: 60_000 });
 
   // Create test client with wallet and public actions
 
