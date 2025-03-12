@@ -95,11 +95,11 @@ describe("ERC20 Tests", () => {
       value: parseEther("10"),
     });
     await testClient.setBalance({
-      address: aliceClient.address,
+      address: alice,
       value: parseEther("10"),
     });
     await testClient.setBalance({
-      address: bobClient.address,
+      address: bob,
       value: parseEther("10"),
     });
 
