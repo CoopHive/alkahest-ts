@@ -41,28 +41,8 @@ import { getAttestation } from "./utils";
  */
 export const makeClient = (
   walletClient: WalletClient<Transport, Chain, Account>,
-  customAddresses?: Record<string, `0x${string}`>
 ) => {
-  // For tests, we can override the supported chains check with custom addresses
-  if (!customAddresses && !supportedChains.includes(walletClient.chain.name)) {
-    throw new Error("unsupported chain");
-  }
-
   const viemClient = walletClient.extend(publicActions);
-  
-  // If custom addresses are provided, create a custom config
-  if (customAddresses) {
-    // Override the default contract addresses with custom ones for testing
-    viemClient.chain = {
-      ...viemClient.chain,
-      name: 'anvil'
-    };
-    
-    // Add anvil to supported chains if not already included
-    if (!contractAddresses.anvil) {
-      (contractAddresses as any).anvil = customAddresses;
-    }
-  }
 
   return {
     /** Methods for interacting with Arbiters */
