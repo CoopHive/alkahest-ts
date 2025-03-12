@@ -73,8 +73,7 @@ export const makeErc20Client = (viemClient: ViemClient) => {
       deadline: props.deadline,
     };
 
-    const signature = await viemClient.signTypedData({
-      account: props.ownerAddress,
+    const signature = await viemClient.account.signTypedData!({
       message,
       domain: domainData,
       primaryType: "Permit",
