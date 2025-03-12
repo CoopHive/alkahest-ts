@@ -1,27 +1,28 @@
 import {
   getAttestation,
-  getAttestationFromTxHash,
+  getAttestedEventFromTxHash,
   type ViemClient,
 } from "../utils";
-import { contractAddresses } from "../config";
+import type { ChainAddresses } from "../types";
 import { abi as attestationEscrowAbi } from "../contracts/AttestationEscrowObligation";
 import { abi as attestationEscrow2Abi } from "../contracts/AttestationEscrowObligation2";
 import { abi as attestationBarterUtilsAbi } from "../contracts/AttestationBarterUtils";
 import { decodeAbiParameters, parseAbiParameters } from "viem";
 
-export const makeAttestationClient = (viemClient: ViemClient) => {
+export const makeAttestationClient = (
+  viemClient: ViemClient,
+  addresses: ChainAddresses,
+) => {
   const getEscrowSchema = async () =>
     await viemClient.readContract({
-      address:
-        contractAddresses[viemClient.chain.name].attestationEscrowObligation,
+      address: addresses.attestationEscrowObligation,
       abi: attestationEscrowAbi.abi,
       functionName: "ATTESTATION_SCHEMA",
     });
 
   const getEscrow2Schema = async () =>
     await viemClient.readContract({
-      address:
-        contractAddresses[viemClient.chain.name].attestationEscrowObligation2,
+      address: addresses.attestationEscrowObligation2,
       abi: attestationEscrow2Abi.abi,
       functionName: "ATTESTATION_SCHEMA",
     });
@@ -192,8 +193,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
       expiration: bigint = 0n,
     ) => {
       const hash = await viemClient.writeContract({
-        address:
-          contractAddresses[viemClient.chain.name].attestationEscrowObligation,
+        address: addresses.attestationEscrowObligation,
         abi: attestationEscrowAbi.abi,
         functionName: "makeStatement",
         args: [
@@ -206,7 +206,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
         ],
       });
 
-      const attested = await getAttestationFromTxHash(viemClient, hash);
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
       return { hash, attested };
     },
 
@@ -223,14 +223,13 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
       fulfillmentAttestation: `0x${string}`,
     ) => {
       const hash = await viemClient.writeContract({
-        address:
-          contractAddresses[viemClient.chain.name].attestationEscrowObligation,
+        address: addresses.attestationEscrowObligation,
         abi: attestationEscrowAbi.abi,
         functionName: "collectPayment",
         args: [escrowAttestation, fulfillmentAttestation],
       });
 
-      const attested = await getAttestationFromTxHash(viemClient, hash);
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
       return { hash, attested };
     },
 
@@ -255,8 +254,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
       expiration: bigint = 0n,
     ) => {
       const hash = await viemClient.writeContract({
-        address:
-          contractAddresses[viemClient.chain.name].attestationEscrowObligation2,
+        address: addresses.attestationEscrowObligation2,
         abi: attestationEscrow2Abi.abi,
         functionName: "makeStatement",
         args: [
@@ -269,7 +267,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
         ],
       });
 
-      const attested = await getAttestationFromTxHash(viemClient, hash);
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
       return { hash, attested };
     },
 
@@ -287,14 +285,13 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
       fulfillmentAttestation: `0x${string}`,
     ) => {
       const hash = await viemClient.writeContract({
-        address:
-          contractAddresses[viemClient.chain.name].attestationEscrowObligation2,
+        address: addresses.attestationEscrowObligation2,
         abi: attestationEscrow2Abi.abi,
         functionName: "collectPayment",
         args: [escrowAttestation, fulfillmentAttestation],
       });
 
-      const attested = await getAttestationFromTxHash(viemClient, hash);
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
       return { hash, attested };
     },
 
@@ -312,8 +309,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
       revocable: boolean,
     ) => {
       const hash = await viemClient.writeContract({
-        address:
-          contractAddresses[viemClient.chain.name].attestationBarterUtils,
+        address: addresses.attestationBarterUtils,
         abi: attestationBarterUtilsAbi.abi,
         functionName: "registerSchema",
         args: [schema, resolver, revocable],
@@ -342,14 +338,13 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
       data: `0x${string}`,
     ) => {
       const hash = await viemClient.writeContract({
-        address:
-          contractAddresses[viemClient.chain.name].attestationBarterUtils,
+        address: addresses.attestationBarterUtils,
         abi: attestationBarterUtilsAbi.abi,
         functionName: "attest",
         args: [schema, recipient, expirationTime, revocable, refUID, data],
       });
 
-      const attested = await getAttestationFromTxHash(viemClient, hash);
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
       return { hash, attested };
     },
 
@@ -380,8 +375,7 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
       },
     ) => {
       const hash = await viemClient.writeContract({
-        address:
-          contractAddresses[viemClient.chain.name].attestationBarterUtils,
+        address: addresses.attestationBarterUtils,
         abi: attestationBarterUtilsAbi.abi,
         functionName: "attestAndCreateEscrow",
         args: [
@@ -392,8 +386,8 @@ export const makeAttestationClient = (viemClient: ViemClient) => {
         ],
       });
 
-      const attested = await getAttestationFromTxHash(viemClient, hash);
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
       return { hash, attested };
     },
   };
-}
+};

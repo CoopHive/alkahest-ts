@@ -6,8 +6,8 @@ import {
 } from "viem";
 import { abi as iEasAbi } from "./contracts/IEAS";
 import { type Account, type Chain } from "viem";
-import type { TokenBundle, TokenBundleFlat } from "./types";
-import { contractAddresses } from "./config";
+import type { ChainAddresses, TokenBundle, TokenBundleFlat } from "./types";
+import { contractAddresses as defaultContractAddresses } from "./config";
 
 import { abi as easAbi } from "./contracts/IEAS";
 
@@ -17,9 +17,18 @@ export type ViemClient = WalletClient<Transport, Chain, Account> &
 export const getAttestation = async (
   viemClient: ViemClient,
   uid: `0x${string}`,
+  addresses?: ChainAddresses,
 ) => {
+  // Use provided addresses or fallback to config addresses if not provided
+  const easAddress =
+    addresses?.eas || defaultContractAddresses[viemClient.chain.name]?.eas;
+
+  if (!easAddress) {
+    throw new Error(`No EAS address available for ${viemClient.chain.name}`);
+  }
+
   const attestation = await viemClient.readContract({
-    address: contractAddresses[viemClient.chain.name].eas,
+    address: easAddress,
     abi: easAbi.abi,
     functionName: "getAttestation",
     args: [uid],
@@ -27,7 +36,7 @@ export const getAttestation = async (
   return attestation;
 };
 
-export const getAttestationFromTxHash = async (
+export const getAttestedEventFromTxHash = async (
   client: ViemClient,
   hash: `0x${string}`,
 ) => {

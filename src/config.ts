@@ -37,4 +37,4 @@ export const contractAddresses: Record<string, ChainAddresses> = {
   },
 } as const;
 
-export const supportedChains = ["Base Sepolia", "anvil"];
+export const supportedChains = ["Base Sepolia"];

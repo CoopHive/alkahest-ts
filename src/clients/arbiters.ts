@@ -5,11 +5,11 @@ import {
   parseAbiParameters,
 } from "viem";
 import type { ViemClient } from "../utils";
+import type { ChainAddresses } from "../types";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
-import { contractAddresses } from "../config";
 
-export const makeArbitersClient = (viemClient: ViemClient) => ({
+export const makeArbitersClient = (viemClient: ViemClient, addresses: ChainAddresses) => ({
   /**
    * Encodes TrustedPartyArbiter.DemandData to bytes.
    * @param demand - struct DemandData {address creator, address baseArbiter, bytes baseDemand}
@@ -92,7 +92,7 @@ export const makeArbitersClient = (viemClient: ViemClient) => ({
     decision: boolean,
   ) => {
     const hash = await viemClient.writeContract({
-      address: contractAddresses[viemClient.chain.name].trustedOracleArbiter,
+      address: addresses.trustedOracleArbiter,
       abi: trustedOracleArbiterAbi.abi,
       functionName: "arbitrate",
       args: [statement, decision],
@@ -117,7 +117,7 @@ export const makeArbitersClient = (viemClient: ViemClient) => ({
       "event ArbitrationMade(address indexed oracle, bytes32 indexed statement, bool decision)",
     );
     const logs = await viemClient.getLogs({
-      address: contractAddresses[viemClient.chain.name].trustedOracleArbiter,
+      address: addresses.trustedOracleArbiter,
       event,
       args: { oracle, statement },
       fromBlock: "earliest",
@@ -128,7 +128,7 @@ export const makeArbitersClient = (viemClient: ViemClient) => ({
 
     return new Promise((resolve) => {
       const unwatch = viemClient.watchEvent({
-        address: contractAddresses[viemClient.chain.name].trustedOracleArbiter,
+        address: addresses.trustedOracleArbiter,
         event,
         args: { oracle, statement },
         pollingInterval: 1000,

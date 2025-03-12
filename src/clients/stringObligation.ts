@@ -3,11 +3,11 @@ import type { ViemClient } from "../utils";
 import { getAttestation } from "../utils";
 
 import { abi as stringObligationAbi } from "../contracts/StringObligation";
-import { contractAddresses } from "../config";
+import type { ChainAddresses } from "../types";
 import type { z, ZodTypeDef } from "zod";
 import type { Type } from "arktype";
 
-export const makeStringObligationClient = (viemClient: ViemClient) => {
+export const makeStringObligationClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
   const decode = (statementData: `0x${string}`) => {
     return decodeAbiParameters(
       parseAbiParameters("(string item)"),
@@ -17,7 +17,7 @@ export const makeStringObligationClient = (viemClient: ViemClient) => {
 
   const makeStatement = async (item: string, refUid?: `0x${string}`) =>
     await viemClient.writeContract({
-      address: contractAddresses["Base Sepolia"].stringObligation,
+      address: addresses.stringObligation,
       abi: stringObligationAbi.abi,
       functionName: "makeStatement",
       args: [
@@ -37,7 +37,7 @@ export const makeStringObligationClient = (viemClient: ViemClient) => {
 
   const getSchema = async () =>
     await viemClient.readContract({
-      address: contractAddresses["Base Sepolia"].stringObligation,
+      address: addresses.stringObligation,
       abi: stringObligationAbi.abi,
       functionName: "ATTESTATION_SCHEMA",
     });
