@@ -647,13 +647,13 @@ describe("ERC20 Tests", () => {
       // Bob approves and fulfills the escrow
       // Check balances before the exchange
       const bobInitialBalanceA = await testClient.getERC20Balance(
-        { address: erc20TokenA, value: 0n },
-        bob
+        { address: erc20TokenA },
+        bob,
       );
 
       const aliceInitialBalanceB = await testClient.getERC20Balance(
-        { address: erc20TokenB, value: 0n },
-        alice
+        { address: erc20TokenB },
+        alice,
       );
 
       console.debug(
@@ -685,15 +685,15 @@ describe("ERC20 Tests", () => {
       console.debug("Verifying token transfers...");
       console.debug("Checking Bob's ERC20 token A balance...");
       const bobFinalBalanceA = await testClient.getERC20Balance(
-        { address: erc20TokenA, value: 0n },
-        bob
+        { address: erc20TokenA },
+        bob,
       );
       console.debug(`Bob's ERC20 token A balance: ${bobFinalBalanceA}`);
 
       console.debug("Checking Alice's ERC20 token B balance...");
       const aliceFinalBalanceB = await testClient.getERC20Balance(
-        { address: erc20TokenB, value: 0n },
-        alice
+        { address: erc20TokenB },
+        alice,
       );
       console.debug(`Alice's ERC20 token B balance: ${aliceFinalBalanceB}`);
 
@@ -724,13 +724,13 @@ describe("ERC20 Tests", () => {
 
       // Check balances before the exchange
       const bobInitialBalanceA = await testClient.getERC20Balance(
-        { address: erc20TokenA, value: 0n },
-        bob
+        { address: erc20TokenA },
+        bob,
       );
 
       const aliceInitialBalanceB = await testClient.getERC20Balance(
-        { address: erc20TokenB, value: 0n },
-        alice
+        { address: erc20TokenB },
+        alice,
       );
 
       console.debug(
@@ -748,13 +748,13 @@ describe("ERC20 Tests", () => {
 
       // Check token transfers
       const bobFinalBalanceA = await testClient.getERC20Balance(
-        { address: erc20TokenA, value: 0n },
-        bob
+        { address: erc20TokenA },
+        bob,
       );
 
       const aliceFinalBalanceB = await testClient.getERC20Balance(
-        { address: erc20TokenB, value: 0n },
-        alice
+        { address: erc20TokenB },
+        alice,
       );
 
       // Verify token transfers by checking the difference

@@ -560,12 +560,12 @@ describe("ERC1155 Tests", () => {
 
       // Check initial balances
       const initialEscrowBalance = await testClient.getERC1155Balance(
-        { address: aliceErc1155Token, id: aliceErc1155TokenId, value: 0n },
+        { address: aliceErc1155Token, id: aliceErc1155TokenId },
         localAddresses.erc1155EscrowObligation,
       );
 
       const initialAliceBalance = await testClient.getERC1155Balance(
-        { address: aliceErc1155Token, id: aliceErc1155TokenId, value: 0n },
+        { address: aliceErc1155Token, id: aliceErc1155TokenId },
         alice,
       );
 
@@ -596,12 +596,12 @@ describe("ERC1155 Tests", () => {
 
       // Verify Alice's tokens are now in escrow
       const finalEscrowBalance = await testClient.getERC1155Balance(
-        { address: aliceErc1155Token, id: aliceErc1155TokenId, value: 0n },
+        { address: aliceErc1155Token, id: aliceErc1155TokenId },
         localAddresses.erc1155EscrowObligation,
       );
 
       const finalAliceBalance = await testClient.getERC1155Balance(
-        { address: aliceErc1155Token, id: aliceErc1155TokenId, value: 0n },
+        { address: aliceErc1155Token, id: aliceErc1155TokenId },
         alice,
       );
 
@@ -637,12 +637,12 @@ describe("ERC1155 Tests", () => {
 
       // Check balances before the exchange
       const bobInitialBalanceErc1155 = await testClient.getERC1155Balance(
-        { address: aliceErc1155Token, id: aliceErc1155TokenId, value: 0n },
+        { address: aliceErc1155Token, id: aliceErc1155TokenId },
         bob,
       );
 
       const aliceInitialBalanceErc20 = await testClient.getERC20Balance(
-        { address: erc20Token, value: 0n },
+        { address: erc20Token },
         alice,
       );
 
@@ -670,12 +670,12 @@ describe("ERC1155 Tests", () => {
 
       // Check token balances after the exchange
       const bobFinalBalanceErc1155 = await testClient.getERC1155Balance(
-        { address: aliceErc1155Token, id: aliceErc1155TokenId, value: 0n },
+        { address: aliceErc1155Token, id: aliceErc1155TokenId },
         bob,
       );
 
       const aliceFinalBalanceErc20 = await testClient.getERC20Balance(
-        { address: erc20Token, value: 0n },
+        { address: erc20Token },
         alice,
       );
 
@@ -698,7 +698,6 @@ describe("ERC1155 Tests", () => {
         {
           address: aliceErc1155Token,
           id: aliceErc1155TokenId,
-          value: 0n,
         },
         localAddresses.erc1155EscrowObligation,
       );
@@ -707,7 +706,6 @@ describe("ERC1155 Tests", () => {
         {
           address: aliceErc1155Token,
           id: aliceErc1155TokenId,
-          value: 0n,
         },
         alice,
       );
@@ -744,7 +742,6 @@ describe("ERC1155 Tests", () => {
         {
           address: aliceErc1155Token,
           id: aliceErc1155TokenId,
-          value: 0n,
         },
         localAddresses.erc1155EscrowObligation,
       );
@@ -753,18 +750,15 @@ describe("ERC1155 Tests", () => {
         {
           address: aliceErc1155Token,
           id: aliceErc1155TokenId,
-          value: 0n,
         },
         alice,
       );
 
       // Verify the correct amount was escrowed
-      expect(
-        (finalEscrowBalance as bigint) - (initialEscrowBalance as bigint),
-      ).toBe(aliceErc1155Amount);
-      expect(
-        (initialAliceBalance as bigint) - (finalAliceBalance as bigint),
-      ).toBe(aliceErc1155Amount);
+      expect(finalEscrowBalance - initialEscrowBalance).toBe(
+        aliceErc1155Amount,
+      );
+      expect(initialAliceBalance - finalAliceBalance).toBe(aliceErc1155Amount);
       expect(finalAliceBalance).toBe(0n);
       console.debug("testBuyErc721WithErc1155 test completed successfully");
     });
@@ -793,7 +787,7 @@ describe("ERC1155 Tests", () => {
 
       // Check ownership before the exchange
       const bobInitialBalanceErc1155 = await testClient.getERC1155Balance(
-        { address: aliceErc1155Token, id: aliceErc1155TokenId, value: 0n },
+        { address: aliceErc1155Token, id: aliceErc1155TokenId },
         bob,
       );
 
@@ -828,7 +822,7 @@ describe("ERC1155 Tests", () => {
 
       // Check token transfers after the exchange
       const bobFinalBalanceErc1155 = await testClient.getERC1155Balance(
-        { address: aliceErc1155Token, id: aliceErc1155TokenId, value: 0n },
+        { address: aliceErc1155Token, id: aliceErc1155TokenId },
         bob,
       );
 
@@ -855,7 +849,6 @@ describe("ERC1155 Tests", () => {
         {
           address: aliceErc1155Token,
           id: aliceErc1155TokenId,
-          value: 0n,
         },
         localAddresses.erc1155EscrowObligation,
       );
@@ -864,7 +857,6 @@ describe("ERC1155 Tests", () => {
         {
           address: aliceErc1155Token,
           id: aliceErc1155TokenId,
-          value: 0n,
         },
         alice,
       );
@@ -912,7 +904,6 @@ describe("ERC1155 Tests", () => {
         {
           address: aliceErc1155Token,
           id: aliceErc1155TokenId,
-          value: 0n,
         },
         localAddresses.erc1155EscrowObligation,
       );
@@ -921,18 +912,15 @@ describe("ERC1155 Tests", () => {
         {
           address: aliceErc1155Token,
           id: aliceErc1155TokenId,
-          value: 0n,
         },
         alice,
       );
 
       // Verify the correct amount was escrowed
-      expect(
-        (finalEscrowBalance as bigint) - (initialEscrowBalance as bigint),
-      ).toBe(aliceErc1155Amount);
-      expect(
-        (initialAliceBalance as bigint) - (finalAliceBalance as bigint),
-      ).toBe(aliceErc1155Amount);
+      expect(finalEscrowBalance - initialEscrowBalance).toBe(
+        aliceErc1155Amount,
+      );
+      expect(initialAliceBalance - finalAliceBalance).toBe(aliceErc1155Amount);
       expect(finalAliceBalance).toBe(0n);
       console.debug("testBuyBundleWithErc1155 test completed successfully");
     });
@@ -945,24 +933,20 @@ describe("ERC1155 Tests", () => {
 
       // Check balances before the exchange
       const aliceInitialBalanceErc20 = await testClient.getERC20Balance(
-        { address: erc20Token, value: 0n },
+        { address: erc20Token },
         alice,
       );
-
       const aliceInitialBalanceErc1155 = await testClient.getERC1155Balance(
         {
           address: bobErc1155Token,
           id: bobErc1155TokenId,
-          value: 0n,
         },
         alice,
       );
-
       const bobInitialBalanceErc1155 = await testClient.getERC1155Balance(
         {
           address: aliceErc1155Token,
-          id: bobErc1155TokenId,
-          value: 0n,
+          id: aliceErc1155TokenId,
         },
         bob,
       );
@@ -1044,19 +1028,16 @@ describe("ERC1155 Tests", () => {
 
       // Check token transfers
       const aliceFinalBalanceErc20 = await testClient.getERC20Balance(
-        { address: erc20Token, value: 0n },
+        { address: erc20Token },
         alice,
       );
-
       const aliceFinalBalanceErc1155 = await testClient.getERC1155Balance(
         {
           address: bobErc1155Token,
           id: bobErc1155TokenId,
-          value: 0n,
         },
         alice,
       );
-
       const aliceOwnsToken = await testClient.getERC721Owner({
         address: erc721Token,
         id: erc721TokenId,
@@ -1065,27 +1046,23 @@ describe("ERC1155 Tests", () => {
       const bobErc1155Balance = await testClient.getERC1155Balance(
         {
           address: aliceErc1155Token,
-          id: bobErc1155TokenId,
-          value: 0n,
+          id: aliceErc1155TokenId,
         },
         bob,
       );
 
       // Verify transfers
-      expect(compareAddresses(aliceOwnsToken as string, alice)).toBe(true);
+      expect(compareAddresses(aliceOwnsToken, alice)).toBe(true);
+      expect(aliceFinalBalanceErc20 - aliceInitialBalanceErc20).toBe(
+        erc20Amount,
+      );
+      expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(
+        bobErc1155HalfAmount,
+      );
 
-      expect(
-        (bobErc1155Balance as bigint) - (bobInitialBalanceErc1155 as bigint),
-      ).toBe(aliceErc1155Amount);
-
-      expect(
-        (aliceFinalBalanceErc20 as bigint) -
-          (aliceInitialBalanceErc20 as bigint),
-      ).toBe(erc20Amount);
-      expect(
-        (aliceFinalBalanceErc1155 as bigint) -
-          (aliceInitialBalanceErc1155 as bigint),
-      ).toBe(bobErc1155HalfAmount);
+      expect(bobErc1155Balance - bobInitialBalanceErc1155).toBe(
+        aliceErc1155Amount,
+      );
       console.debug("testPayErc1155ForBundle test completed successfully");
     });
 
@@ -1126,7 +1103,7 @@ describe("ERC1155 Tests", () => {
 
       // Verify Alice got her tokens back
       const aliceBalance = await testClient.getERC1155Balance(
-        { address: aliceErc1155Token, id: aliceErc1155TokenId, value: 0n },
+        { address: aliceErc1155Token, id: aliceErc1155TokenId },
         alice,
       );
 
