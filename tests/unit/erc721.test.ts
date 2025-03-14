@@ -715,12 +715,10 @@ describe("ERC721 Tests", () => {
         );
 
       // Check balances before the exchange
-      const aliceInitialBalanceErc20 = await testClient.readContract({
-        address: erc20Token,
-        abi: MockERC20Permit.abi,
-        functionName: "balanceOf",
-        args: [alice],
-      });
+      const aliceInitialBalanceErc20 = await testClient.getERC20Balance(
+        { address: erc20Token, value: 0n },
+        alice
+      );
 
       // Bob approves and fulfills the escrow
       await bobClient.erc20.approve(
@@ -750,8 +748,8 @@ describe("ERC721 Tests", () => {
       // Verify transfers
       expect(compareAddresses(bobOwnsToken, bob)).toBe(true);
       expect(
-        (aliceFinalBalanceErc20 as bigint) -
-          (aliceInitialBalanceErc20 as bigint),
+        aliceFinalBalanceErc20 -
+          aliceInitialBalanceErc20,
       ).toBe(erc20Amount);
     });
 
@@ -840,8 +838,8 @@ describe("ERC721 Tests", () => {
       // Verify transfers
       expect(compareAddresses(bobOwnsToken, bob)).toBe(true);
       expect(
-        (aliceFinalBalanceErc1155 as bigint) -
-          (aliceInitialBalanceErc1155 as bigint),
+        aliceFinalBalanceErc1155 -
+          aliceInitialBalanceErc1155,
       ).toBe(amount);
     });
 
@@ -990,12 +988,12 @@ describe("ERC721 Tests", () => {
       expect(compareAddresses(bobOwnsToken, bob)).toBe(true);
       expect(compareAddresses(aliceOwnsToken, alice)).toBe(true);
       expect(
-        (aliceFinalBalanceErc20 as bigint) -
-          (aliceInitialBalanceErc20 as bigint),
+        aliceFinalBalanceErc20 -
+          aliceInitialBalanceErc20,
       ).toBe(erc20Amount / 2n);
       expect(
-        (aliceFinalBalanceErc1155 as bigint) -
-          (aliceInitialBalanceErc1155 as bigint),
+        aliceFinalBalanceErc1155 -
+          aliceInitialBalanceErc1155,
       ).toBe(erc1155Amount / 2n);
     });
 
