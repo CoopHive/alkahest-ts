@@ -45,7 +45,7 @@ test("tradeErc20ForErc20", async () => {
   // approve escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve(
     { address: usdc, value: 10n },
-    contractAddresses["Base Sepolia"].erc20EscrowObligation,
+    "escrow",
   );
   console.log(escrowApproval);
 
@@ -60,7 +60,7 @@ test("tradeErc20ForErc20", async () => {
   // approve payment contract to spend tokens
   const paymentApproval = await clientSeller.erc20.approve(
     { address: eurc, value: 10n },
-    contractAddresses["Base Sepolia"].erc20PaymentObligation,
+    "escrow",
   );
   console.log(paymentApproval);
 
@@ -118,7 +118,7 @@ test("tradeErc20ForCustom", async () => {
   // approve escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve(
     { address: usdc, value: 10n },
-    contractAddresses["Base Sepolia"].erc20EscrowObligation,
+    "escrow",
   );
   clientBuyer.viemClient.waitForTransactionReceipt({ hash: escrowApproval });
   console.log("escrow approval: ", escrowApproval);
