@@ -13,7 +13,7 @@ export function compareAddresses(a: string, b: string) {
 export function createTokenTestExtension<C extends Client & PublicActions>() {
   return (client: C) => ({
     // Get ERC20 token balance
-    async getERC20Balance(token: Erc20, owner: `0x${string}`) {
+    async getERC20Balance(token: Omit<Erc20, "value">, owner: `0x${string}`) {
       return client.readContract({
         address: token.address,
         abi: MockERC20Permit.abi,
@@ -33,7 +33,10 @@ export function createTokenTestExtension<C extends Client & PublicActions>() {
     },
 
     // Get ERC1155 token balance
-    async getERC1155Balance(token: Erc1155, owner: `0x${string}`) {
+    async getERC1155Balance(
+      token: Omit<Erc1155, "value">,
+      owner: `0x${string}`,
+    ) {
       return client.readContract({
         address: token.address,
         abi: MockERC1155.abi,
