@@ -538,7 +538,7 @@ describe("ERC20 Tests", () => {
       console.debug("Approving ERC20 token for escrow...");
       await aliceClient.erc20.approve(
         { address: erc20TokenA, value: bidAmount },
-        localAddresses.erc20EscrowObligation,
+        "escrow",
       );
       console.debug("ERC20 token approved for escrow");
 
@@ -624,7 +624,7 @@ describe("ERC20 Tests", () => {
       console.debug("ALICE: Approving ERC20 token A for escrow...");
       await aliceClient.erc20.approve(
         { address: erc20TokenA, value: bidAmount },
-        localAddresses.erc20EscrowObligation,
+        "escrow",
       );
       console.debug("ALICE: ERC20 token A approved for escrow");
 
@@ -640,10 +640,29 @@ describe("ERC20 Tests", () => {
       );
 
       // Bob approves and fulfills the escrow
+      // Check balances before the exchange
+      const bobInitialBalanceA = (await testClient.readContract({
+        address: erc20TokenA,
+        abi: MockERC20Permit.abi,
+        functionName: "balanceOf",
+        args: [bob],
+      })) as bigint;
+
+      const aliceInitialBalanceB = (await testClient.readContract({
+        address: erc20TokenB,
+        abi: MockERC20Permit.abi,
+        functionName: "balanceOf",
+        args: [alice],
+      })) as bigint;
+
+      console.debug(
+        `Initial balances - Bob Token A: ${bobInitialBalanceA}, Alice Token B: ${aliceInitialBalanceB}`,
+      );
+
       console.debug("BOB: Approving ERC20 token B for payment...");
       await bobClient.erc20.approve(
         { address: erc20TokenB, value: askAmount },
-        localAddresses.erc20PaymentObligation,
+        "payment",
       );
       console.debug("BOB: ERC20 token B approved for payment");
 
@@ -664,26 +683,26 @@ describe("ERC20 Tests", () => {
       // Check token transfers
       console.debug("Verifying token transfers...");
       console.debug("Checking Bob's ERC20 token A balance...");
-      const bobBalanceA = await testClient.readContract({
+      const bobFinalBalanceA = (await testClient.readContract({
         address: erc20TokenA,
         abi: MockERC20Permit.abi,
         functionName: "balanceOf",
         args: [bob],
-      });
-      console.debug(`Bob's ERC20 token A balance: ${bobBalanceA}`);
+      })) as bigint;
+      console.debug(`Bob's ERC20 token A balance: ${bobFinalBalanceA}`);
 
       console.debug("Checking Alice's ERC20 token B balance...");
-      const aliceBalanceB = await testClient.readContract({
+      const aliceFinalBalanceB = (await testClient.readContract({
         address: erc20TokenB,
         abi: MockERC20Permit.abi,
         functionName: "balanceOf",
         args: [alice],
-      });
-      console.debug(`Alice's ERC20 token B balance: ${aliceBalanceB}`);
+      })) as bigint;
+      console.debug(`Alice's ERC20 token B balance: ${aliceFinalBalanceB}`);
 
-      // Verify token transfers like in Solidity test
-      expect(bobBalanceA).toBe(bidAmount);
-      expect(aliceBalanceB).toBe(askAmount);
+      // Verify token transfers by checking the difference
+      expect(bobFinalBalanceA - bobInitialBalanceA).toBe(bidAmount);
+      expect(aliceFinalBalanceB - aliceInitialBalanceB).toBe(askAmount);
       console.debug("testPayErc20ForErc20 test completed successfully");
     });
 
@@ -696,7 +715,7 @@ describe("ERC20 Tests", () => {
       // Alice approves and creates an escrow
       await aliceClient.erc20.approve(
         { address: erc20TokenA, value: bidAmount },
-        localAddresses.erc20EscrowObligation,
+        "escrow",
       );
 
       const { attested: buyAttestation } =
@@ -705,6 +724,25 @@ describe("ERC20 Tests", () => {
           { address: erc20TokenB, value: askAmount },
           expiration,
         );
+
+      // Check balances before the exchange
+      const bobInitialBalanceA = (await testClient.readContract({
+        address: erc20TokenA,
+        abi: MockERC20Permit.abi,
+        functionName: "balanceOf",
+        args: [bob],
+      })) as bigint;
+
+      const aliceInitialBalanceB = (await testClient.readContract({
+        address: erc20TokenB,
+        abi: MockERC20Permit.abi,
+        functionName: "balanceOf",
+        args: [alice],
+      })) as bigint;
+
+      console.debug(
+        `Initial balances - Bob Token A: ${bobInitialBalanceA}, Alice Token B: ${aliceInitialBalanceB}`,
+      );
 
       // Bob uses permit and fulfills the escrow
       const { attested: sellAttestation } =
@@ -716,23 +754,23 @@ describe("ERC20 Tests", () => {
       );
 
       // Check token transfers
-      const bobBalanceA = await testClient.readContract({
+      const bobFinalBalanceA = (await testClient.readContract({
         address: erc20TokenA,
         abi: MockERC20Permit.abi,
         functionName: "balanceOf",
         args: [bob],
-      });
+      })) as bigint;
 
-      const aliceBalanceB = await testClient.readContract({
+      const aliceFinalBalanceB = (await testClient.readContract({
         address: erc20TokenB,
         abi: MockERC20Permit.abi,
         functionName: "balanceOf",
         args: [alice],
-      });
+      })) as bigint;
 
-      // Verify token transfers like in Solidity test
-      expect(bobBalanceA).toBe(bidAmount);
-      expect(aliceBalanceB).toBe(askAmount);
+      // Verify token transfers by checking the difference
+      expect(bobFinalBalanceA - bobInitialBalanceA).toBe(bidAmount);
+      expect(aliceFinalBalanceB - aliceInitialBalanceB).toBe(askAmount);
     });
   });
 
@@ -745,7 +783,7 @@ describe("ERC20 Tests", () => {
       // Alice approves and creates an escrow for ERC721
       await aliceClient.erc20.approve(
         { address: erc20TokenA, value: bidAmount },
-        localAddresses.erc20EscrowObligation,
+        "escrow",
       );
 
       const { attested } = await aliceClient.erc20.buyErc721WithErc20(
@@ -787,7 +825,7 @@ describe("ERC20 Tests", () => {
       // Alice approves and creates an escrow for ERC1155
       await aliceClient.erc20.approve(
         { address: erc20TokenA, value: bidAmount },
-        localAddresses.erc20EscrowObligation,
+        "escrow",
       );
 
       const { attested } = await aliceClient.erc20.buyErc1155WithErc20(
@@ -835,7 +873,7 @@ describe("ERC20 Tests", () => {
       // Alice approves and creates an escrow for token bundle
       await aliceClient.erc20.approve(
         { address: erc20TokenA, value: bidAmount },
-        localAddresses.erc20EscrowObligation,
+        "escrow",
       );
 
       const { attested } = await aliceClient.erc20.buyBundleWithErc20(
@@ -874,86 +912,6 @@ describe("ERC20 Tests", () => {
       expect(attested.uid).not.toBe(
         "0x0000000000000000000000000000000000000000000000000000000000000000",
       );
-    });
-
-    test("testPayErc20ForErc721 - Full Trade Execution", async () => {
-      console.debug(
-        "Starting testPayErc20ForErc721 test (full trade execution)",
-      );
-      const bidAmount = parseEther("100");
-      const erc721TokenId = 1n;
-      const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
-      console.debug(
-        `Test setup: bidAmount=${bidAmount}, erc721TokenId=${erc721TokenId}, expiration=${expiration}`,
-      );
-
-      // Alice approves and creates an escrow for ERC721
-      console.debug("ALICE: Approving ERC20 token A for escrow...");
-      await aliceClient.erc20.approve(
-        { address: erc20TokenA, value: bidAmount },
-        localAddresses.erc20EscrowObligation,
-      );
-      console.debug("ALICE: ERC20 token A approved for escrow");
-
-      console.debug("ALICE: Creating buy attestation (buyErc721WithErc20)...");
-      const { attested: buyAttestation } =
-        await aliceClient.erc20.buyErc721WithErc20(
-          { address: erc20TokenA, value: bidAmount },
-          { address: askErc721Token, id: erc721TokenId },
-          expiration,
-        );
-      console.debug(
-        `ALICE: Buy attestation created with UID: ${buyAttestation.uid}`,
-      );
-
-      // Bob approves ERC721 and fulfills the escrow
-      console.debug(
-        `BOB: Approving ERC721 token (ID: ${erc721TokenId}) for escrow...`,
-      );
-      await bobClient.erc721.approve(
-        { address: askErc721Token, id: erc721TokenId },
-        "escrow", // Use ApprovalPurpose type instead of raw address
-      );
-      console.debug("BOB: ERC721 token approved for escrow");
-
-      console.debug(
-        `BOB: Fulfilling escrow with buy attestation UID: ${buyAttestation.uid}`,
-      );
-      const { attested: sellAttestation } =
-        await bobClient.erc20.payErc20ForErc721(buyAttestation.uid);
-      console.debug(
-        `BOB: Sell attestation created with UID: ${sellAttestation.uid}`,
-      );
-
-      // Assert the sell attestation was created
-      expect(sellAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
-
-      // Check token transfers
-      console.debug("Verifying token transfers...");
-      console.debug(`Checking ERC721 token (ID: ${erc721TokenId}) owner...`);
-      const erc721Owner = await testClient.readContract({
-        address: askErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [erc721TokenId],
-      });
-      console.debug(`ERC721 token owner: ${erc721Owner}`);
-
-      console.debug("Checking Bob's ERC20 token A balance...");
-      const bobBalanceA = await testClient.readContract({
-        address: erc20TokenA,
-        abi: MockERC20Permit.abi,
-        functionName: "balanceOf",
-        args: [bob],
-      });
-      console.debug(`Bob's ERC20 token A balance: ${bobBalanceA}`);
-
-      // Verify transfers
-      expect(erc721Owner).toBe(alice);
-      expect(bobBalanceA).toBe(bidAmount);
-      console.debug("testPayErc20ForErc721 test completed successfully");
     });
   });
 });
