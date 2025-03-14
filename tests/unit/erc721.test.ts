@@ -20,6 +20,11 @@ import {
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { baseSepolia, foundry } from "viem/chains";
+import { $ } from "bun";
+import {
+  compareAddresses,
+  createTokenTestExtension,
+} from "../utils/tokenTestUtils";
 
 // Import contract artifacts from src/contracts where available
 import ERC20EscrowObligation from "@contracts/ERC20EscrowObligation.json";
@@ -39,13 +44,9 @@ import SchemaRegistry from "../fixtures/SchemaRegistry.json";
 import MockERC20Permit from "../fixtures/MockERC20Permit.json";
 import MockERC721 from "../fixtures/MockERC721.json";
 import MockERC1155 from "../fixtures/MockERC1155.json";
-import { $ } from "bun";
 
 describe("ERC721 Tests", () => {
   // Anvil instance
-  function compareAddresses(a: string, b: string) {
-    return getAddress(a) === getAddress(b);
-  }
   const anvil = createAnvil();
   let anvilInitState: `0x${string}`;
 
@@ -64,7 +65,8 @@ describe("ERC721 Tests", () => {
     transport,
   })
     .extend(walletActions)
-    .extend(publicActions);
+    .extend(publicActions)
+    .extend(createTokenTestExtension());
 
   // Addresses
   let alice: `0x${string}`;
@@ -577,16 +579,14 @@ describe("ERC721 Tests", () => {
       );
 
       // Verify Alice's token is now in escrow
-      const newOwner = await testClient.readContract({
+      const newOwner = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
       expect(
         compareAddresses(
-          newOwner as string,
+          newOwner,
           localAddresses.erc721EscrowObligation,
         ),
       ).toBe(true);
@@ -613,18 +613,14 @@ describe("ERC721 Tests", () => {
         );
 
       // Check ownership before the exchange
-      const aliceInitialOwnsToken = await testClient.readContract({
+      const aliceInitialOwnsToken = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
-      const bobInitialOwnsToken = await testClient.readContract({
+      const bobInitialOwnsToken = await testClient.getERC721Owner({
         address: bobErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [bobTokenId],
+        id: bobTokenId,
       });
 
       console.debug(
@@ -648,23 +644,19 @@ describe("ERC721 Tests", () => {
       console.debug(`BOB: Payment transaction submitted with hash: ${hash}`);
 
       // Check token ownership after the exchange
-      const aliceFinalOwnsToken = await testClient.readContract({
+      const aliceFinalOwnsToken = await testClient.getERC721Owner({
         address: bobErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [bobTokenId],
+        id: bobTokenId,
       });
 
-      const bobFinalOwnsToken = await testClient.readContract({
+      const bobFinalOwnsToken = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
       // Verify token transfers
-      expect(compareAddresses(aliceFinalOwnsToken as string, alice)).toBe(true);
-      expect(compareAddresses(bobFinalOwnsToken as string, bob)).toBe(true);
+      expect(compareAddresses(aliceFinalOwnsToken, alice)).toBe(true);
+      expect(compareAddresses(bobFinalOwnsToken, bob)).toBe(true);
       console.debug("testPayErc721ForErc721 test completed successfully");
     });
   });
@@ -692,16 +684,14 @@ describe("ERC721 Tests", () => {
       );
 
       // Verify Alice's token is now in escrow
-      const newOwner = await testClient.readContract({
+      const newOwner = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
       expect(
         compareAddresses(
-          newOwner as string,
+          newOwner,
           localAddresses.erc721EscrowObligation,
         ),
       ).toBe(true);
@@ -747,22 +737,18 @@ describe("ERC721 Tests", () => {
       );
 
       // Check token transfers
-      const aliceFinalBalanceErc20 = await testClient.readContract({
-        address: erc20Token,
-        abi: MockERC20Permit.abi,
-        functionName: "balanceOf",
-        args: [alice],
-      });
+      const aliceFinalBalanceErc20 = await testClient.getERC20Balance(
+        { address: erc20Token, value: 0n },
+        alice
+      );
 
-      const bobOwnsToken = await testClient.readContract({
+      const bobOwnsToken = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
       // Verify transfers
-      expect(compareAddresses(bobOwnsToken as string, bob)).toBe(true);
+      expect(compareAddresses(bobOwnsToken, bob)).toBe(true);
       expect(
         (aliceFinalBalanceErc20 as bigint) -
           (aliceInitialBalanceErc20 as bigint),
@@ -792,16 +778,14 @@ describe("ERC721 Tests", () => {
       );
 
       // Verify Alice's token is now in escrow
-      const newOwner = await testClient.readContract({
+      const newOwner = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
       expect(
         compareAddresses(
-          newOwner as string,
+          newOwner,
           localAddresses.erc721EscrowObligation,
         ),
       ).toBe(true);
@@ -826,12 +810,10 @@ describe("ERC721 Tests", () => {
         );
 
       // Check balances before the exchange
-      const aliceInitialBalanceErc1155 = await testClient.readContract({
-        address: erc1155Token,
-        abi: MockERC1155.abi,
-        functionName: "balanceOf",
-        args: [alice, tokenId],
-      });
+      const aliceInitialBalanceErc1155 = await testClient.getERC1155Balance(
+        { address: erc1155Token, id: tokenId, value: 0n },
+        alice
+      );
 
       // Bob approves and fulfills the escrow
       await bobClient.erc1155.approveAll(erc1155Token, "payment");
@@ -845,22 +827,18 @@ describe("ERC721 Tests", () => {
       );
 
       // Check token transfers
-      const aliceFinalBalanceErc1155 = await testClient.readContract({
-        address: erc1155Token,
-        abi: MockERC1155.abi,
-        functionName: "balanceOf",
-        args: [alice, tokenId],
-      });
+      const aliceFinalBalanceErc1155 = await testClient.getERC1155Balance(
+        { address: erc1155Token, id: tokenId, value: 0n },
+        alice
+      );
 
-      const bobOwnsToken = await testClient.readContract({
+      const bobOwnsToken = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
       // Verify transfers
-      expect(compareAddresses(bobOwnsToken as string, bob)).toBe(true);
+      expect(compareAddresses(bobOwnsToken, bob)).toBe(true);
       expect(
         (aliceFinalBalanceErc1155 as bigint) -
           (aliceInitialBalanceErc1155 as bigint),
@@ -896,16 +874,14 @@ describe("ERC721 Tests", () => {
       );
 
       // Verify Alice's token is now in escrow
-      const newOwner = await testClient.readContract({
+      const newOwner = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
       expect(
         compareAddresses(
-          newOwner as string,
+          newOwner,
           localAddresses.erc721EscrowObligation,
         ),
       ).toBe(true);
@@ -922,7 +898,11 @@ describe("ERC721 Tests", () => {
         erc20s: [{ address: erc20Token, value: erc20Amount / 2n }],
         erc721s: [{ address: bobErc721Token, id: bobTokenId }],
         erc1155s: [
-          { address: erc1155Token, id: erc1155TokenId, value: erc1155Amount / 2n },
+          {
+            address: erc1155Token,
+            id: erc1155TokenId,
+            value: erc1155Amount / 2n,
+          },
         ],
       };
 
@@ -941,19 +921,15 @@ describe("ERC721 Tests", () => {
         );
 
       // Check balances before the exchange
-      const aliceInitialBalanceErc20 = await testClient.readContract({
-        address: erc20Token,
-        abi: MockERC20Permit.abi,
-        functionName: "balanceOf",
-        args: [alice],
-      });
+      const aliceInitialBalanceErc20 = await testClient.getERC20Balance(
+        { address: erc20Token, value: 0n },
+        alice
+      );
 
-      const aliceInitialBalanceErc1155 = await testClient.readContract({
-        address: erc1155Token,
-        abi: MockERC1155.abi,
-        functionName: "balanceOf",
-        args: [alice, erc1155TokenId],
-      });
+      const aliceInitialBalanceErc1155 = await testClient.getERC1155Balance(
+        { address: erc1155Token, id: erc1155TokenId, value: 0n },
+        alice
+      );
 
       // Bob approves his tokens to the TokenBundlePaymentObligation contract
       console.debug("Approving ERC20 tokens for TokenBundlePaymentObligation");
@@ -990,37 +966,29 @@ describe("ERC721 Tests", () => {
       );
 
       // Check token transfers
-      const aliceFinalBalanceErc20 = await testClient.readContract({
-        address: erc20Token,
-        abi: MockERC20Permit.abi,
-        functionName: "balanceOf",
-        args: [alice],
-      });
+      const aliceFinalBalanceErc20 = await testClient.getERC20Balance(
+        { address: erc20Token, value: 0n },
+        alice
+      );
 
-      const aliceFinalBalanceErc1155 = await testClient.readContract({
-        address: erc1155Token,
-        abi: MockERC1155.abi,
-        functionName: "balanceOf",
-        args: [alice, erc1155TokenId],
-      });
+      const aliceFinalBalanceErc1155 = await testClient.getERC1155Balance(
+        { address: erc1155Token, id: erc1155TokenId, value: 0n },
+        alice
+      );
 
-      const aliceOwnsToken = await testClient.readContract({
+      const aliceOwnsToken = await testClient.getERC721Owner({
         address: bobErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [bobTokenId],
+        id: bobTokenId,
       });
 
-      const bobOwnsToken = await testClient.readContract({
+      const bobOwnsToken = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
       // Verify transfers
-      expect(compareAddresses(bobOwnsToken as string, bob)).toBe(true);
-      expect(compareAddresses(aliceOwnsToken as string, alice)).toBe(true);
+      expect(compareAddresses(bobOwnsToken, bob)).toBe(true);
+      expect(compareAddresses(aliceOwnsToken, alice)).toBe(true);
       expect(
         (aliceFinalBalanceErc20 as bigint) -
           (aliceInitialBalanceErc20 as bigint),
@@ -1055,14 +1023,12 @@ describe("ERC721 Tests", () => {
       await aliceClient.erc721.collectExpired(buyAttestation.uid);
 
       // Verify Alice got her token back
-      const tokenOwner = await testClient.readContract({
+      const tokenOwner = await testClient.getERC721Owner({
         address: aliceErc721Token,
-        abi: MockERC721.abi,
-        functionName: "ownerOf",
-        args: [aliceTokenId],
+        id: aliceTokenId,
       });
 
-      expect(compareAddresses(tokenOwner as string, alice)).toBe(true);
+      expect(compareAddresses(tokenOwner, alice)).toBe(true);
     });
   });
 });
