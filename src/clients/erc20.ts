@@ -25,6 +25,7 @@ import { abi as erc20EscrowAbi } from "../contracts/ERC20EscrowObligation";
 import { abi as erc20PaymentAbi } from "../contracts/ERC20PaymentObligation";
 import { abi as erc20Abi } from "../contracts/ERC20Permit";
 import { abi as easAbi } from "../contracts/IEAS";
+import type { ApprovalPurpose } from "../../dist";
 
 export const makeErc20Client = (
   viemClient: ViemClient,
@@ -101,7 +102,7 @@ export const makeErc20Client = (
     decodeEscrowStatement: (statementData: `0x${string}`) => {
       return decodeAbiParameters(
         parseAbiParameters(
-          "(address token, uint256 amount, address arbiter, bytes demand)",
+          "(address arbiter, bytes demand, address token, uint256 amount)",
         ),
         statementData,
       )[0];
@@ -135,7 +136,7 @@ export const makeErc20Client = (
       }
       const data = decodeAbiParameters(
         parseAbiParameters(
-          "(address token, uint256 amount, address arbiter, bytes demand)",
+          "(address arbiter, bytes demand, address token, uint256 amount)",
         ),
         attestation.data,
       )[0];
@@ -170,12 +171,17 @@ export const makeErc20Client = (
      * @param spender - Address to approve
      * @returns Transaction hash
      */
-    approve: async (token: Erc20, spender: `0x${string}`) => {
+    approve: async (token: Erc20, purpose: ApprovalPurpose) => {
+      const to =
+        purpose === "escrow"
+          ? addresses.erc20EscrowObligation
+          : addresses.erc20PaymentObligation;
+
       const hash = await viemClient.writeContract({
         address: token.address,
         abi: erc20Abi.abi,
         functionName: "approve",
-        args: [spender, token.value],
+        args: [to, token.value],
       });
       return hash;
     },
@@ -186,12 +192,17 @@ export const makeErc20Client = (
      * @param spender - Address to approve
      * @returns Transaction hash or null if approval not needed
      */
-    approveIfLess: async (token: Erc20, spender: `0x${string}`) => {
+    approveIfLess: async (token: Erc20, purpose: ApprovalPurpose) => {
+      const to =
+        purpose === "escrow"
+          ? addresses.erc721EscrowObligation
+          : addresses.erc721PaymentObligation;
+
       const currentAllowance = await viemClient.readContract({
         address: token.address,
         abi: erc20Abi.abi,
         functionName: "allowance",
-        args: [viemClient.account.address, spender],
+        args: [viemClient.account.address, to],
       });
 
       if (currentAllowance < token.value) {
@@ -199,7 +210,7 @@ export const makeErc20Client = (
           address: token.address,
           abi: erc20Abi.abi,
           functionName: "approve",
-          args: [spender, token.value],
+          args: [to, token.value],
         });
       }
       return null;
@@ -567,10 +578,10 @@ export const makeErc20Client = (
           {
             type: "tuple",
             components: [
-              { name: "token", type: "address" },
-              { name: "amount", type: "uint256" },
               { name: "arbiter", type: "address" },
               { name: "demand", type: "bytes" },
+              { name: "token", type: "address" },
+              { name: "amount", type: "uint256" },
             ],
           },
         ],
