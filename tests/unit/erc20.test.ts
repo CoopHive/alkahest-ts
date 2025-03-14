@@ -1,4 +1,11 @@
-import { afterAll, beforeAll, describe, expect, test } from "bun:test";
+import {
+  afterAll,
+  beforeAll,
+  beforeEach,
+  describe,
+  expect,
+  test,
+} from "bun:test";
 import { makeClient } from "../../src";
 import { createAnvil } from "@viem/anvil";
 import {
@@ -14,25 +21,30 @@ import {
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { baseSepolia, foundry } from "viem/chains";
 
-// Import contract artifacts from the fixtures directory
+// Import contract artifacts from src/contracts where available
+import ERC20EscrowObligation from "@contracts/ERC20EscrowObligation.json";
+import ERC20PaymentObligation from "@contracts/ERC20PaymentObligation.json";
+import ERC721EscrowObligation from "@contracts/ERC721EscrowObligation.json";
+import ERC721PaymentObligation from "@contracts/ERC721PaymentObligation.json";
+import ERC1155EscrowObligation from "@contracts/ERC1155EscrowObligation.json";
+import ERC1155PaymentObligation from "@contracts/ERC1155PaymentObligation.json";
+import TokenBundleEscrowObligation from "@contracts/TokenBundleEscrowObligation.json";
+import TokenBundlePaymentObligation from "@contracts/TokenBundlePaymentObligation.json";
+import ERC20BarterCrossToken from "@contracts/ERC20BarterCrossToken.json";
+
+// Import implementation contracts from fixtures
+// These are needed because they have bytecode for deployment (interfaces don't)
 import EAS from "../fixtures/EAS.json";
 import SchemaRegistry from "../fixtures/SchemaRegistry.json";
-import ERC20EscrowObligation from "../fixtures/ERC20EscrowObligation.json";
-import ERC20PaymentObligation from "../fixtures/ERC20PaymentObligation.json";
-import ERC721EscrowObligation from "../fixtures/ERC721EscrowObligation.json";
-import ERC721PaymentObligation from "../fixtures/ERC721PaymentObligation.json";
-import ERC1155EscrowObligation from "../fixtures/ERC1155EscrowObligation.json";
-import ERC1155PaymentObligation from "../fixtures/ERC1155PaymentObligation.json";
-import TokenBundleEscrowObligation from "../fixtures/TokenBundleEscrowObligation.json";
-import TokenBundlePaymentObligation from "../fixtures/TokenBundlePaymentObligation.json";
-import ERC20BarterCrossToken from "../fixtures/ERC20BarterCrossToken.json";
 import MockERC20Permit from "../fixtures/MockERC20Permit.json";
 import MockERC721 from "../fixtures/MockERC721.json";
 import MockERC1155 from "../fixtures/MockERC1155.json";
+import { $ } from "bun";
 
 describe("ERC20 Tests", () => {
   // Anvil instance
   const anvil = createAnvil();
+  let anvilInitState: `0x${string}`;
 
   const chain = foundry;
   const transport = http("http://127.0.0.1:8545", { timeout: 60_000 });
@@ -497,12 +509,18 @@ describe("ERC20 Tests", () => {
     // Create clients with local contract addresses
     aliceClient = makeClient(aliceWalletClient, localAddresses);
     bobClient = makeClient(bobWalletClient, localAddresses);
+    anvilInitState = await testClient.dumpState();
     console.debug("Setup complete");
+  });
+
+  beforeEach(async () => {
+    await testClient.loadState({ state: anvilInitState });
   });
 
   afterAll(async () => {
     // console.debug("Stopping Anvil instance...");
     // await anvil.stop();
+    await $`pkill anvil`;
     // console.debug("Anvil instance stopped");
   });
 
@@ -833,7 +851,7 @@ describe("ERC20 Tests", () => {
       );
     });
 
-    test("testPermitAndBuyBundleWithERC20", async () => {
+    test("testPermitAndBuyBundleWithErc20", async () => {
       const bidAmount = parseEther("100");
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
