@@ -987,32 +987,14 @@ describe("ERC1155 Tests", () => {
         `ALICE: Buy attestation created with UID: ${buyAttestation.uid}`,
       );
 
-      // Bob approves his tokens to the TokenBundlePaymentObligation contract
-      console.debug(
-        "BOB: Approving ERC20 tokens for TokenBundlePaymentObligation",
-      );
-      await bobClient.viemClient.writeContract({
-        address: erc20Token,
-        abi: MockERC20Permit.abi,
-        functionName: "approve",
-        args: [localAddresses.tokenBundlePaymentObligation, erc20Amount],
-      });
-
-      console.debug("BOB: Approving ERC721 for TokenBundlePaymentObligation");
-      await bobClient.viemClient.writeContract({
-        address: erc721Token,
-        abi: MockERC721.abi,
-        functionName: "approve",
-        args: [localAddresses.tokenBundlePaymentObligation, erc721TokenId],
-      });
-
-      console.debug("BOB: Approving ERC1155 for TokenBundlePaymentObligation");
-      await bobClient.viemClient.writeContract({
-        address: bobErc1155Token,
-        abi: MockERC1155.abi,
-        functionName: "setApprovalForAll",
-        args: [localAddresses.tokenBundlePaymentObligation, true],
-      });
+      // Bob approves his tokens using bundle.approve
+      console.debug("BOB: Approving tokens for bundle payment");
+      const bobPaymentBundle = {
+        erc20s: [{ address: erc20Token, value: erc20Amount }],
+        erc721s: [{ address: erc721Token, id: erc721TokenId }],
+        erc1155s: [{ address: bobErc1155Token, id: bobErc1155TokenId, value: bobErc1155Amount }],
+      };
+      await bobClient.bundle.approve(bobPaymentBundle, "payment");
 
       console.debug("BOB: Executing payErc1155ForBundle");
       const { attested: payAttestation } =

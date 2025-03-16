@@ -859,7 +859,7 @@ describe("ERC20 Tests", () => {
         erc1155s: [{ address: askErc1155Token, id: 1n, value: 20n }],
       };
 
-      // Alice approves and creates an escrow for token bundle
+      // Alice approves tokens for token bundle escrow
       await aliceClient.erc20.approve(
         { address: erc20TokenA, value: bidAmount },
         "escrow",
