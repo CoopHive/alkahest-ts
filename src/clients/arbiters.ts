@@ -9,20 +9,23 @@ import type { ChainAddresses } from "../types";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
 
-export const makeArbitersClient = (viemClient: ViemClient, addresses: ChainAddresses) => ({
+export const makeArbitersClient = (
+  viemClient: ViemClient,
+  addresses: ChainAddresses,
+) => ({
   /**
    * Encodes TrustedPartyArbiter.DemandData to bytes.
-   * @param demand - struct DemandData {address creator, address baseArbiter, bytes baseDemand}
+   * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, address creator}
    * @returns abi encoded bytes
    */
   encodeTrustedPartyDemand: (demand: {
-    creator: `0x${string}`;
     baseArbiter: `0x${string}`;
     baseDemand: `0x${string}`;
+    creator: `0x${string}`;
   }) => {
     return encodeAbiParameters(
       parseAbiParameters(
-        "(address creator, address baseArbiter, bytes baseDemand)",
+        "(address baseArbiter, bytes baseDemand, address creator)",
       ),
       [demand],
     );
@@ -35,7 +38,7 @@ export const makeArbitersClient = (viemClient: ViemClient, addresses: ChainAddre
   decodeTrustedPartyDemand: (demandData: `0x${string}`) => {
     return decodeAbiParameters(
       parseAbiParameters(
-        "(address creator, address baseArbiter, bytes baseDemand)",
+        "(address baseArbiter, bytes baseDemand, address creator)",
       ),
       demandData,
     )[0];
