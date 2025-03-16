@@ -20,11 +20,11 @@ export const getAttestation = async (
   addresses?: ChainAddresses,
 ) => {
   // Use provided addresses or fallback to config addresses if not provided
-  const easAddress =
-    addresses?.eas || defaultContractAddresses[viemClient.chain.name]?.eas;
+  const easAddress = addresses?.eas;
 
   if (!easAddress) {
-    throw new Error(`No EAS address available for ${viemClient.chain.name}`);
+    // This is a test environment and we should have received addresses directly
+    throw new Error(`No EAS address provided`);
   }
 
   const attestation = await viemClient.readContract({
