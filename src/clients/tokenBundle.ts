@@ -173,7 +173,7 @@ export const makeTokenBundleClient = (
       abi: tokenBundleBarterUtilsAbi.abi,
       functionName: "buyBundleForBundle",
       args: [
-        { ...flattenTokenBundle(bid), arbiter: "0x", demand: "0x" },
+        { ...flattenTokenBundle(bid), arbiter: "0x0000000000000000000000000000000000000000", demand: "0x" },
         { ...flattenTokenBundle(ask), payee: viemClient.account.address },
         expiration,
       ],

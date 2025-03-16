@@ -641,19 +641,9 @@ describe("TokenBundle Tests", () => {
         localAddresses.tokenBundleEscrowObligation
       );
 
-      // Alice approves tokens
+      // Alice approves tokens using bundle.approve
       console.debug("ALICE: Approving tokens for escrow...");
-      await aliceClient.erc20.approve(
-        { address: erc20TokenA, value: erc20AmountA },
-        "bundleEscrow",
-      );
-      
-      await aliceClient.erc721.approve(
-        { address: erc721TokenA, id: aliceErc721Id },
-        "bundleEscrow",
-      );
-      
-      await aliceClient.erc1155.approveAll(erc1155TokenA, "bundleEscrow");
+      await aliceClient.bundle.approve(aliceBundle, "escrow");
       console.debug("ALICE: Tokens approved for escrow");
 
       // Alice creates buy attestation
@@ -662,7 +652,6 @@ describe("TokenBundle Tests", () => {
         await aliceClient.bundle.buyBundleForBundle(
           aliceBundle,
           bobBundle,
-          alice,
           expiration,
         );
       console.debug(
@@ -707,17 +696,7 @@ describe("TokenBundle Tests", () => {
 
       // Alice approves and creates escrow
       console.debug("ALICE: Approving tokens for escrow...");
-      await aliceClient.erc20.approve(
-        { address: erc20TokenA, value: erc20AmountA },
-        "bundleEscrow",
-      );
-      
-      await aliceClient.erc721.approve(
-        { address: erc721TokenA, id: aliceErc721Id },
-        "bundleEscrow",
-      );
-      
-      await aliceClient.erc1155.approveAll(erc1155TokenA, "bundleEscrow");
+      await aliceClient.bundle.approve(aliceBundle, "escrow");
       console.debug("ALICE: Tokens approved for escrow");
 
       console.debug("ALICE: Creating buy attestation (buyBundleForBundle)...");
@@ -725,7 +704,6 @@ describe("TokenBundle Tests", () => {
         await aliceClient.bundle.buyBundleForBundle(
           aliceBundle,
           bobBundle,
-          alice,
           expiration,
         );
       console.debug(
@@ -753,19 +731,9 @@ describe("TokenBundle Tests", () => {
         bob
       );
 
-      // Bob approves his tokens
+      // Bob approves his tokens using bundle.approve
       console.debug("BOB: Approving tokens for payment...");
-      await bobClient.erc20.approve(
-        { address: erc20TokenB, value: erc20AmountB },
-        "bundlePayment",
-      );
-      
-      await bobClient.erc721.approve(
-        { address: erc721TokenB, id: bobErc721Id },
-        "bundlePayment",
-      );
-      
-      await bobClient.erc1155.approveAll(erc1155TokenB, "bundlePayment");
+      await bobClient.bundle.approve(bobBundle, "payment");
       console.debug("BOB: Tokens approved for payment");
 
       // Bob fulfills Alice's order
@@ -832,17 +800,7 @@ describe("TokenBundle Tests", () => {
 
       // Alice approves and creates escrow
       console.debug("ALICE: Approving tokens for escrow...");
-      await aliceClient.erc20.approve(
-        { address: erc20TokenA, value: erc20AmountA },
-        "bundleEscrow",
-      );
-      
-      await aliceClient.erc721.approve(
-        { address: erc721TokenA, id: aliceErc721Id },
-        "bundleEscrow",
-      );
-      
-      await aliceClient.erc1155.approveAll(erc1155TokenA, "bundleEscrow");
+      await aliceClient.bundle.approve(aliceBundle, "escrow");
       console.debug("ALICE: Tokens approved for escrow");
 
       console.debug("ALICE: Creating buy attestation with short expiration...");
@@ -850,7 +808,6 @@ describe("TokenBundle Tests", () => {
         await aliceClient.bundle.buyBundleForBundle(
           aliceBundle,
           bobBundle,
-          alice,
           shortExpiration,
         );
       console.debug(
