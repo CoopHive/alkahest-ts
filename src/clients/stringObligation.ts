@@ -42,6 +42,7 @@ export const makeStringObligationClient = (
           "0x0000000000000000000000000000000000000000000000000000000000000000", // bytes32 0
       ],
     });
+
     const attested = await getAttestedEventFromTxHash(viemClient, hash);
     return { hash, attested };
   };
