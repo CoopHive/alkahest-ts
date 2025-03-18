@@ -174,7 +174,7 @@ export const makeAttestationClient = (
      * @param expiration - Optional expiration time for the escrow (default: 0 = no expiration)
      * @returns The transaction hash and attested escrow data
      */
-    createEscrow: async (
+    buyWithAttestation: async (
       attestation: {
         schema: `0x${string}`;
         data: {
@@ -245,7 +245,7 @@ export const makeAttestationClient = (
      * @param expiration - Optional expiration time for the escrow (default: 0 = no expiration)
      * @returns The transaction hash and attested escrow data
      */
-    createEscrow2: async (
+    buyWithAttestation2: async (
       attestationUid: `0x${string}`,
       item: {
         arbiter: `0x${string}`;

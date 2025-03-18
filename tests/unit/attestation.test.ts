@@ -1,25 +1,3 @@
-/**
- * Attestation Client Unit Tests
- *
- * This file contains tests for the attestation client functionality, including:
- * - AttestationEscrowObligation
- * - AttestationEscrowObligation2
- * - AttestationBarterUtils
- *
- * Note on test environment limitations:
- *
- * When testing with Anvil, the EAS contract does not always behave exactly like in production:
- * 1. Attestation UIDs in logs may not match the format expected by the contracts
- * 2. getAttestation calls may return empty attestations even when they exist
- * 3. The collectPayment function on AttestationEscrowObligation2 fails in the test environment
- *    with a generic revert, likely due to attestation existence checks
- *
- * Workarounds implemented:
- * 1. We use transaction hashes as attestation UIDs to ensure they have the right format
- * 2. For the collectPayment test, we demonstrate the expected workflow but mock the final step
- * 3. We avoid checking revocation status which may not work correctly in Anvil
- */
-
 import {
   afterAll,
   beforeAll,
@@ -376,7 +354,7 @@ describe("Attestation Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       const { attested: escrowData } =
-        await aliceClient.attestation.createEscrow(
+        await aliceClient.attestation.buyWithAttestation(
           {
             schema: testSchemaId,
             data: {
@@ -415,12 +393,8 @@ describe("Attestation Tests", () => {
 
     test("testCollectPayment", async () => {
       // Bob creates a fulfillment attestation using StringObligation
-      const fulfillmentData =
+      const { attested: fulfillmentEvent } =
         await bobClient.stringObligation.makeStatement("fulfillment data");
-
-      // Get the attestation UID using the SDK function
-      const fulfillmentEvent =
-        await bobClient.getAttestedEventFromTxHash(fulfillmentData);
       const fulfillmentUid = fulfillmentEvent.uid as `0x${string}`;
 
       // Alice creates an escrow attestation that requires a fulfillment
@@ -429,7 +403,7 @@ describe("Attestation Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       const { attested: escrowData } =
-        await aliceClient.attestation.createEscrow(
+        await aliceClient.attestation.buyWithAttestation(
           {
             schema: testSchemaId,
             data: {
@@ -554,14 +528,15 @@ describe("Attestation Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now - EXPIRATION_TIME (line 105)
 
       // Create the statement - lines 106-107
-      const { hash: escrowHash } = await aliceClient.attestation.createEscrow2(
-        preExistingAttestationId,
-        {
-          arbiter: localAddresses.trivialArbiter,
-          demand: demandData,
-        },
-        expiration,
-      );
+      const { hash: escrowHash } =
+        await aliceClient.attestation.buyWithAttestation2(
+          preExistingAttestationId,
+          {
+            arbiter: localAddresses.trivialArbiter,
+            demand: demandData,
+          },
+          expiration,
+        );
 
       // Get the escrow attestation UID using the SDK function
       const escrowEvent =
@@ -625,14 +600,15 @@ describe("Attestation Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day expiration - line 175
 
       // Create the escrow exactly as in Solidity test - lines 176-177
-      const { hash: escrowHash } = await aliceClient.attestation.createEscrow2(
-        preExistingAttestationId,
-        {
-          arbiter: localAddresses.trivialArbiter,
-          demand: demandData,
-        },
-        expiration,
-      );
+      const { hash: escrowHash } =
+        await aliceClient.attestation.buyWithAttestation2(
+          preExistingAttestationId,
+          {
+            arbiter: localAddresses.trivialArbiter,
+            demand: demandData,
+          },
+          expiration,
+        );
 
       // Get the escrow attestation UID using the SDK function
       const escrowEvent =
@@ -644,13 +620,10 @@ describe("Attestation Tests", () => {
       console.log("Creating a fulfillment attestation...");
 
       // Create the string data - lines 181-183
-      const fulfillmentHash =
+      const { attested: fulfillmentEvent } =
         await bobClient.stringObligation.makeStatement("fulfillment data");
-
-      // Get the fulfillment attestation UID using the SDK function
-      const fulfillmentEvent =
-        await bobClient.getAttestedEventFromTxHash(fulfillmentHash);
       const fulfillmentUid = fulfillmentEvent.uid as `0x${string}`;
+
       console.log("Fulfillment attestation created with UID:", fulfillmentUid);
 
       // Collect payment - lines 188-189
@@ -794,14 +767,15 @@ describe("Attestation Tests", () => {
       // Now create an escrow for this attestation using the SDK function
       const demandData = ("0x" +
         Buffer.from("false").toString("hex")) as `0x${string}`;
-      const { hash: escrowHash } = await aliceClient.attestation.createEscrow2(
-        attestationUid,
-        {
-          arbiter: localAddresses.trivialArbiter,
-          demand: demandData,
-        },
-        BigInt(Math.floor(Date.now() / 1000) + 2 * 86400), // 2 days expiration
-      );
+      const { hash: escrowHash } =
+        await aliceClient.attestation.buyWithAttestation2(
+          attestationUid,
+          {
+            arbiter: localAddresses.trivialArbiter,
+            demand: demandData,
+          },
+          BigInt(Math.floor(Date.now() / 1000) + 2 * 86400), // 2 days expiration
+        );
 
       const escrowEvent =
         await aliceClient.getAttestedEventFromTxHash(escrowHash);
