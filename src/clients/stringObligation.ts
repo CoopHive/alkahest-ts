@@ -80,7 +80,7 @@ export const makeStringObligationClient = (viemClient: ViemClient, addresses: Ch
      */
     getObligation: async (uid: `0x${string}`) => {
       const [attestation, schema] = await Promise.all([
-        getAttestation(viemClient, uid),
+        getAttestation(viemClient, uid, addresses),
         getSchema(),
       ]);
 
@@ -99,7 +99,7 @@ export const makeStringObligationClient = (viemClient: ViemClient, addresses: Ch
     },
     getJsonObligation: async <T>(uid: `0x${string}`) => {
       const [attestation, schema] = await Promise.all([
-        getAttestation(viemClient, uid),
+        getAttestation(viemClient, uid, addresses),
         getSchema(),
       ]);
 
