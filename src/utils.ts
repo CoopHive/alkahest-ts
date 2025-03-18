@@ -7,7 +7,7 @@ import {
 import { abi as iEasAbi } from "./contracts/IEAS";
 import { type Account, type Chain } from "viem";
 import type { ChainAddresses, TokenBundle, TokenBundleFlat } from "./types";
-import { contractAddresses as defaultContractAddresses } from "./config";
+import { contractAddresses } from "./config";
 
 import { abi as easAbi } from "./contracts/IEAS";
 
@@ -19,13 +19,8 @@ export const getAttestation = async (
   uid: `0x${string}`,
   addresses?: ChainAddresses,
 ) => {
-  // Use provided addresses or fallback to config addresses if not provided
-  const easAddress = addresses?.eas;
-
-  if (!easAddress) {
-    // This is a test environment and we should have received addresses directly
-    throw new Error(`No EAS address provided`);
-  }
+  let easAddress =
+    addresses?.eas ?? contractAddresses[viemClient.chain.name].eas;
 
   const attestation = await viemClient.readContract({
     address: easAddress,
