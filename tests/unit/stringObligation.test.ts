@@ -304,7 +304,7 @@ describe("StringObligation Tests", () => {
       const testString = "Test Decode Function";
       const encodedData = encodeAbiParameters(
         parseAbiParameters("(string item)"),
-        [{ item: testString }]
+        [{ item: testString }],
       );
 
       // Use the decode function
@@ -321,78 +321,117 @@ describe("StringObligation Tests", () => {
         value: 456,
         nested: {
           flag: true,
-          list: [1, 2, 3]
-        }
+          list: [1, 2, 3],
+        },
       };
 
       // Create encoded data for testing
       const encodedData = encodeAbiParameters(
         parseAbiParameters("(string item)"),
-        [{ item: JSON.stringify(testJsonData) }]
+        [{ item: JSON.stringify(testJsonData) }],
       );
 
       // Use the decodeJson function
-      const decoded = aliceClient.stringObligation.decodeJson<typeof testJsonData>(encodedData);
+      const decoded =
+        aliceClient.stringObligation.decodeJson<typeof testJsonData>(
+          encodedData,
+        );
 
       // Verify decoded JSON data
       expect(decoded).toEqual(testJsonData);
     });
 
     test("testDecodeZod", async () => {
-      // Create a Zod schema for testing - this parses the string item directly
-      const TestSchema = z.string().min(1);
+      const data = {
+        foo: "bar",
+        baz: 123,
+      };
 
-      // Create encoded data for testing
-      const testString = "Test String For Zod";
       const encodedData = encodeAbiParameters(
         parseAbiParameters("(string item)"),
-        [{ item: testString }]
+        [{ item: JSON.stringify(data) }],
       );
+
+      const TestSchema = z.object({
+        foo: z.string(),
+        baz: z.number(),
+      });
 
       // Test with default options (sync, not safe)
       const decoded = aliceClient.stringObligation.decodeZod(
         encodedData,
-        TestSchema
+        TestSchema,
       );
 
       // Verify decoded data - should be the string value directly
-      expect(decoded).toBe(testString);
+      expect(decoded).toEqual(data);
 
-      // Test with safe option - explicitly typing the result to help TypeScript
+      // Test with safe option
       const safeDecoded = aliceClient.stringObligation.decodeZod(
         encodedData,
         TestSchema,
         undefined,
-        { async: false, safe: true }
-      ) as z.SafeParseReturnType<string, string>;
+        { async: false, safe: true },
+      );
 
       // Verify safe parsing result
       expect(safeDecoded.success).toBe(true);
       if (safeDecoded.success) {
-        expect(safeDecoded.data).toBe(testString);
+        expect(safeDecoded.data).toEqual(data);
+      }
+      
+      // Test with async option
+      const asyncDecoded = await aliceClient.stringObligation.decodeZod(
+        encodedData,
+        TestSchema,
+        undefined,
+        { async: true, safe: false },
+      );
+      
+      // Verify async parsing result
+      expect(asyncDecoded).toEqual(data);
+      
+      // Test with both async and safe options
+      const asyncSafeDecoded = await aliceClient.stringObligation.decodeZod(
+        encodedData,
+        TestSchema,
+        undefined,
+        { async: true, safe: true },
+      );
+      
+      // Verify async safe parsing result
+      expect(asyncSafeDecoded.success).toBe(true);
+      if (asyncSafeDecoded.success) {
+        expect(asyncSafeDecoded.data).toEqual(data);
       }
     });
 
     test("testDecodeArkType", async () => {
-      // Create an arktype schema for testing - validate the string directly
-      // Type-cast to help TypeScript understand the schema type
-      const TestType = type("string") as Type<string>;
+      const data = {
+        foo: "bar",
+        baz: 123,
+      };
 
-      // Create encoded data for testing
-      const testString = "Test String For ArkType";
       const encodedData = encodeAbiParameters(
         parseAbiParameters("(string item)"),
-        [{ item: testString }]
+        [{ item: JSON.stringify(data) }],
       );
+
+      const TestType = type({
+        foo: "string",
+        baz: "number",
+      });
 
       // Use the decodeArkType function
       const decoded = aliceClient.stringObligation.decodeArkType(
         encodedData,
-        TestType
+        TestType,
       );
 
+      console.log(decoded);
+
       // Verify decoded data - should be the string value directly
-      expect(decoded).toBe(testString);
+      expect(decoded).toEqual(data);
     });
   });
 });
