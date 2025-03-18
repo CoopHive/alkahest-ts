@@ -48,52 +48,116 @@ export const makeClient = (
   // Determine base addresses to use
   let baseAddresses: ChainAddresses | undefined = undefined;
   if (supportedChains.includes(viemClient.chain.name)) {
-    baseAddresses = defaultContractAddresses[
-      viemClient.chain.name as keyof typeof defaultContractAddresses
-    ];
+    baseAddresses =
+      defaultContractAddresses[
+        viemClient.chain.name as keyof typeof defaultContractAddresses
+      ];
   }
-  
+
   if (!baseAddresses && !contractAddresses) {
     throw new Error(
       `Chain "${viemClient.chain.name}" is not supported and no custom contract addresses were provided.`,
     );
   }
-  
+
   // Create a full ChainAddresses object with zero address fallbacks
   const zeroAddress = "0x0000000000000000000000000000000000000000" as const;
   const addresses: ChainAddresses = {
     eas: contractAddresses?.eas || baseAddresses?.eas || zeroAddress,
-    easSchemaRegistry: contractAddresses?.easSchemaRegistry || baseAddresses?.easSchemaRegistry || zeroAddress,
-    
-    erc20EscrowObligation: contractAddresses?.erc20EscrowObligation || baseAddresses?.erc20EscrowObligation || zeroAddress,
-    erc20PaymentObligation: contractAddresses?.erc20PaymentObligation || baseAddresses?.erc20PaymentObligation || zeroAddress,
-    erc20BarterUtils: contractAddresses?.erc20BarterUtils || baseAddresses?.erc20BarterUtils || zeroAddress,
-    
-    erc721EscrowObligation: contractAddresses?.erc721EscrowObligation || baseAddresses?.erc721EscrowObligation || zeroAddress,
-    erc721PaymentObligation: contractAddresses?.erc721PaymentObligation || baseAddresses?.erc721PaymentObligation || zeroAddress,
-    erc721BarterUtils: contractAddresses?.erc721BarterUtils || baseAddresses?.erc721BarterUtils || zeroAddress,
-    
-    erc1155EscrowObligation: contractAddresses?.erc1155EscrowObligation || baseAddresses?.erc1155EscrowObligation || zeroAddress,
-    erc1155PaymentObligation: contractAddresses?.erc1155PaymentObligation || baseAddresses?.erc1155PaymentObligation || zeroAddress,
-    erc1155BarterUtils: contractAddresses?.erc1155BarterUtils || baseAddresses?.erc1155BarterUtils || zeroAddress,
-    
-    tokenBundleEscrowObligation: contractAddresses?.tokenBundleEscrowObligation || baseAddresses?.tokenBundleEscrowObligation || zeroAddress,
-    tokenBundlePaymentObligation: contractAddresses?.tokenBundlePaymentObligation || baseAddresses?.tokenBundlePaymentObligation || zeroAddress,
-    tokenBundleBarterUtils: contractAddresses?.tokenBundleBarterUtils || baseAddresses?.tokenBundleBarterUtils || zeroAddress,
-    
-    attestationEscrowObligation: contractAddresses?.attestationEscrowObligation || baseAddresses?.attestationEscrowObligation || zeroAddress,
-    attestationEscrowObligation2: contractAddresses?.attestationEscrowObligation2 || baseAddresses?.attestationEscrowObligation2 || zeroAddress,
-    attestationBarterUtils: contractAddresses?.attestationBarterUtils || baseAddresses?.attestationBarterUtils || zeroAddress,
-    
-    stringObligation: contractAddresses?.stringObligation || baseAddresses?.stringObligation || zeroAddress,
-    
+    easSchemaRegistry:
+      contractAddresses?.easSchemaRegistry ||
+      baseAddresses?.easSchemaRegistry ||
+      zeroAddress,
+
+    erc20EscrowObligation:
+      contractAddresses?.erc20EscrowObligation ||
+      baseAddresses?.erc20EscrowObligation ||
+      zeroAddress,
+    erc20PaymentObligation:
+      contractAddresses?.erc20PaymentObligation ||
+      baseAddresses?.erc20PaymentObligation ||
+      zeroAddress,
+    erc20BarterUtils:
+      contractAddresses?.erc20BarterUtils ||
+      baseAddresses?.erc20BarterUtils ||
+      zeroAddress,
+
+    erc721EscrowObligation:
+      contractAddresses?.erc721EscrowObligation ||
+      baseAddresses?.erc721EscrowObligation ||
+      zeroAddress,
+    erc721PaymentObligation:
+      contractAddresses?.erc721PaymentObligation ||
+      baseAddresses?.erc721PaymentObligation ||
+      zeroAddress,
+    erc721BarterUtils:
+      contractAddresses?.erc721BarterUtils ||
+      baseAddresses?.erc721BarterUtils ||
+      zeroAddress,
+
+    erc1155EscrowObligation:
+      contractAddresses?.erc1155EscrowObligation ||
+      baseAddresses?.erc1155EscrowObligation ||
+      zeroAddress,
+    erc1155PaymentObligation:
+      contractAddresses?.erc1155PaymentObligation ||
+      baseAddresses?.erc1155PaymentObligation ||
+      zeroAddress,
+    erc1155BarterUtils:
+      contractAddresses?.erc1155BarterUtils ||
+      baseAddresses?.erc1155BarterUtils ||
+      zeroAddress,
+
+    tokenBundleEscrowObligation:
+      contractAddresses?.tokenBundleEscrowObligation ||
+      baseAddresses?.tokenBundleEscrowObligation ||
+      zeroAddress,
+    tokenBundlePaymentObligation:
+      contractAddresses?.tokenBundlePaymentObligation ||
+      baseAddresses?.tokenBundlePaymentObligation ||
+      zeroAddress,
+    tokenBundleBarterUtils:
+      contractAddresses?.tokenBundleBarterUtils ||
+      baseAddresses?.tokenBundleBarterUtils ||
+      zeroAddress,
+
+    attestationEscrowObligation:
+      contractAddresses?.attestationEscrowObligation ||
+      baseAddresses?.attestationEscrowObligation ||
+      zeroAddress,
+    attestationEscrowObligation2:
+      contractAddresses?.attestationEscrowObligation2 ||
+      baseAddresses?.attestationEscrowObligation2 ||
+      zeroAddress,
+    attestationBarterUtils:
+      contractAddresses?.attestationBarterUtils ||
+      baseAddresses?.attestationBarterUtils ||
+      zeroAddress,
+
+    stringObligation:
+      contractAddresses?.stringObligation ||
+      baseAddresses?.stringObligation ||
+      zeroAddress,
+
     usdc: contractAddresses?.usdc || baseAddresses?.usdc || zeroAddress,
     eurc: contractAddresses?.eurc || baseAddresses?.eurc || zeroAddress,
-    
-    trustedPartyArbiter: contractAddresses?.trustedPartyArbiter || baseAddresses?.trustedPartyArbiter || zeroAddress,
-    trivialArbiter: contractAddresses?.trivialArbiter || baseAddresses?.trivialArbiter || zeroAddress,
-    specificAttestationArbiter: contractAddresses?.specificAttestationArbiter || baseAddresses?.specificAttestationArbiter || zeroAddress,
-    trustedOracleArbiter: contractAddresses?.trustedOracleArbiter || baseAddresses?.trustedOracleArbiter || zeroAddress,
+
+    trustedPartyArbiter:
+      contractAddresses?.trustedPartyArbiter ||
+      baseAddresses?.trustedPartyArbiter ||
+      zeroAddress,
+    trivialArbiter:
+      contractAddresses?.trivialArbiter ||
+      baseAddresses?.trivialArbiter ||
+      zeroAddress,
+    specificAttestationArbiter:
+      contractAddresses?.specificAttestationArbiter ||
+      baseAddresses?.specificAttestationArbiter ||
+      zeroAddress,
+    trustedOracleArbiter:
+      contractAddresses?.trustedOracleArbiter ||
+      baseAddresses?.trustedOracleArbiter ||
+      zeroAddress,
   };
 
   return {
@@ -116,7 +180,7 @@ export const makeClient = (
     attestation: makeAttestationClient(viemClient, addresses),
 
     /** Utilities for StringObligation */
-    stringResult: makeStringObligationClient(viemClient, addresses),
+    stringObligation: makeStringObligationClient(viemClient, addresses),
 
     /** The underlying Viem client */
     viemClient,
