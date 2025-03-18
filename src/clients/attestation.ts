@@ -218,7 +218,7 @@ export const makeAttestationClient = (
      * @param fulfillmentAttestation - The UID of the fulfillment attestation
      * @returns The transaction hash and validation attestation data
      */
-    collectEscrow: async (
+    collectPayment: async (
       escrowAttestation: `0x${string}`,
       fulfillmentAttestation: `0x${string}`,
     ) => {
@@ -280,7 +280,7 @@ export const makeAttestationClient = (
      * @param fulfillmentAttestation - The UID of the fulfillment attestation
      * @returns The transaction hash and validation attestation data
      */
-    collectEscrow2: async (
+    collectPayment2: async (
       escrowAttestation: `0x${string}`,
       fulfillmentAttestation: `0x${string}`,
     ) => {
