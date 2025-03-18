@@ -428,7 +428,7 @@ describe("Attestation Tests", () => {
 
       // Bob collects the payment by providing his fulfillment
       const { attested: paymentData } =
-        await bobClient.attestation.collectEscrow(
+        await bobClient.attestation.collectPayment(
           escrowData.uid,
           fulfillmentUid,
         );
@@ -628,7 +628,7 @@ describe("Attestation Tests", () => {
 
       // Collect payment - lines 188-189
       console.log("Collecting payment...");
-      const { hash: collectHash } = await bobClient.attestation.collectEscrow2(
+      const { hash: collectHash } = await bobClient.attestation.collectPayment2(
         escrowUid,
         fulfillmentUid,
       );
