@@ -10,8 +10,8 @@ import type { Type } from "arktype";
 // Type helper for Zod parse functions return types
 type ZodParseReturnType<
   TSchema extends z.ZodSchema,
-  TAsync extends boolean,
-  TSafe extends boolean,
+  TAsync extends boolean | undefined,
+  TSafe extends boolean | undefined,
 > = TSafe extends true
   ? TAsync extends true
     ? Promise<SafeParseReturnType<z.infer<TSchema>, z.infer<TSchema>>>
@@ -64,38 +64,34 @@ export const makeStringObligationClient = (
       const decoded = decode(statementData);
       return JSON.parse(decoded.item) as T;
     },
-    decodeZod: <TSchema extends z.ZodSchema>(
+    decodeZod: <
+      TSchema extends z.ZodSchema,
+      TAsync extends boolean = false,
+      TSafe extends boolean = false,
+    >(
       statementData: `0x${string}`,
       schema: TSchema,
       schemaOptions?: Partial<z.ParseParams>,
       parseOptions: {
-        async: boolean;
-        safe: boolean;
-      } = { async: false, safe: false },
-    ): ZodParseReturnType<
-      TSchema,
-      typeof parseOptions.async,
-      typeof parseOptions.safe
-    > => {
+        async: TAsync;
+        safe: TSafe;
+      } = { async: false, safe: false } as any,
+    ): ZodParseReturnType<TSchema, TAsync, TSafe> => {
       const parseFunc = getZodParseFunc(parseOptions);
       const decoded = decode(statementData);
 
       // Type assertion needed because TypeScript can't infer the connection between parseFunc and return type
       return schema[parseFunc](
-        decoded.item,
+        JSON.parse(decoded.item),
         schemaOptions,
-      ) as ZodParseReturnType<
-        TSchema,
-        typeof parseOptions.async,
-        typeof parseOptions.safe
-      >;
+      ) as ZodParseReturnType<TSchema, TAsync, TSafe>;
     },
     decodeArkType: <Schema extends Type<any, any>>(
       statementData: `0x${string}`,
       schema: Schema,
     ): Schema["inferOut"] => {
       const decoded = decode(statementData);
-      return schema(decoded.item) as Schema["inferOut"];
+      return schema(JSON.parse(decoded.item)) as Schema["inferOut"];
     },
     makeStatement,
     makeStatementJson: async <T>(item: T, refUid?: `0x${string}`) => {
