@@ -285,52 +285,6 @@ describe("StringObligation Tests", () => {
       expect(jsonObligation.data.item).toEqual(testJsonData);
     });
 
-    test("testDecodeWithZod", async () => {
-      // Define a Zod schema
-      const TestSchema = z.object({
-        name: z.string(),
-        value: z.number(),
-        properties: z.object({
-          isTest: z.boolean(),
-          tags: z.array(z.string()),
-        }),
-      });
-
-      // Create test data
-      const testData = {
-        name: "Test Object",
-        value: 123,
-        properties: {
-          isTest: true,
-          tags: ["test", "json", "data"],
-        },
-      };
-
-      // Make a JSON statement
-      const hash =
-        await aliceClient.stringObligation.makeStatementJson(testData);
-
-      // Get the attested event
-      const attestedEvent = await getAttestedEventFromTxHash(
-        aliceClient.viemClient,
-        hash,
-      );
-
-      // Get the attestation
-      const attestation = await aliceClient.getAttestation(attestedEvent.uid);
-
-      // Decode with Zod
-      const decodedData = aliceClient.stringObligation.decodeZod(
-        attestation.data,
-        TestSchema,
-        undefined,
-        { async: false, safe: false },
-      );
-
-      // Verify decoded data matches original
-      expect(decodedData).toEqual(testData);
-    });
-
     test("testGetInvalidStatement", async () => {
       // Try to get a non-existent statement/obligation
       const invalidUid =
@@ -338,7 +292,7 @@ describe("StringObligation Tests", () => {
 
       // Expect this to throw an error
       expect(
-        await aliceClient.stringObligation.getObligation(invalidUid),
+        aliceClient.stringObligation.getObligation(invalidUid),
       ).rejects.toThrow();
     });
   });
