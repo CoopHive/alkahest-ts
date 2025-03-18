@@ -4,10 +4,26 @@ import { getAttestation } from "../utils";
 
 import { abi as stringObligationAbi } from "../contracts/StringObligation";
 import type { ChainAddresses } from "../types";
-import type { z, ZodTypeDef } from "zod";
+import type { z, ZodTypeDef, SafeParseReturnType } from "zod";
 import type { Type } from "arktype";
 
-export const makeStringObligationClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
+// Type helper for Zod parse functions return types
+type ZodParseReturnType<
+  TSchema extends z.ZodSchema,
+  TAsync extends boolean,
+  TSafe extends boolean,
+> = TSafe extends true
+  ? TAsync extends true
+    ? Promise<SafeParseReturnType<z.infer<TSchema>, z.infer<TSchema>>>
+    : SafeParseReturnType<z.infer<TSchema>, z.infer<TSchema>>
+  : TAsync extends true
+    ? Promise<z.infer<TSchema>>
+    : z.infer<TSchema>;
+
+export const makeStringObligationClient = (
+  viemClient: ViemClient,
+  addresses: ChainAddresses,
+) => {
   const decode = (statementData: `0x${string}`) => {
     return decodeAbiParameters(
       parseAbiParameters("(string item)"),
@@ -48,25 +64,38 @@ export const makeStringObligationClient = (viemClient: ViemClient, addresses: Ch
       const decoded = decode(statementData);
       return JSON.parse(decoded.item) as T;
     },
-    decodeZod: (
+    decodeZod: <TSchema extends z.ZodSchema>(
       statementData: `0x${string}`,
-      schema: z.ZodSchema<unknown, ZodTypeDef, unknown>,
+      schema: TSchema,
       schemaOptions?: Partial<z.ParseParams>,
       parseOptions: {
         async: boolean;
         safe: boolean;
       } = { async: false, safe: false },
-    ): z.infer<typeof schema> => {
-      return schema[getZodParseFunc(parseOptions)](
-        decode(statementData),
+    ): ZodParseReturnType<
+      TSchema,
+      typeof parseOptions.async,
+      typeof parseOptions.safe
+    > => {
+      const parseFunc = getZodParseFunc(parseOptions);
+      const decoded = decode(statementData);
+
+      // Type assertion needed because TypeScript can't infer the connection between parseFunc and return type
+      return schema[parseFunc](
+        decoded.item,
         schemaOptions,
-      );
+      ) as ZodParseReturnType<
+        TSchema,
+        typeof parseOptions.async,
+        typeof parseOptions.safe
+      >;
     },
-    decodeArkType: <Schema extends Type<unknown, unknown>>(
+    decodeArkType: <Schema extends Type<any, any>>(
       statementData: `0x${string}`,
       schema: Schema,
     ): Schema["inferOut"] => {
-      return schema(decode(statementData));
+      const decoded = decode(statementData);
+      return schema(decoded.item) as Schema["inferOut"];
     },
     makeStatement,
     makeStatementJson: async <T>(item: T, refUid?: `0x${string}`) => {
