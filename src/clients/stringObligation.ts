@@ -1,6 +1,6 @@
 import { decodeAbiParameters, parseAbiParameters } from "viem";
 import type { ViemClient } from "../utils";
-import { getAttestation } from "../utils";
+import { getAttestation, getAttestedEventFromTxHash } from "../utils";
 
 import { abi as stringObligationAbi } from "../contracts/StringObligation";
 import type { ChainAddresses } from "../types";
@@ -31,8 +31,8 @@ export const makeStringObligationClient = (
     )[0];
   };
 
-  const makeStatement = async (item: string, refUid?: `0x${string}`) =>
-    await viemClient.writeContract({
+  const makeStatement = async (item: string, refUid?: `0x${string}`) => {
+    const hash = await viemClient.writeContract({
       address: addresses.stringObligation,
       abi: stringObligationAbi.abi,
       functionName: "makeStatement",
@@ -42,6 +42,9 @@ export const makeStringObligationClient = (
           "0x0000000000000000000000000000000000000000000000000000000000000000", // bytes32 0
       ],
     });
+    const attested = await getAttestedEventFromTxHash(viemClient, hash);
+    return { hash, attested };
+  };
 
   const getZodParseFunc = (opts: { async: boolean; safe: boolean }) => {
     let command = opts.safe ? "safeParse" : "parse";
