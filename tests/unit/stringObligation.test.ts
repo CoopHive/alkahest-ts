@@ -200,21 +200,8 @@ describe("StringObligation Tests", () => {
       const testString = "Test String Data";
 
       // Make a statement using alice's client - returns transaction hash
-      const hash = await aliceClient.stringObligation.makeStatement(testString);
-
-      // Wait for the transaction to be mined
-      const receipt = await aliceClient.viemClient.waitForTransactionReceipt({
-        hash,
-      });
-
-      // Check transaction was successful
-      expect(receipt.status).toBe("success");
-
-      // Extract the attestation UID from transaction logs
-      const attestedEvent = await getAttestedEventFromTxHash(
-        aliceClient.viemClient,
-        hash,
-      );
+      const { attested: attestedEvent } =
+        await aliceClient.stringObligation.makeStatement(testString);
 
       // Verify attestation UID exists
       expect(attestedEvent.uid).not.toBe(
@@ -227,18 +214,8 @@ describe("StringObligation Tests", () => {
       const testString = "Test String Data";
 
       // Make a statement using alice's client - returns transaction hash
-      const hash = await aliceClient.stringObligation.makeStatement(testString);
-
-      // Get the attested event from the transaction hash
-      const attestedEvent = await getAttestedEventFromTxHash(
-        aliceClient.viemClient,
-        hash,
-      );
-
-      // Verify attestation UID exists
-      expect(attestedEvent.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      const { attested: attestedEvent } =
+        await aliceClient.stringObligation.makeStatement(testString);
 
       // Get the complete obligation/statement
       const obligation = await aliceClient.stringObligation.getObligation(
@@ -264,14 +241,8 @@ describe("StringObligation Tests", () => {
       };
 
       // Make a JSON statement
-      const hash =
+      const { attested: attestedEvent } =
         await aliceClient.stringObligation.makeStatementJson(testJsonData);
-
-      // Get the attested event from the transaction hash
-      const attestedEvent = await getAttestedEventFromTxHash(
-        aliceClient.viemClient,
-        hash,
-      );
 
       // Verify attestation UID exists
       expect(attestedEvent.uid).not.toBe(
@@ -379,7 +350,7 @@ describe("StringObligation Tests", () => {
       if (safeDecoded.success) {
         expect(safeDecoded.data).toEqual(data);
       }
-      
+
       // Test with async option
       const asyncDecoded = await aliceClient.stringObligation.decodeZod(
         encodedData,
@@ -387,10 +358,10 @@ describe("StringObligation Tests", () => {
         undefined,
         { async: true, safe: false },
       );
-      
+
       // Verify async parsing result
       expect(asyncDecoded).toEqual(data);
-      
+
       // Test with both async and safe options
       const asyncSafeDecoded = await aliceClient.stringObligation.decodeZod(
         encodedData,
@@ -398,7 +369,7 @@ describe("StringObligation Tests", () => {
         undefined,
         { async: true, safe: true },
       );
-      
+
       // Verify async safe parsing result
       expect(asyncSafeDecoded.success).toBe(true);
       if (asyncSafeDecoded.success) {
