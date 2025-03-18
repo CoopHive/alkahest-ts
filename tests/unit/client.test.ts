@@ -454,7 +454,7 @@ describe("Client Tests", () => {
 
       // Start a promise that waits for fulfillment in the background
       const fulfillmentPromise = aliceClient.waitForFulfillment(
-        localAddresses.stringObligation,
+        localAddresses.erc20EscrowObligation,
         escrowData.uid,
       );
 
