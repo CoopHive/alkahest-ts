@@ -139,9 +139,6 @@ export const makeClient = (
       baseAddresses?.stringObligation ||
       zeroAddress,
 
-    usdc: contractAddresses?.usdc || baseAddresses?.usdc || zeroAddress,
-    eurc: contractAddresses?.eurc || baseAddresses?.eurc || zeroAddress,
-
     trustedPartyArbiter:
       contractAddresses?.trustedPartyArbiter ||
       baseAddresses?.trustedPartyArbiter ||
