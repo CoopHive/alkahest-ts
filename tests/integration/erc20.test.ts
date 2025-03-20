@@ -16,8 +16,8 @@ import { baseSepolia } from "viem/chains";
 let clientBuyer: ReturnType<typeof makeClient>;
 let clientSeller: ReturnType<typeof makeClient>;
 
-let usdc = contractAddresses["Base Sepolia"].usdc;
-let eurc = contractAddresses["Base Sepolia"].eurc;
+const usdc = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
+const eurc = "0x808456652fdb597867f38412077A9182bf77359F";
 
 beforeAll(() => {
   clientBuyer = makeClient(
