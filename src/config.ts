@@ -2,35 +2,28 @@ import type { ChainAddresses } from "./types";
 
 export const contractAddresses: Record<string, ChainAddresses> = {
   "Base Sepolia": {
+    attestationBarterUtils: "0xfFA2bf5Fc4270e9AFd20Aa2C87b3B100489DF97a",
+    attestationEscrowObligation: "0x021d28E9eBc935Bf21fe5Ff48cAAbE126Ed706aB",
+    attestationEscrowObligation2: "0x5f177293F46d938316229A07E31bC65d64D58c9b",
     eas: "0x4200000000000000000000000000000000000021",
     easSchemaRegistry: "0x4200000000000000000000000000000000000020",
-
-    erc20BarterUtils: "0x07E6Cb3Cb45fa35fb364cA24Fd1BfcD19556757A",
-    erc20EscrowObligation: "0x4996749214CC20911B9c3169C9eE12cf73686224",
-    erc20PaymentObligation: "0x85A8BA268F72eb3c820719Aa298a9d6D156C1d5D",
-
-    erc721BarterUtils: "0x58d04aED5debaD571f728c5aBa0e7856a2e19F7f",
-    erc721EscrowObligation: "0xe3eAeeD9438Bd1Db5954eFBd95027cE0259180e9",
-    erc721PaymentObligation: "0x1018c085a32772E93Fd13e282ba3F22E3365C642",
-
-    erc1155BarterUtils: "0xcbDEBC0033Aa1fFedfbdec853AE3862165790a91",
-    erc1155EscrowObligation: "0x4EC4374e730FCF6c7Aceef49da0c82ea0987298e",
-    erc1155PaymentObligation: "0xDe16FC7692161ef4656dB85f0815f7fFB535403A",
-
-    tokenBundleBarterUtils: "0x8AF31c90E7bDbf8cc78548Bfe8983aa7822eFf55",
-    tokenBundleEscrowObligation: "0x0f6D03bd26BEB9f2b6eDe69f1e6AefF7DA9E7e40",
-    tokenBundlePaymentObligation: "0xF643fD0259b34fFF9cFe2AfC0086163c961c2bB4",
-
-    attestationBarterUtils: "0xADB9439413BCe4d720b2892abcF568B3BE3d5684",
-    attestationEscrowObligation: "0x3b58003a160C75D44fc42cABDb8b4F299e53a8F3",
-    attestationEscrowObligation2: "0x0433792a2e7481AE696f7b2EE6326C0f3670d100",
-
-    stringObligation: "0x0E8591645144EBaBdbCE518DA75DC3254b29B708",
-
-    trustedPartyArbiter: "0x550c511f456f8f30A7357e204B83874bD0dF2566",
-    trivialArbiter: "0x862F7E9961B518316260Fe2B45c1110D7f4b9b4e",
-    specificAttestationArbiter: "0x6B19cfe622384663aeB8F886Fe3646629caCE375",
-    trustedOracleArbiter: "0x77154e8F4204e484e12fAA68d50964e793224d02",
+    erc1155BarterUtils: "0x70a9Ce33CF0f7487A8a33B1447455047A90F3998",
+    erc1155EscrowObligation: "0x4e7d759Df6204d901fb6FD82248FEa64f129bfa3",
+    erc1155PaymentObligation: "0x799048b0772381A095aa37305C1D85f26b8445C7",
+    erc20BarterUtils: "0x5C624f8FbbB377378cDfE8B627384A917FE839db",
+    erc20EscrowObligation: "0xFa76421cEe6aee41adc7f6a475b9Ef3776d500F0",
+    erc20PaymentObligation: "0xE95d3931E15E4d96cE1d2Dd336DcEad35A708bdB",
+    erc721BarterUtils: "0x01414CC4a4c7b7fa9F551907ee89c867c7a74d29",
+    erc721EscrowObligation: "0xF3C3dC387e00FE76CCF7549634aa694D466de5AA",
+    erc721PaymentObligation: "0x9DFe20Ded52D0F9e535F546f87d83B473DefC5B2",
+    specificAttestationArbiter: "0xdE5eCFC92E3da87865CD29C196aA5cebFdC4D9C6",
+    stringObligation: "0x4edEa259C8E014eeEd583D1a863e020190B21Db7",
+    tokenBundleBarterUtils: "0xb03633005C763feAD6993541Cab2a10FA79828c1",
+    tokenBundleEscrowObligation: "0xf63e97217f71C4cdbA643c8EFc9F152486560542",
+    tokenBundlePaymentObligation: "0xd192685E79F760fA769614d22916528254FD4937",
+    trivialArbiter: "0x7D4bCD84901cEC903105564f63BE70432448B222",
+    trustedOracleArbiter: "0x361E0950534F4a54A39F8C4f1f642C323f6e66B9",
+    trustedPartyArbiter: "0x3895398C46da88b75eE3ca3092F7714BEbE795a5",
   },
   "Filecoin Calibration": {
     eas: "0x3c79a0225380fb6f3cb990ffc4e3d5af4546b524",
