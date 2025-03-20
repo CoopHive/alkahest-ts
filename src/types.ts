@@ -26,9 +26,6 @@ export type ChainAddresses = {
 
   stringObligation: `0x${string}`;
 
-  usdc: `0x${string}`;
-  eurc: `0x${string}`;
-
   trustedPartyArbiter: `0x${string}`;
   trivialArbiter: `0x${string}`;
   specificAttestationArbiter: `0x${string}`;
