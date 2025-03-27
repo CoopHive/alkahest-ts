@@ -7,7 +7,11 @@ import {
   test,
 } from "bun:test";
 import { parseEther, getAddress } from "viem";
-import { setupTestEnvironment, teardownTestEnvironment, type TestContext } from "../utils/setup";
+import {
+  setupTestEnvironment,
+  teardownTestEnvironment,
+  type TestContext,
+} from "../utils/setup";
 
 describe("ERC20 Tests", () => {
   // Test context and variables
@@ -17,7 +21,7 @@ describe("ERC20 Tests", () => {
   let aliceClient: TestContext["aliceClient"];
   let bobClient: TestContext["bobClient"];
   let testClient: TestContext["testClient"];
-  
+
   // Token addresses
   let erc20TokenA: `0x${string}`;
   let erc20TokenB: `0x${string}`;
@@ -27,14 +31,14 @@ describe("ERC20 Tests", () => {
   beforeAll(async () => {
     // Setup test environment
     testContext = await setupTestEnvironment();
-    
+
     // Extract the values we need for tests
     alice = testContext.alice;
     bob = testContext.bob;
     aliceClient = testContext.aliceClient;
     bobClient = testContext.bobClient;
     testClient = testContext.testClient;
-    
+
     // Set token addresses from mock addresses
     erc20TokenA = testContext.mockAddresses.erc20A;
     erc20TokenB = testContext.mockAddresses.erc20B;
@@ -45,7 +49,9 @@ describe("ERC20 Tests", () => {
   beforeEach(async () => {
     // Reset to initial state before each test
     if (testContext.anvilInitState) {
-      await testContext.testClient.loadState({ state: testContext.anvilInitState });
+      await testContext.testClient.loadState({
+        state: testContext.anvilInitState,
+      });
     }
   });
 
@@ -152,12 +158,12 @@ describe("ERC20 Tests", () => {
 
       // Bob approves and fulfills the escrow
       // Check balances before the exchange
-      const bobInitialBalanceA = await testClient.getERC20Balance(
+      const bobInitialBalanceA = await testClient.getErc20Balance(
         { address: erc20TokenA },
         bob,
       );
 
-      const aliceInitialBalanceB = await testClient.getERC20Balance(
+      const aliceInitialBalanceB = await testClient.getErc20Balance(
         { address: erc20TokenB },
         alice,
       );
@@ -176,12 +182,12 @@ describe("ERC20 Tests", () => {
       );
 
       // Check token transfers
-      const bobFinalBalanceA = await testClient.getERC20Balance(
+      const bobFinalBalanceA = await testClient.getErc20Balance(
         { address: erc20TokenA },
         bob,
       );
 
-      const aliceFinalBalanceB = await testClient.getERC20Balance(
+      const aliceFinalBalanceB = await testClient.getErc20Balance(
         { address: erc20TokenB },
         alice,
       );
@@ -211,12 +217,12 @@ describe("ERC20 Tests", () => {
         );
 
       // Check balances before the exchange
-      const bobInitialBalanceA = await testClient.getERC20Balance(
+      const bobInitialBalanceA = await testClient.getErc20Balance(
         { address: erc20TokenA },
         bob,
       );
 
-      const aliceInitialBalanceB = await testClient.getERC20Balance(
+      const aliceInitialBalanceB = await testClient.getErc20Balance(
         { address: erc20TokenB },
         alice,
       );
@@ -231,12 +237,12 @@ describe("ERC20 Tests", () => {
       );
 
       // Check token transfers
-      const bobFinalBalanceA = await testClient.getERC20Balance(
+      const bobFinalBalanceA = await testClient.getErc20Balance(
         { address: erc20TokenA },
         bob,
       );
 
-      const aliceFinalBalanceB = await testClient.getERC20Balance(
+      const aliceFinalBalanceB = await testClient.getErc20Balance(
         { address: erc20TokenB },
         alice,
       );
