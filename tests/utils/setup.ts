@@ -7,6 +7,9 @@ import {
   walletActions,
   parseEther,
   nonceManager,
+  type PublicActions,
+  type WalletActions,
+  type TestClient,
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { foundry } from "viem/chains";
@@ -46,7 +49,7 @@ import MockERC1155 from "../fixtures/MockERC1155.json";
 export type TestContext = {
   // Anvil instance and clients
   anvil: ReturnType<typeof createAnvil>;
-  testClient: ReturnType<typeof createTestClient>;
+  testClient: TestClient & WalletActions & PublicActions & AlkahestTestActions;
   anvilInitState?: `0x${string}`;
 
   // User addresses and clients

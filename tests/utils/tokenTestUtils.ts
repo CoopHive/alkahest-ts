@@ -9,11 +9,15 @@ export function compareAddresses(a: string, b: string) {
   return a.toLowerCase() === b.toLowerCase();
 }
 
+export type AlkahestTestActions = ReturnType<
+  ReturnType<typeof createTokenTestExtension>
+>;
+
 // Create token testing extensions that can be added to viem clients
 export function createTokenTestExtension<C extends Client & PublicActions>() {
   return (client: C) => ({
     // Get ERC20 token balance
-    async getERC20Balance(token: Omit<Erc20, "value">, owner: `0x${string}`) {
+    async getErc20Balance(token: Omit<Erc20, "value">, owner: `0x${string}`) {
       return client.readContract({
         address: token.address,
         abi: MockERC20Permit.abi,
@@ -23,7 +27,7 @@ export function createTokenTestExtension<C extends Client & PublicActions>() {
     },
 
     // Get ERC721 token owner
-    async getERC721Owner(token: Erc721) {
+    async getErc721Owner(token: Erc721) {
       return client.readContract({
         address: token.address,
         abi: MockERC721.abi,
@@ -33,7 +37,7 @@ export function createTokenTestExtension<C extends Client & PublicActions>() {
     },
 
     // Get ERC1155 token balance
-    async getERC1155Balance(
+    async getErc1155Balance(
       token: Omit<Erc1155, "value">,
       owner: `0x${string}`,
     ) {
@@ -49,7 +53,7 @@ export function createTokenTestExtension<C extends Client & PublicActions>() {
 
 // Legacy utility functions for backward compatibility
 // Utility function to check ERC20 balance
-export async function getERC20Balance(
+export async function getErc20Balance(
   testClient: TestClient & PublicActions,
   tokenAddress: `0x${string}`,
   ownerAddress: `0x${string}`,
