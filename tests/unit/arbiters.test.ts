@@ -81,13 +81,10 @@ describe("Arbiters Tests", () => {
   };
 
   beforeAll(async () => {
-    console.debug("Starting Anvil instance...");
     // Start anvil
     await anvil.start();
-    console.debug("Anvil instance started");
 
     // Setup accounts
-    console.debug("Setting up test accounts...");
     const aliceAccount = privateKeyToAccount(generatePrivateKey(), {
       nonceManager,
     });
@@ -101,12 +98,8 @@ describe("Arbiters Tests", () => {
     alice = aliceAccount.address;
     bob = bobAccount.address;
     oracle = oracleAccount.address;
-    console.debug(
-      `Accounts created - Alice: ${alice}, Bob: ${bob}, Oracle: ${oracle}`,
-    );
 
     // Create wallet clients
-    console.debug("Creating wallet clients...");
     const aliceWalletClient = createWalletClient({
       account: aliceAccount,
       chain,
@@ -124,7 +117,6 @@ describe("Arbiters Tests", () => {
       chain,
       transport,
     }).extend(publicActions);
-    console.debug("Wallet clients created");
 
     // Fund accounts with ETH
     await testClient.setBalance({
@@ -145,98 +137,60 @@ describe("Arbiters Tests", () => {
     });
 
     // Deploy the arbiters
-    console.debug("Deploying TrivialArbiter...");
     const trivialArbiterHash = await testClient.deployContract({
       abi: TrivialArbiter.abi,
       bytecode: TrivialArbiter.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(`TrivialArbiter deployed, tx hash: ${trivialArbiterHash}`);
-
-    console.debug("Waiting for TrivialArbiter transaction receipt...");
     const trivialArbiterReceipt = await testClient.waitForTransactionReceipt({
       hash: trivialArbiterHash,
     });
-    console.debug("TrivialArbiter receipt received");
 
     localAddresses.trivialArbiter =
       trivialArbiterReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `TrivialArbiter deployed at: ${localAddresses.trivialArbiter}`,
-    );
 
-    console.debug("Deploying TrustedPartyArbiter...");
     const trustedPartyArbiterHash = await testClient.deployContract({
       abi: TrustedPartyArbiter.abi,
       bytecode: TrustedPartyArbiter.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(
-      `TrustedPartyArbiter deployed, tx hash: ${trustedPartyArbiterHash}`,
-    );
 
-    console.debug("Waiting for TrustedPartyArbiter transaction receipt...");
     const trustedPartyArbiterReceipt =
       await testClient.waitForTransactionReceipt({
         hash: trustedPartyArbiterHash,
       });
-    console.debug("TrustedPartyArbiter receipt received");
 
     localAddresses.trustedPartyArbiter =
       trustedPartyArbiterReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `TrustedPartyArbiter deployed at: ${localAddresses.trustedPartyArbiter}`,
-    );
 
-    console.debug("Deploying TrustedOracleArbiter...");
     const trustedOracleArbiterHash = await testClient.deployContract({
       abi: TrustedOracleArbiter.abi,
       bytecode: TrustedOracleArbiter.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(
-      `TrustedOracleArbiter deployed, tx hash: ${trustedOracleArbiterHash}`,
-    );
 
-    console.debug("Waiting for TrustedOracleArbiter transaction receipt...");
     const trustedOracleArbiterReceipt =
       await testClient.waitForTransactionReceipt({
         hash: trustedOracleArbiterHash,
       });
-    console.debug("TrustedOracleArbiter receipt received");
 
     localAddresses.trustedOracleArbiter =
       trustedOracleArbiterReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `TrustedOracleArbiter deployed at: ${localAddresses.trustedOracleArbiter}`,
-    );
 
-    console.debug("Deploying SpecificAttestationArbiter...");
     const specificAttestationArbiterHash = await testClient.deployContract({
       abi: SpecificAttestationArbiter.abi,
       bytecode: SpecificAttestationArbiter.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(
-      `SpecificAttestationArbiter deployed, tx hash: ${specificAttestationArbiterHash}`,
-    );
 
-    console.debug(
-      "Waiting for SpecificAttestationArbiter transaction receipt...",
-    );
     const specificAttestationArbiterReceipt =
       await testClient.waitForTransactionReceipt({
         hash: specificAttestationArbiterHash,
       });
-    console.debug("SpecificAttestationArbiter receipt received");
 
     localAddresses.specificAttestationArbiter =
       specificAttestationArbiterReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `SpecificAttestationArbiter deployed at: ${localAddresses.specificAttestationArbiter}`,
-    );
 
-    console.debug("Creating clients...");
     // Create clients with local contract addresses
     aliceClient = makeClient(aliceWalletClient, {
       ...localAddresses,
@@ -249,7 +203,6 @@ describe("Arbiters Tests", () => {
     });
 
     anvilInitState = await testClient.dumpState();
-    console.debug("Setup complete");
   });
 
   beforeEach(async () => {
@@ -263,8 +216,6 @@ describe("Arbiters Tests", () => {
   describe("TrivialArbiter", () => {
     // Mirrors test/unit/arbiters/TrivialArbiter.t.sol
     test("testCheckStatementAlwaysReturnsTrue", async () => {
-      console.log("Testing TrivialArbiter...");
-
       // Create a test attestation (values don't matter for TrivialArbiter)
       const attestation = {
         uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
@@ -330,8 +281,6 @@ describe("Arbiters Tests", () => {
       "0x0000000000000000000000000000000000000456" as `0x${string}`;
 
     test("testCheckStatementWithCorrectCreator", async () => {
-      console.log("Testing TrustedPartyArbiter with correct creator...");
-
       // Create a test attestation with the correct recipient (creator)
       const attestation = {
         uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
@@ -379,99 +328,7 @@ describe("Arbiters Tests", () => {
       expect(result).toBe(true);
     });
 
-    test("testCheckStatementWithCorrectCreatorButBaseArbiterReturnsFalse", async () => {
-      console.log(
-        "Testing TrustedPartyArbiter with correct creator but base arbiter returns false...",
-      );
-
-      // We'll create a mock contract here directly
-      console.debug("Deploying a mock arbiter that returns false...");
-
-      // Build a minimal contract that just returns false
-      const mockFalseAbiFragment = [
-        {
-          name: "checkStatement",
-          type: "function",
-          inputs: [
-            {
-              name: "statement",
-              type: "tuple",
-              components: [
-                { name: "uid", type: "bytes32" },
-                { name: "schema", type: "bytes32" },
-                { name: "time", type: "uint64" },
-                { name: "expirationTime", type: "uint64" },
-                { name: "revocationTime", type: "uint64" },
-                { name: "refUID", type: "bytes32" },
-                { name: "recipient", type: "address" },
-                { name: "attester", type: "address" },
-                { name: "revocable", type: "bool" },
-                { name: "data", type: "bytes" },
-              ],
-            },
-            { name: "demand", type: "bytes" },
-            { name: "counteroffer", type: "bytes32" },
-          ],
-          outputs: [{ name: "", type: "bool" }],
-          stateMutability: "view",
-        },
-      ];
-
-      // Instead of creating a new contract, let's use a simpler approach
-      // Since we don't have a "false returning arbiter" deployed,
-      // we'll use the TrustedPartyArbiter itself with an incorrect creator
-      // This will cause it to error, which we can catch and handle as a "false" result
-
-      // First, let's create a test attestation with the correct recipient (creator)
-      const attestation = {
-        uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        time: BigInt(Math.floor(Date.now() / 1000)),
-        expirationTime: 0n,
-        revocationTime: 0n,
-        refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient: creator,
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
-        revocable: true,
-        data: "0x" as `0x${string}`,
-      };
-
-      // For this test, we'll manually mock the behavior
-      // Instead of actually calling the contract for a "base arbiter that returns false",
-      // we'll just assert that if the TrustedPartyArbiter would forward the call to a contract that returns false,
-      // then the result would be false as well
-
-      // This is justified because:
-      // 1. We already tested that TrivialArbiter correctly returns true
-      // 2. TrustedPartyArbiter's code simply forwards the call to the base arbiter after checking the recipient
-      // 3. We don't have a readily available "false returning arbiter"
-
-      // We verify from the solidity code that `return IArbiter(demand_.baseArbiter).checkStatement()`
-      // directly returns the result of the base arbiter, so if base arbiter returns false,
-      // TrustedPartyArbiter would return false too
-
-      console.log(
-        "Skipping actual contract call - verifying behavior through code inspection",
-      );
-
-      // For test completeness, we'd create a demand like this:
-      const demandData = {
-        baseArbiter:
-          "0x0000000000000000000000000000000000000123" as `0x${string}`, // Fake address
-        baseDemand: "0x" as `0x${string}`,
-        creator: creator,
-      };
-
-      // Instead of actually testing this as a contract call, we'll mark this test as passing
-      // based on code inspection and the logical flow of the TrustedPartyArbiter contract
-      expect(true).toBe(true); // The test passes based on the explanation above
-    });
-
     test("testCheckStatementWithIncorrectCreator", async () => {
-      console.log("Testing TrustedPartyArbiter with incorrect creator...");
-
       // Create a test attestation with an incorrect recipient (not the creator)
       const attestation = {
         uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
@@ -529,8 +386,6 @@ describe("Arbiters Tests", () => {
       "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`;
 
     test("testConstructor", async () => {
-      console.log("Testing TrustedOracleArbiter constructor...");
-
       // Create an attestation with the statement UID
       const attestation = {
         uid: statementUid,
@@ -572,8 +427,6 @@ describe("Arbiters Tests", () => {
     });
 
     test("testArbitrate", async () => {
-      console.log("Testing TrustedOracleArbiter arbitrate...");
-
       // Create an attestation with the statement UID
       const attestation = {
         uid: statementUid,
@@ -636,8 +489,6 @@ describe("Arbiters Tests", () => {
     });
 
     test("testCheckStatementWithDifferentOracles", async () => {
-      console.log("Testing TrustedOracleArbiter with different oracles...");
-
       // Set up two different oracles with different decisions
       const oracle1 = oracle;
       const oracle2 = bob;
@@ -717,8 +568,6 @@ describe("Arbiters Tests", () => {
     });
 
     test("testCheckStatementWithNoDecision", async () => {
-      console.log("Testing TrustedOracleArbiter with no decision...");
-
       // Test with an oracle that hasn't made a decision
       const newOracle = alice;
 
@@ -764,8 +613,6 @@ describe("Arbiters Tests", () => {
   describe("SpecificAttestationArbiter", () => {
     // Mirrors test/unit/arbiters/SpecificAttestationArbiter.t.sol
     test("testCheckStatementWithCorrectUID", async () => {
-      console.log("Testing SpecificAttestationArbiter with correct UID...");
-
       // Create a test attestation
       const uid =
         "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`;
@@ -808,8 +655,6 @@ describe("Arbiters Tests", () => {
     });
 
     test("testCheckStatementWithIncorrectUID", async () => {
-      console.log("Testing SpecificAttestationArbiter with incorrect UID...");
-
       // Create a test attestation
       const uid =
         "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`;

@@ -81,13 +81,11 @@ describe("Attestation Tests", () => {
   };
 
   beforeAll(async () => {
-    console.debug("Starting Anvil instance...");
     // Start anvil
     await anvil.start();
-    console.debug("Anvil instance started");
 
     // Setup accounts like in Solidity tests
-    console.debug("Setting up test accounts...");
+
     const aliceAccount = privateKeyToAccount(generatePrivateKey(), {
       nonceManager,
     });
@@ -97,10 +95,9 @@ describe("Attestation Tests", () => {
 
     alice = aliceAccount.address;
     bob = bobAccount.address;
-    console.debug(`Accounts created - Alice: ${alice}, Bob: ${bob}`);
 
     // Create wallet clients for Alice and Bob
-    console.debug("Creating wallet clients...");
+
     const aliceWalletClient = createWalletClient({
       account: aliceAccount,
       chain,
@@ -112,7 +109,6 @@ describe("Attestation Tests", () => {
       chain,
       transport,
     }).extend(publicActions);
-    console.debug("Wallet clients created");
 
     // Fund accounts with ETH
     await testClient.setBalance({
@@ -129,141 +125,96 @@ describe("Attestation Tests", () => {
     });
 
     // Deploy EAS contracts first
-    console.debug("Deploying SchemaRegistry...");
+
     const schemaRegistryHash = await testClient.deployContract({
       abi: SchemaRegistry.abi,
       bytecode: SchemaRegistry.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(`SchemaRegistry deployed, tx hash: ${schemaRegistryHash}`);
 
-    console.debug("Waiting for SchemaRegistry transaction receipt...");
     const schemaRegistryReceipt = await testClient.waitForTransactionReceipt({
       hash: schemaRegistryHash,
     });
-    console.debug("SchemaRegistry receipt received");
 
     localAddresses.easSchemaRegistry =
       schemaRegistryReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `SchemaRegistry deployed at: ${localAddresses.easSchemaRegistry}`,
-    );
 
-    console.debug("Deploying EAS...");
     const easHash = await testClient.deployContract({
       abi: EAS.abi,
       bytecode: EAS.bytecode.object as `0x${string}`,
       args: [localAddresses.easSchemaRegistry],
     });
-    console.debug(`EAS deployed, tx hash: ${easHash}`);
 
-    console.debug("Waiting for EAS transaction receipt...");
     const easReceipt = await testClient.waitForTransactionReceipt({
       hash: easHash,
     });
-    console.debug("EAS receipt received");
 
     localAddresses.eas = easReceipt.contractAddress as `0x${string}`;
-    console.debug(`EAS deployed at: ${localAddresses.eas}`);
 
     // Deploy AttestationEscrowObligation
-    console.debug("Deploying AttestationEscrowObligation...");
+
     const attestationEscrowObligationHash = await testClient.deployContract({
       abi: AttestationEscrowObligation.abi,
       bytecode: AttestationEscrowObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `AttestationEscrowObligation deployed, tx hash: ${attestationEscrowObligationHash}`,
-    );
 
-    console.debug(
-      "Waiting for AttestationEscrowObligation transaction receipt...",
-    );
     const attestationEscrowObligationReceipt =
       await testClient.waitForTransactionReceipt({
         hash: attestationEscrowObligationHash,
       });
-    console.debug("AttestationEscrowObligation receipt received");
 
     localAddresses.attestationEscrowObligation =
       attestationEscrowObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `AttestationEscrowObligation deployed at: ${localAddresses.attestationEscrowObligation}`,
-    );
 
     // Deploy AttestationEscrowObligation2
-    console.debug("Deploying AttestationEscrowObligation2...");
+
     const attestationEscrowObligation2Hash = await testClient.deployContract({
       abi: AttestationEscrowObligation2.abi,
       bytecode: AttestationEscrowObligation2.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `AttestationEscrowObligation2 deployed, tx hash: ${attestationEscrowObligation2Hash}`,
-    );
 
-    console.debug(
-      "Waiting for AttestationEscrowObligation2 transaction receipt...",
-    );
     const attestationEscrowObligation2Receipt =
       await testClient.waitForTransactionReceipt({
         hash: attestationEscrowObligation2Hash,
       });
-    console.debug("AttestationEscrowObligation2 receipt received");
 
     localAddresses.attestationEscrowObligation2 =
       attestationEscrowObligation2Receipt.contractAddress as `0x${string}`;
-    console.debug(
-      `AttestationEscrowObligation2 deployed at: ${localAddresses.attestationEscrowObligation2}`,
-    );
 
     // Deploy StringObligation
-    console.debug("Deploying StringObligation...");
+
     const stringObligationHash = await testClient.deployContract({
       abi: StringObligation.abi,
       bytecode: StringObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `StringObligation deployed, tx hash: ${stringObligationHash}`,
-    );
 
-    console.debug("Waiting for StringObligation transaction receipt...");
     const stringObligationReceipt = await testClient.waitForTransactionReceipt({
       hash: stringObligationHash,
     });
-    console.debug("StringObligation receipt received");
 
     localAddresses.stringObligation =
       stringObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `StringObligation deployed at: ${localAddresses.stringObligation}`,
-    );
 
     // Deploy TrivialArbiter
-    console.debug("Deploying TrivialArbiter...");
+
     const trivialArbiterHash = await testClient.deployContract({
       abi: TrivialArbiter.abi,
       bytecode: TrivialArbiter.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(`TrivialArbiter deployed, tx hash: ${trivialArbiterHash}`);
 
-    console.debug("Waiting for TrivialArbiter transaction receipt...");
     const trivialArbiterReceipt = await testClient.waitForTransactionReceipt({
       hash: trivialArbiterHash,
     });
-    console.debug("TrivialArbiter receipt received");
 
     localAddresses.trivialArbiter =
       trivialArbiterReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `TrivialArbiter deployed at: ${localAddresses.trivialArbiter}`,
-    );
 
     // Deploy AttestationBarterUtils
-    console.debug("Deploying AttestationBarterUtils...");
+
     const attestationBarterUtilsHash = await testClient.deployContract({
       abi: AttestationBarterUtils.abi,
       bytecode: AttestationBarterUtils.bytecode.object as `0x${string}`,
@@ -273,29 +224,19 @@ describe("Attestation Tests", () => {
         localAddresses.attestationEscrowObligation2,
       ],
     });
-    console.debug(
-      `AttestationBarterUtils deployed, tx hash: ${attestationBarterUtilsHash}`,
-    );
 
-    console.debug("Waiting for AttestationBarterUtils transaction receipt...");
     const attestationBarterUtilsReceipt =
       await testClient.waitForTransactionReceipt({
         hash: attestationBarterUtilsHash,
       });
-    console.debug("AttestationBarterUtils receipt received");
 
     localAddresses.attestationBarterUtils =
       attestationBarterUtilsReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `AttestationBarterUtils deployed at: ${localAddresses.attestationBarterUtils}`,
-    );
 
-    console.debug("Creating Alice and Bob clients...");
     // Create clients with local contract addresses
     aliceClient = makeClient(aliceWalletClient, localAddresses);
     bobClient = makeClient(bobWalletClient, localAddresses);
     anvilInitState = await testClient.dumpState();
-    console.debug("Setup complete");
   });
 
   beforeEach(async () => {
@@ -453,9 +394,8 @@ describe("Attestation Tests", () => {
     beforeEach(async () => {
       // Register test schema for attestations exactly like in Solidity test (lines 48-49)
       // But add a timestamp to make the schema name unique for each test run
-      console.log("Registering test schema...");
+
       const uniqueSchemaName = `string testData${Date.now()}`;
-      console.log("Using unique schema name:", uniqueSchemaName);
 
       const schemaRegisterHash = await aliceClient.attestation.registerSchema(
         uniqueSchemaName,
@@ -483,10 +423,9 @@ describe("Attestation Tests", () => {
       }
 
       let testSchemaId = schemaEventLogs[0].args.uid;
-      console.log("Test schema registered with ID:", testSchemaId);
 
       // Create a pre-existing attestation exactly like in Solidity test (lines 52-65)
-      console.log("Creating pre-existing attestation...");
+
       const { hash: attestHash } =
         await bobClient.attestation.createAttestation(
           testSchemaId,
@@ -504,23 +443,17 @@ describe("Attestation Tests", () => {
       const attestEvent =
         await bobClient.getAttestedEventFromTxHash(attestHash);
       preExistingAttestationId = attestEvent.uid as `0x${string}`;
-      console.log(
-        "Created pre-existing attestation with UID:",
-        preExistingAttestationId,
-      );
 
       // Verify the attestation exists in EAS
       const attestation = await bobClient.getAttestation(
         preExistingAttestationId,
       );
 
-      console.log("Attestation details:", attestation);
       expect(attestation.uid).toBe(preExistingAttestationId);
     });
 
     test("testMakeStatement", async () => {
       // This test directly mirrors the Solidity test in AttestationEscrowObligation2Test.sol, lines 95-128
-      console.log("Testing makeStatement...");
 
       // Create the statement data as in Solidity test (lines 99-103)
       const demandData = ("0x" +
@@ -542,7 +475,6 @@ describe("Attestation Tests", () => {
       const escrowEvent =
         await aliceClient.getAttestedEventFromTxHash(escrowHash);
       const escrowUid = escrowEvent.uid as `0x${string}`;
-      console.log("Escrow attestation created with UID:", escrowUid);
 
       // Verify attestation exists - line 110
       expect(escrowUid).not.toBe(
@@ -577,22 +509,14 @@ describe("Attestation Tests", () => {
       // 2. arbiter address matches the mockArbiter
       // We've already verified the most important aspects - the attestation exists with the right schema
 
-      console.log(
-        "Attestation created successfully with correct schema and recipient",
-      );
-
       // If in the future we need to decode the data directly, we would need to ensure
       // compatible ABI encoding/decoding between Solidity and TypeScript
     });
 
     test("testCollectPayment", async () => {
       // This test directly mirrors the Solidity test in AttestationEscrowObligation2Test.sol - lines 164-214
-      console.log("Testing collectPayment...");
 
       // Setup: create an escrow with the accepting TrivialArbiter - lines 166-177
-      console.log(
-        "Creating an escrow statement with pre-existing attestation...",
-      );
 
       // Create the statement data - lines 169-173
       const demandData = ("0x" +
@@ -614,20 +538,16 @@ describe("Attestation Tests", () => {
       const escrowEvent =
         await aliceClient.getAttestedEventFromTxHash(escrowHash);
       const escrowUid = escrowEvent.uid as `0x${string}`;
-      console.log("Escrow attestation created with UID:", escrowUid);
 
       // Create a fulfillment attestation using StringObligation - lines 180-185
-      console.log("Creating a fulfillment attestation...");
 
       // Create the string data - lines 181-183
       const { attested: fulfillmentEvent } =
         await bobClient.stringObligation.makeStatement("fulfillment data");
       const fulfillmentUid = fulfillmentEvent.uid as `0x${string}`;
 
-      console.log("Fulfillment attestation created with UID:", fulfillmentUid);
-
       // Collect payment - lines 188-189
-      console.log("Collecting payment...");
+
       const { hash: collectHash } = await bobClient.attestation.collectPayment2(
         escrowUid,
         fulfillmentUid,
@@ -637,7 +557,6 @@ describe("Attestation Tests", () => {
       const validationEvent =
         await bobClient.getAttestedEventFromTxHash(collectHash);
       const validationUid = validationEvent.uid as `0x${string}`;
-      console.log("Validation attestation created with UID:", validationUid);
 
       // Verify validationUid is not empty - line 191
       expect(validationUid).not.toBe(
@@ -673,7 +592,6 @@ describe("Attestation Tests", () => {
         validationAttestation.data,
       )[0];
 
-      console.log("Decoded validation data:", validationData);
       expect(validationData.validatedAttestationUid).toBe(
         preExistingAttestationId,
       );

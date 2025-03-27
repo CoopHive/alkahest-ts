@@ -94,13 +94,13 @@ describe("ERC20 Tests", () => {
   let askErc1155Token: `0x${string}`;
 
   beforeAll(async () => {
-    console.debug("Starting Anvil instance...");
+    
     // Start anvil
     await anvil.start();
-    console.debug("Anvil instance started");
+    
 
     // Setup accounts like in Solidity tests
-    console.debug("Setting up test accounts...");
+    
     const aliceAccount = privateKeyToAccount(generatePrivateKey(), {
       nonceManager,
     });
@@ -110,10 +110,10 @@ describe("ERC20 Tests", () => {
 
     alice = aliceAccount.address;
     bob = bobAccount.address;
-    console.debug(`Accounts created - Alice: ${alice}, Bob: ${bob}`);
+    
 
     // Create wallet clients for Alice and Bob
-    console.debug("Creating wallet clients...");
+    
     const aliceWalletClient = createWalletClient({
       account: aliceAccount,
       chain,
@@ -125,7 +125,7 @@ describe("ERC20 Tests", () => {
       chain,
       transport,
     }).extend(publicActions);
-    console.debug("Wallet clients created");
+    
 
     // Fund accounts with ETH
     await testClient.setBalance({
@@ -142,237 +142,197 @@ describe("ERC20 Tests", () => {
     });
 
     // Deploy EAS contracts first
-    console.debug("Deploying SchemaRegistry...");
+    
     const schemaRegistryHash = await testClient.deployContract({
       abi: SchemaRegistry.abi,
       bytecode: SchemaRegistry.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(`SchemaRegistry deployed, tx hash: ${schemaRegistryHash}`);
+    
 
-    console.debug("Waiting for SchemaRegistry transaction receipt...");
+    
     const schemaRegistryReceipt = await testClient.waitForTransactionReceipt({
       hash: schemaRegistryHash,
     });
-    console.debug("SchemaRegistry receipt received");
+    
 
     localAddresses.easSchemaRegistry =
       schemaRegistryReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `SchemaRegistry deployed at: ${localAddresses.easSchemaRegistry}`,
-    );
+    
 
-    console.debug("Deploying EAS...");
+    
     const easHash = await testClient.deployContract({
       abi: EAS.abi,
       bytecode: EAS.bytecode.object as `0x${string}`,
       args: [localAddresses.easSchemaRegistry],
     });
-    console.debug(`EAS deployed, tx hash: ${easHash}`);
+    
 
-    console.debug("Waiting for EAS transaction receipt...");
+    
     const easReceipt = await testClient.waitForTransactionReceipt({
       hash: easHash,
     });
-    console.debug("EAS receipt received");
+    
 
     localAddresses.eas = easReceipt.contractAddress as `0x${string}`;
-    console.debug(`EAS deployed at: ${localAddresses.eas}`);
+    
 
     // Deploy Obligations
-    console.debug("Deploying ERC20EscrowObligation...");
+    
     const erc20EscrowObligationHash = await testClient.deployContract({
       abi: ERC20EscrowObligation.abi,
       bytecode: ERC20EscrowObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `ERC20EscrowObligation deployed, tx hash: ${erc20EscrowObligationHash}`,
-    );
+    
 
-    console.debug("Waiting for ERC20EscrowObligation transaction receipt...");
+    
     const erc20EscrowObligationReceipt =
       await testClient.waitForTransactionReceipt({
         hash: erc20EscrowObligationHash,
       });
-    console.debug("ERC20EscrowObligation receipt received");
+    
 
     localAddresses.erc20EscrowObligation =
       erc20EscrowObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `ERC20EscrowObligation deployed at: ${localAddresses.erc20EscrowObligation}`,
-    );
+    
 
-    console.debug("Deploying ERC20PaymentObligation...");
+    
     const erc20PaymentObligationHash = await testClient.deployContract({
       abi: ERC20PaymentObligation.abi,
       bytecode: ERC20PaymentObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `ERC20PaymentObligation deployed, tx hash: ${erc20PaymentObligationHash}`,
-    );
+    
 
-    console.debug("Waiting for ERC20PaymentObligation transaction receipt...");
+    
     const erc20PaymentObligationReceipt =
       await testClient.waitForTransactionReceipt({
         hash: erc20PaymentObligationHash,
       });
-    console.debug("ERC20PaymentObligation receipt received");
+    
 
     localAddresses.erc20PaymentObligation =
       erc20PaymentObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `ERC20PaymentObligation deployed at: ${localAddresses.erc20PaymentObligation}`,
-    );
+    
 
     // Deploy the additional obligation contracts needed for ERC20BarterCrossToken
-    console.debug("Deploying ERC721EscrowObligation...");
+    
     const erc721EscrowObligationHash = await testClient.deployContract({
       abi: ERC721EscrowObligation.abi,
       bytecode: ERC721EscrowObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `ERC721EscrowObligation deployed, tx hash: ${erc721EscrowObligationHash}`,
-    );
+    
 
-    console.debug("Waiting for ERC721EscrowObligation transaction receipt...");
+    
     const erc721EscrowObligationReceipt =
       await testClient.waitForTransactionReceipt({
         hash: erc721EscrowObligationHash,
       });
-    console.debug("ERC721EscrowObligation receipt received");
+    
 
     localAddresses.erc721EscrowObligation =
       erc721EscrowObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `ERC721EscrowObligation deployed at: ${localAddresses.erc721EscrowObligation}`,
-    );
+    
 
-    console.debug("Deploying ERC721PaymentObligation...");
+    
     const erc721PaymentObligationHash = await testClient.deployContract({
       abi: ERC721PaymentObligation.abi,
       bytecode: ERC721PaymentObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `ERC721PaymentObligation deployed, tx hash: ${erc721PaymentObligationHash}`,
-    );
+    
 
-    console.debug("Waiting for ERC721PaymentObligation transaction receipt...");
+    
     const erc721PaymentObligationReceipt =
       await testClient.waitForTransactionReceipt({
         hash: erc721PaymentObligationHash,
       });
-    console.debug("ERC721PaymentObligation receipt received");
+    
 
     localAddresses.erc721PaymentObligation =
       erc721PaymentObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `ERC721PaymentObligation deployed at: ${localAddresses.erc721PaymentObligation}`,
-    );
+    
 
-    console.debug("Deploying ERC1155EscrowObligation...");
+    
     const erc1155EscrowObligationHash = await testClient.deployContract({
       abi: ERC1155EscrowObligation.abi,
       bytecode: ERC1155EscrowObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `ERC1155EscrowObligation deployed, tx hash: ${erc1155EscrowObligationHash}`,
-    );
+    
 
-    console.debug("Waiting for ERC1155EscrowObligation transaction receipt...");
+    
     const erc1155EscrowObligationReceipt =
       await testClient.waitForTransactionReceipt({
         hash: erc1155EscrowObligationHash,
       });
-    console.debug("ERC1155EscrowObligation receipt received");
+    
 
     localAddresses.erc1155EscrowObligation =
       erc1155EscrowObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `ERC1155EscrowObligation deployed at: ${localAddresses.erc1155EscrowObligation}`,
-    );
+    
 
-    console.debug("Deploying ERC1155PaymentObligation...");
+    
     const erc1155PaymentObligationHash = await testClient.deployContract({
       abi: ERC1155PaymentObligation.abi,
       bytecode: ERC1155PaymentObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `ERC1155PaymentObligation deployed, tx hash: ${erc1155PaymentObligationHash}`,
-    );
+    
 
-    console.debug(
-      "Waiting for ERC1155PaymentObligation transaction receipt...",
-    );
+    
     const erc1155PaymentObligationReceipt =
       await testClient.waitForTransactionReceipt({
         hash: erc1155PaymentObligationHash,
       });
-    console.debug("ERC1155PaymentObligation receipt received");
+    
 
     localAddresses.erc1155PaymentObligation =
       erc1155PaymentObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `ERC1155PaymentObligation deployed at: ${localAddresses.erc1155PaymentObligation}`,
-    );
+    
 
-    console.debug("Deploying TokenBundleEscrowObligation...");
+    
     const tokenBundleEscrowObligationHash = await testClient.deployContract({
       abi: TokenBundleEscrowObligation.abi,
       bytecode: TokenBundleEscrowObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `TokenBundleEscrowObligation deployed, tx hash: ${tokenBundleEscrowObligationHash}`,
-    );
+    
 
-    console.debug(
-      "Waiting for TokenBundleEscrowObligation transaction receipt...",
-    );
+    
     const tokenBundleEscrowObligationReceipt =
       await testClient.waitForTransactionReceipt({
         hash: tokenBundleEscrowObligationHash,
       });
-    console.debug("TokenBundleEscrowObligation receipt received");
+    
 
     localAddresses.tokenBundleEscrowObligation =
       tokenBundleEscrowObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `TokenBundleEscrowObligation deployed at: ${localAddresses.tokenBundleEscrowObligation}`,
-    );
+    
 
-    console.debug("Deploying TokenBundlePaymentObligation...");
+    
     const tokenBundlePaymentObligationHash = await testClient.deployContract({
       abi: TokenBundlePaymentObligation.abi,
       bytecode: TokenBundlePaymentObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `TokenBundlePaymentObligation deployed, tx hash: ${tokenBundlePaymentObligationHash}`,
-    );
+    
 
-    console.debug(
-      "Waiting for TokenBundlePaymentObligation transaction receipt...",
-    );
+    
     const tokenBundlePaymentObligationReceipt =
       await testClient.waitForTransactionReceipt({
         hash: tokenBundlePaymentObligationHash,
       });
-    console.debug("TokenBundlePaymentObligation receipt received");
+    
 
     localAddresses.tokenBundlePaymentObligation =
       tokenBundlePaymentObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `TokenBundlePaymentObligation deployed at: ${localAddresses.tokenBundlePaymentObligation}`,
-    );
+    
 
     // Deploy ERC20BarterCrossToken which extends ERC20BarterUtils
-    console.debug("Deploying ERC20BarterCrossToken...");
+    
     const erc20BarterUtilsHash = await testClient.deployContract({
       abi: ERC20BarterCrossToken.abi,
       bytecode: ERC20BarterCrossToken.bytecode.object as `0x${string}`,
@@ -388,134 +348,126 @@ describe("ERC20 Tests", () => {
         localAddresses.tokenBundlePaymentObligation,
       ],
     });
-    console.debug(
-      `ERC20BarterCrossToken deployed, tx hash: ${erc20BarterUtilsHash}`,
-    );
+    
 
-    console.debug("Waiting for ERC20BarterCrossToken transaction receipt...");
+    
     const erc20BarterUtilsReceipt = await testClient.waitForTransactionReceipt({
       hash: erc20BarterUtilsHash,
     });
-    console.debug("ERC20BarterCrossToken receipt received");
+    
 
     localAddresses.erc20BarterUtils =
       erc20BarterUtilsReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `ERC20BarterCrossToken deployed at: ${localAddresses.erc20BarterUtils}`,
-    );
+    
 
     // Deploy mock tokens
-    console.debug("Deploying ERC20 Token A...");
+    
     const erc20TokenAHash = await testClient.deployContract({
       abi: MockERC20Permit.abi,
       bytecode: MockERC20Permit.bytecode.object as `0x${string}`,
       args: ["Token A", "TKA"],
     });
-    console.debug(`ERC20 Token A deployed, tx hash: ${erc20TokenAHash}`);
+    
 
-    console.debug("Deploying ERC20 Token B...");
+    
     const erc20TokenBHash = await testClient.deployContract({
       abi: MockERC20Permit.abi,
       bytecode: MockERC20Permit.bytecode.object as `0x${string}`,
       args: ["Token B", "TKB"],
     });
-    console.debug(`ERC20 Token B deployed, tx hash: ${erc20TokenBHash}`);
+    
 
-    console.debug("Deploying ERC721 token...");
+    
     const askErc721TokenHash = await testClient.deployContract({
       abi: MockERC721.abi,
       bytecode: MockERC721.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(`ERC721 token deployed, tx hash: ${askErc721TokenHash}`);
+    
 
-    console.debug("Deploying ERC1155 token...");
+    
     const askErc1155TokenHash = await testClient.deployContract({
       abi: MockERC1155.abi,
       bytecode: MockERC1155.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(`ERC1155 token deployed, tx hash: ${askErc1155TokenHash}`);
+    
 
     // Get contract addresses
-    console.debug("Waiting for ERC20 Token A transaction receipt...");
+    
     const erc20TokenAReceipt = await testClient.waitForTransactionReceipt({
       hash: erc20TokenAHash,
     });
-    console.debug("ERC20 Token A receipt received");
+    
 
-    console.debug("Waiting for ERC20 Token B transaction receipt...");
+    
     const erc20TokenBReceipt = await testClient.waitForTransactionReceipt({
       hash: erc20TokenBHash,
     });
-    console.debug("ERC20 Token B receipt received");
+    
 
-    console.debug("Waiting for ERC721 token transaction receipt...");
+    
     const askErc721TokenReceipt = await testClient.waitForTransactionReceipt({
       hash: askErc721TokenHash,
     });
-    console.debug("ERC721 token receipt received");
+    
 
-    console.debug("Waiting for ERC1155 token transaction receipt...");
+    
     const askErc1155TokenReceipt = await testClient.waitForTransactionReceipt({
       hash: askErc1155TokenHash,
     });
-    console.debug("ERC1155 token receipt received");
+    
 
     erc20TokenA = erc20TokenAReceipt.contractAddress as `0x${string}`;
     erc20TokenB = erc20TokenBReceipt.contractAddress as `0x${string}`;
     askErc721Token = askErc721TokenReceipt.contractAddress as `0x${string}`;
     askErc1155Token = askErc1155TokenReceipt.contractAddress as `0x${string}`;
-    console.debug(`Contract addresses obtained:
-      - ERC20 A: ${erc20TokenA}
-      - ERC20 B: ${erc20TokenB}
-      - ERC721: ${askErc721Token}
-      - ERC1155: ${askErc1155Token}`);
+    
 
     // Transfer tokens to Alice and Bob like in Solidity tests
-    console.debug("Transferring ERC20 Token A to Alice...");
+    
     await testClient.writeContract({
       address: erc20TokenA,
       abi: MockERC20Permit.abi,
       functionName: "transfer",
       args: [alice, parseEther("1000")],
     });
-    console.debug("ERC20 Token A transferred to Alice");
+    
 
-    console.debug("Transferring ERC20 Token B to Bob...");
+    
     await testClient.writeContract({
       address: erc20TokenB,
       abi: MockERC20Permit.abi,
       functionName: "transfer",
       args: [bob, parseEther("1000")],
     });
-    console.debug("ERC20 Token B transferred to Bob");
+    
 
     // Mint NFTs to Bob
-    console.debug("Minting ERC721 to Bob...");
+    
     await testClient.writeContract({
       address: askErc721Token,
       abi: MockERC721.abi,
       functionName: "mint",
       args: [bob],
     });
-    console.debug("ERC721 minted to Bob");
+    
 
-    console.debug("Minting ERC1155 to Bob...");
+    
     await testClient.writeContract({
       address: askErc1155Token,
       abi: MockERC1155.abi,
       functionName: "mint",
       args: [bob, 1n, 100n],
     });
-    console.debug("ERC1155 minted to Bob");
+    
 
-    console.debug("Creating Alice and Bob clients...");
+    
     // Create clients with local contract addresses
     aliceClient = makeClient(aliceWalletClient, localAddresses);
     bobClient = makeClient(bobWalletClient, localAddresses);
     anvilInitState = await testClient.dumpState();
-    console.debug("Setup complete");
+    
   });
 
   beforeEach(async () => {
@@ -523,43 +475,41 @@ describe("ERC20 Tests", () => {
   });
 
   afterAll(async () => {
-    // console.debug("Stopping Anvil instance...");
+    // 
     // await anvil.stop();
     await $`pkill anvil`;
-    // console.debug("Anvil instance stopped");
+    // 
   });
 
   describe("ERC20BarterUtils", () => {
     test("testBuyErc20ForErc20", async () => {
-      console.debug("Starting testBuyErc20ForErc20 test");
+      
       const bidAmount = parseEther("100");
       const askAmount = parseEther("200");
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
-      console.debug(
-        `Test setup: bidAmount=${bidAmount}, askAmount=${askAmount}, expiration=${expiration}`,
-      );
+      
 
       // Alice approves and buys ERC20 for ERC20
-      console.debug("Approving ERC20 token for escrow...");
+      
       await aliceClient.erc20.approve(
         { address: erc20TokenA, value: bidAmount },
         "escrow",
       );
-      console.debug("ERC20 token approved for escrow");
+      
 
-      console.debug("Creating ERC20 for ERC20 buy attestation...");
+      
       const { attested } = await aliceClient.erc20.buyErc20ForErc20(
         { address: erc20TokenA, value: bidAmount },
         { address: erc20TokenB, value: askAmount },
         expiration,
       );
-      console.debug(`Buy attestation created with UID: ${attested.uid}`);
+      
 
       // Assert the attestation was created
       expect(attested.uid).not.toBe(
         "0x0000000000000000000000000000000000000000000000000000000000000000",
       );
-      console.debug("testBuyErc20ForErc20 test completed successfully");
+      
     });
 
     test("testPermitAndBuyErc20ForErc20", async () => {
@@ -616,33 +566,29 @@ describe("ERC20 Tests", () => {
     });
 
     test("testPayErc20ForErc20", async () => {
-      console.debug("Starting testPayErc20ForErc20 test");
+      
       // First create a buy attestation
       const bidAmount = parseEther("100");
       const askAmount = parseEther("200");
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
-      console.debug(
-        `Test setup: bidAmount=${bidAmount}, askAmount=${askAmount}, expiration=${expiration}`,
-      );
+      
 
       // Alice approves and creates an escrow
-      console.debug("ALICE: Approving ERC20 token A for escrow...");
+      
       await aliceClient.erc20.approve(
         { address: erc20TokenA, value: bidAmount },
         "escrow",
       );
-      console.debug("ALICE: ERC20 token A approved for escrow");
+      
 
-      console.debug("ALICE: Creating buy attestation (buyErc20ForErc20)...");
+      
       const { attested: buyAttestation } =
         await aliceClient.erc20.buyErc20ForErc20(
           { address: erc20TokenA, value: bidAmount },
           { address: erc20TokenB, value: askAmount },
           expiration,
         );
-      console.debug(
-        `ALICE: Buy attestation created with UID: ${buyAttestation.uid}`,
-      );
+      
 
       // Bob approves and fulfills the escrow
       // Check balances before the exchange
@@ -656,25 +602,19 @@ describe("ERC20 Tests", () => {
         alice,
       );
 
-      console.debug(
-        `Initial balances - Bob Token A: ${bobInitialBalanceA}, Alice Token B: ${aliceInitialBalanceB}`,
-      );
+      
 
-      console.debug("BOB: Approving ERC20 token B for payment...");
+      
       await bobClient.erc20.approve(
         { address: erc20TokenB, value: askAmount },
         "payment",
       );
-      console.debug("BOB: ERC20 token B approved for payment");
+      
 
-      console.debug(
-        `BOB: Fulfilling escrow with buy attestation UID: ${buyAttestation.uid}`,
-      );
+      
       const { attested: sellAttestation } =
         await bobClient.erc20.payErc20ForErc20(buyAttestation.uid);
-      console.debug(
-        `BOB: Sell attestation created with UID: ${sellAttestation.uid}`,
-      );
+      
 
       // Assert the sell attestation was created
       expect(sellAttestation.uid).not.toBe(
@@ -682,25 +622,25 @@ describe("ERC20 Tests", () => {
       );
 
       // Check token transfers
-      console.debug("Verifying token transfers...");
-      console.debug("Checking Bob's ERC20 token A balance...");
+      
+      
       const bobFinalBalanceA = await testClient.getERC20Balance(
         { address: erc20TokenA },
         bob,
       );
-      console.debug(`Bob's ERC20 token A balance: ${bobFinalBalanceA}`);
+      
 
-      console.debug("Checking Alice's ERC20 token B balance...");
+      
       const aliceFinalBalanceB = await testClient.getERC20Balance(
         { address: erc20TokenB },
         alice,
       );
-      console.debug(`Alice's ERC20 token B balance: ${aliceFinalBalanceB}`);
+      
 
       // Verify token transfers by checking the difference
       expect(bobFinalBalanceA - bobInitialBalanceA).toBe(bidAmount);
       expect(aliceFinalBalanceB - aliceInitialBalanceB).toBe(askAmount);
-      console.debug("testPayErc20ForErc20 test completed successfully");
+      
     });
 
     test("testPermitAndPayErc20ForErc20", async () => {
@@ -733,9 +673,7 @@ describe("ERC20 Tests", () => {
         alice,
       );
 
-      console.debug(
-        `Initial balances - Bob Token A: ${bobInitialBalanceA}, Alice Token B: ${aliceInitialBalanceB}`,
-      );
+      
 
       // Bob uses permit and fulfills the escrow
       const { attested: sellAttestation } =

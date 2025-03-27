@@ -67,13 +67,13 @@ describe("StringObligation Tests", () => {
   };
 
   beforeAll(async () => {
-    console.debug("Starting Anvil instance...");
+    
     // Start anvil
     await anvil.start();
-    console.debug("Anvil instance started");
+    
 
     // Setup accounts like in Solidity tests
-    console.debug("Setting up test accounts...");
+    
     const aliceAccount = privateKeyToAccount(generatePrivateKey(), {
       nonceManager,
     });
@@ -83,10 +83,10 @@ describe("StringObligation Tests", () => {
 
     alice = aliceAccount.address;
     bob = bobAccount.address;
-    console.debug(`Accounts created - Alice: ${alice}, Bob: ${bob}`);
+    
 
     // Create wallet clients for Alice and Bob
-    console.debug("Creating wallet clients...");
+    
     const aliceWalletClient = createWalletClient({
       account: aliceAccount,
       chain,
@@ -98,7 +98,7 @@ describe("StringObligation Tests", () => {
       chain,
       transport,
     }).extend(publicActions);
-    console.debug("Wallet clients created");
+    
 
     // Fund accounts with ETH
     await testClient.setBalance({
@@ -115,13 +115,13 @@ describe("StringObligation Tests", () => {
     });
 
     // Deploy EAS contracts first
-    console.debug("Deploying SchemaRegistry...");
+    
     const schemaRegistryHash = await testClient.deployContract({
       abi: SchemaRegistry.abi,
       bytecode: SchemaRegistry.bytecode.object as `0x${string}`,
       args: [],
     });
-    console.debug(`SchemaRegistry deployed, tx hash: ${schemaRegistryHash}`);
+    
 
     const schemaRegistryReceipt = await testClient.waitForTransactionReceipt({
       hash: schemaRegistryHash,
@@ -129,35 +129,31 @@ describe("StringObligation Tests", () => {
 
     localAddresses.easSchemaRegistry =
       schemaRegistryReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `SchemaRegistry deployed at: ${localAddresses.easSchemaRegistry}`,
-    );
+    
 
-    console.debug("Deploying EAS...");
+    
     const easHash = await testClient.deployContract({
       abi: EAS.abi,
       bytecode: EAS.bytecode.object as `0x${string}`,
       args: [localAddresses.easSchemaRegistry],
     });
-    console.debug(`EAS deployed, tx hash: ${easHash}`);
+    
 
     const easReceipt = await testClient.waitForTransactionReceipt({
       hash: easHash,
     });
 
     localAddresses.eas = easReceipt.contractAddress as `0x${string}`;
-    console.debug(`EAS deployed at: ${localAddresses.eas}`);
+    
 
     // Deploy StringObligation
-    console.debug("Deploying StringObligation...");
+    
     const stringObligationHash = await testClient.deployContract({
       abi: StringObligation.abi,
       bytecode: StringObligation.bytecode.object as `0x${string}`,
       args: [localAddresses.eas, localAddresses.easSchemaRegistry],
     });
-    console.debug(
-      `StringObligation deployed, tx hash: ${stringObligationHash}`,
-    );
+    
 
     const stringObligationReceipt = await testClient.waitForTransactionReceipt({
       hash: stringObligationHash,
@@ -165,15 +161,13 @@ describe("StringObligation Tests", () => {
 
     localAddresses.stringObligation =
       stringObligationReceipt.contractAddress as `0x${string}`;
-    console.debug(
-      `StringObligation deployed at: ${localAddresses.stringObligation}`,
-    );
+    
 
     // Create clients with local contract addresses
     aliceClient = makeClient(aliceWalletClient, localAddresses);
     bobClient = makeClient(bobWalletClient, localAddresses);
     anvilInitState = await testClient.dumpState();
-    console.debug("Setup complete");
+    
   });
 
   beforeEach(async () => {
@@ -399,7 +393,7 @@ describe("StringObligation Tests", () => {
         TestType,
       );
 
-      console.log(decoded);
+      
 
       // Verify decoded data - should be the string value directly
       expect(decoded).toEqual(data);
