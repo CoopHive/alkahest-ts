@@ -28,30 +28,53 @@ export const makeErc1155Client = (
   addresses: ChainAddresses,
 ) => ({
   /**
-   * Encodes ERC1155EscrowObligation.StatementData to bytes.
+   * Encodes ERC1155EscrowObligation.StatementData to bytes using raw parameters.
    * @param data - StatementData object to encode
    * @returns the abi encoded StatementData as bytes
    */
-  encodeEscrowStatement: (data: {
+  encodeEscrowStatementRaw: (data: {
+    arbiter: `0x${string}`;
+    demand: `0x${string}`;
     token: `0x${string}`;
     tokenId: bigint;
     amount: bigint;
-    arbiter: `0x${string}`;
-    demand: `0x${string}`;
   }) => {
     return encodeAbiParameters(
       parseAbiParameters(
-        "(address token, uint256 tokenId, uint256 amount, address arbiter, bytes demand)",
+        "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
       ),
       [data],
     );
   },
+
   /**
-   * Encodes ERC1155PaymentObligation.StatementData to bytes.
+   * Encodes ERC1155EscrowObligation.StatementData to bytes using type-based parameters.
+   * @param token - ERC1155 token details
+   * @param demand - Custom demand details
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodeEscrowStatement: (token: Erc1155, demand: Demand) => {
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
+      ),
+      [
+        {
+          token: token.address,
+          tokenId: token.id,
+          amount: token.value,
+          arbiter: demand.arbiter,
+          demand: demand.demand,
+        },
+      ],
+    );
+  },
+  /**
+   * Encodes ERC1155PaymentObligation.StatementData to bytes using raw parameters.
    * @param data - StatementData object to encode
    * @returns the abi encoded StatementData as bytes
    */
-  encodePaymentStatement: (data: {
+  encodePaymentStatementRaw: (data: {
     token: `0x${string}`;
     tokenId: bigint;
     amount: bigint;
@@ -64,6 +87,28 @@ export const makeErc1155Client = (
       [data],
     );
   },
+
+  /**
+   * Encodes ERC1155PaymentObligation.StatementData to bytes using type-based parameters.
+   * @param token - ERC1155 token details
+   * @param payee - Address to receive the payment
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodePaymentStatement: (token: Erc1155, payee: `0x${string}`) => {
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address token, uint256 tokenId, uint256 amount, address payee)",
+      ),
+      [
+        {
+          token: token.address,
+          tokenId: token.id,
+          amount: token.value,
+          payee,
+        },
+      ],
+    );
+  },
   /**
    * Decodes ERC1155EscrowObligation.StatementData from bytes.
    * @param statementData - StatementData as abi encoded bytes
@@ -72,7 +117,7 @@ export const makeErc1155Client = (
   decodeEscrowStatement: (statementData: `0x${string}`) => {
     return decodeAbiParameters(
       parseAbiParameters(
-        "(address token, uint256 tokenId, uint256 amount, address arbiter, bytes demand)",
+        "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
       ),
       statementData,
     )[0];

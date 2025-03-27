@@ -23,11 +23,11 @@ export const makeTokenBundleClient = (
   addresses: ChainAddresses,
 ) => ({
   /**
-   * Encodes TokenBundleEscrowObligation.StatementData to bytes.
+   * Encodes TokenBundleEscrowObligation.StatementData to bytes using raw parameters.
    * @param data - StatementData object to encode
    * @returns the abi encoded StatementData as bytes
    */
-  encodeEscrowStatement: (data: {
+  encodeEscrowStatementRaw: (data: {
     erc20Tokens: `0x${string}`[];
     erc20Amounts: bigint[];
     erc721Tokens: `0x${string}`[];
@@ -40,17 +40,40 @@ export const makeTokenBundleClient = (
   }) => {
     return encodeAbiParameters(
       parseAbiParameters(
-        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address arbiter, bytes demand)",
+        "(address arbiter, bytes demand, address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
       ),
       [data],
     );
   },
+
   /**
-   * Encodes TokenBundlePaymentObligation.StatementData to bytes.
+   * Encodes TokenBundleEscrowObligation.StatementData to bytes using type-based parameters.
+   * @param bundle - Bundle of tokens for payment
+   * @param demand - Custom demand details
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodeEscrowStatement: (bundle: TokenBundle, demand: Demand) => {
+    const flatBundle = flattenTokenBundle(bundle);
+
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address arbiter, bytes demand, address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
+      ),
+      [
+        {
+          ...flatBundle,
+          arbiter: demand.arbiter,
+          demand: demand.demand,
+        },
+      ],
+    );
+  },
+  /**
+   * Encodes TokenBundlePaymentObligation.StatementData to bytes using raw parameters.
    * @param data - StatementData object to encode
    * @returns the abi encoded StatementData as bytes
    */
-  encodePaymentStatement: (data: {
+  encodePaymentStatementRaw: (data: {
     erc20Tokens: `0x${string}`[];
     erc20Amounts: bigint[];
     erc721Tokens: `0x${string}`[];
@@ -67,6 +90,28 @@ export const makeTokenBundleClient = (
       [data],
     );
   },
+
+  /**
+   * Encodes TokenBundlePaymentObligation.StatementData to bytes using type-based parameters.
+   * @param bundle - Bundle of tokens for payment
+   * @param payee - Address to receive the payment
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodePaymentStatement: (bundle: TokenBundle, payee: `0x${string}`) => {
+    const flatBundle = flattenTokenBundle(bundle);
+
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address payee)",
+      ),
+      [
+        {
+          ...flatBundle,
+          payee,
+        },
+      ],
+    );
+  },
   /**
    * Decodes TokenBundleEscrowObligation.StatementData from bytes.
    * @param statementData - StatementData as abi encoded bytes
@@ -75,7 +120,7 @@ export const makeTokenBundleClient = (
   decodeEscrowStatement: (statementData: `0x${string}`) => {
     return decodeAbiParameters(
       parseAbiParameters(
-        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address arbiter, bytes demand)",
+        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
       ),
       statementData,
     )[0];

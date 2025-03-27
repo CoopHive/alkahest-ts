@@ -28,29 +28,51 @@ export const makeErc721Client = (
   addresses: ChainAddresses,
 ) => ({
   /**
-   * Encodes ERC721EscrowObligation.StatementData to bytes.
+   * Encodes ERC721EscrowObligation.StatementData to bytes using raw parameters.
    * @param data - StatementData object to encode
    * @returns the abi encoded StatementData as bytes
    */
-  encodeEscrowStatement: (data: {
-    token: `0x${string}`;
-    tokenId: bigint;
+  encodeEscrowStatementRaw: (data: {
     arbiter: `0x${string}`;
     demand: `0x${string}`;
+    token: `0x${string}`;
+    tokenId: bigint;
   }) => {
     return encodeAbiParameters(
       parseAbiParameters(
-        "(address token, uint256 tokenId, address arbiter, bytes demand)",
+        "(address arbiter, bytes demand, address token, uint256 tokenId)",
       ),
       [data],
     );
   },
+
   /**
-   * Encodes ERC721PaymentObligation.StatementData to bytes.
+   * Encodes ERC721EscrowObligation.StatementData to bytes using type-based parameters.
+   * @param token - ERC721 token details
+   * @param demand - Custom demand details
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodeEscrowStatement: (token: Erc721, demand: Demand) => {
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address arbiter, bytes demand, address token, uint256 tokenId)",
+      ),
+      [
+        {
+          token: token.address,
+          tokenId: token.id,
+          arbiter: demand.arbiter,
+          demand: demand.demand,
+        },
+      ],
+    );
+  },
+  /**
+   * Encodes ERC721PaymentObligation.StatementData to bytes using raw parameters.
    * @param data - StatementData object to encode
    * @returns the abi encoded StatementData as bytes
    */
-  encodePaymentStatement: (data: {
+  encodePaymentStatementRaw: (data: {
     token: `0x${string}`;
     tokenId: bigint;
     payee: `0x${string}`;
@@ -58,6 +80,25 @@ export const makeErc721Client = (
     return encodeAbiParameters(
       parseAbiParameters("(address token, uint256 tokenId, address payee)"),
       [data],
+    );
+  },
+
+  /**
+   * Encodes ERC721PaymentObligation.StatementData to bytes using type-based parameters.
+   * @param token - ERC721 token details
+   * @param payee - Address to receive the payment
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodePaymentStatement: (token: Erc721, payee: `0x${string}`) => {
+    return encodeAbiParameters(
+      parseAbiParameters("(address token, uint256 tokenId, address payee)"),
+      [
+        {
+          token: token.address,
+          tokenId: token.id,
+          payee,
+        },
+      ],
     );
   },
   /**

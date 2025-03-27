@@ -96,11 +96,11 @@ export const makeErc20Client = (
 
   return {
     /**
-     * Encodes ERC20EscrowObligation.StatementData to bytes.
+     * Encodes ERC20EscrowObligation.StatementData to bytes using raw parameters.
      * @param data - StatementData object to encode
      * @returns the abi encoded StatementData as bytes
      */
-    encodeEscrowStatement: (data: {
+    encodeEscrowStatementRaw: (data: {
       arbiter: `0x${string}`;
       demand: `0x${string}`;
       token: `0x${string}`;
@@ -113,12 +113,32 @@ export const makeErc20Client = (
         [data],
       );
     },
+    
     /**
-     * Encodes ERC20PaymentObligation.StatementData to bytes.
+     * Encodes ERC20EscrowObligation.StatementData to bytes using type-based parameters.
+     * @param token - ERC20 token details
+     * @param demand - Custom demand details
+     * @returns the abi encoded StatementData as bytes
+     */
+    encodeEscrowStatement: (token: Erc20, demand: Demand) => {
+      return encodeAbiParameters(
+        parseAbiParameters(
+          "(address arbiter, bytes demand, address token, uint256 amount)",
+        ),
+        [{
+          arbiter: demand.arbiter,
+          demand: demand.demand,
+          token: token.address,
+          amount: token.value
+        }],
+      );
+    },
+    /**
+     * Encodes ERC20PaymentObligation.StatementData to bytes using raw parameters.
      * @param data - StatementData object to encode
      * @returns the abi encoded StatementData as bytes
      */
-    encodePaymentStatement: (data: {
+    encodePaymentStatementRaw: (data: {
       token: `0x${string}`;
       amount: bigint;
       payee: `0x${string}`;
@@ -126,6 +146,23 @@ export const makeErc20Client = (
       return encodeAbiParameters(
         parseAbiParameters("(address token, uint256 amount, address payee)"),
         [data],
+      );
+    },
+    
+    /**
+     * Encodes ERC20PaymentObligation.StatementData to bytes using type-based parameters.
+     * @param token - ERC20 token details
+     * @param payee - Address to receive the payment
+     * @returns the abi encoded StatementData as bytes
+     */
+    encodePaymentStatement: (token: Erc20, payee: `0x${string}`) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(address token, uint256 amount, address payee)"),
+        [{
+          token: token.address,
+          amount: token.value,
+          payee
+        }],
       );
     },
     /**

@@ -195,7 +195,7 @@ export const makeAttestationClient = (
       }
       const data = decodeAbiParameters(
         parseAbiParameters(
-          "(bytes32 attestationUid, address arbiter, bytes demand)",
+          "(address arbiter, bytes demand, bytes32 attestationUid)",
         ),
         attestation.data,
       )[0];
