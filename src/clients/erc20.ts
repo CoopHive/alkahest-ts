@@ -17,6 +17,7 @@ import {
   decodeAbiParameters,
   encodeAbiParameters,
   hexToNumber,
+  parseAbiParameter,
   parseAbiParameters,
   slice,
 } from "viem";
@@ -54,13 +55,9 @@ export const makeErc20Client = (
    */
   const signPermit = async (props: Eip2612Props) => {
     const types = {
-      Permit: [
-        { name: "owner", type: "address" },
-        { name: "spender", type: "address" },
-        { name: "value", type: "uint256" },
-        { name: "nonce", type: "uint256" },
-        { name: "deadline", type: "uint256" },
-      ],
+      Permit: parseAbiParameters(
+        "(address owner, address spender, uint256 value, uint256 nonce, uint256 deadline)",
+      ),
     };
     const domainData = {
       name: props.erc20Name,
@@ -645,30 +642,13 @@ export const makeErc20Client = (
         args: [buyAttestation],
       });
       const buyAttestationStatementData = decodeAbiParameters(
-        [
-          {
-            type: "tuple",
-            components: [
-              { name: "arbiter", type: "address" },
-              { name: "demand", type: "bytes" },
-              { name: "token", type: "address" },
-              { name: "amount", type: "uint256" },
-            ],
-          },
-        ],
+        parseAbiParameters(
+          "(address arbiter, bytes demand, address token, uint256 amount)",
+        ),
         buyAttestationData.data,
       )[0];
       const demandData = decodeAbiParameters(
-        [
-          {
-            type: "tuple",
-            components: [
-              { name: "token", type: "address" },
-              { name: "amount", type: "uint256" },
-              { name: "payee", type: "address" },
-            ],
-          },
-        ],
+        parseAbiParameters("(address token, uint256 amount, address payee)"),
         buyAttestationStatementData.demand,
       )[0];
 
@@ -816,31 +796,13 @@ export const makeErc20Client = (
         args: [buyAttestation],
       });
       const buyAttestationStatementData = decodeAbiParameters(
-        [
-          {
-            type: "tuple",
-            components: [
-              { name: "token", type: "address" },
-              { name: "tokenId", type: "uint256" },
-              { name: "amount", type: "uint256" },
-              { name: "arbiter", type: "address" },
-              { name: "demand", type: "bytes" },
-            ],
-          },
-        ],
+        parseAbiParameters(
+          "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
+        ),
         buyAttestationData.data,
       )[0];
       const demandData = decodeAbiParameters(
-        [
-          {
-            type: "tuple",
-            components: [
-              { name: "token", type: "address" },
-              { name: "amount", type: "uint256" },
-              { name: "payee", type: "address" },
-            ],
-          },
-        ],
+        parseAbiParameters("(address token, uint256 amount, address payee)"),
         buyAttestationStatementData.demand,
       )[0];
       const permit = await signPermit({
@@ -1014,16 +976,7 @@ export const makeErc20Client = (
         buyAttestationData.data,
       )[0];
       const demandData = decodeAbiParameters(
-        [
-          {
-            type: "tuple",
-            components: [
-              { name: "token", type: "address" },
-              { name: "amount", type: "uint256" },
-              { name: "payee", type: "address" },
-            ],
-          },
-        ],
+        parseAbiParameters("(address token, uint256 amount, address payee)"),
         buyAttestationStatementData.demand,
       )[0];
       const permit = await signPermit({
@@ -1187,63 +1140,13 @@ export const makeErc20Client = (
         args: [buyAttestation],
       });
       const buyAttestationStatementData = decodeAbiParameters(
-        [
-          {
-            type: "tuple",
-            components: [
-              {
-                name: "erc20Tokens",
-                type: "address[]",
-                internalType: "address[]",
-              },
-              {
-                name: "erc20Amounts",
-                type: "uint256[]",
-                internalType: "uint256[]",
-              },
-              {
-                name: "erc721Tokens",
-                type: "address[]",
-                internalType: "address[]",
-              },
-              {
-                name: "erc721TokenIds",
-                type: "uint256[]",
-                internalType: "uint256[]",
-              },
-              {
-                name: "erc1155Tokens",
-                type: "address[]",
-                internalType: "address[]",
-              },
-              {
-                name: "erc1155TokenIds",
-                type: "uint256[]",
-                internalType: "uint256[]",
-              },
-              {
-                name: "erc1155Amounts",
-                type: "uint256[]",
-                internalType: "uint256[]",
-              },
-              { name: "arbiter", type: "address", internalType: "address" },
-              { name: "demand", type: "bytes", internalType: "bytes" },
-            ],
-          },
-        ],
+        parseAbiParameters(
+          "(address arbiter, bytes demand, address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
+        ),
         buyAttestationData.data,
       )[0];
       const demandData = decodeAbiParameters(
-        [
-          {
-            type: "tuple",
-            components: [
-              { name: "token", type: "address" },
-              { name: "amount", type: "uint256" },
-              { name: "payee", type: "address" },
-            ],
-          },
-        ],
+        parseAbiParameters("(address token, uint256 amount, address payee)"),
         buyAttestationStatementData.demand,
       )[0];
       const permit = await signPermit({
