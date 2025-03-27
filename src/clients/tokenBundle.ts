@@ -21,13 +21,13 @@ import {
 export const makeTokenBundleClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
-) => ({
+) => {
   /**
    * Encodes TokenBundleEscrowObligation.StatementData to bytes using raw parameters.
    * @param data - StatementData object to encode
    * @returns the abi encoded StatementData as bytes
    */
-  encodeEscrowStatementRaw: (data: {
+  const encodeEscrowStatementRaw = (data: {
     erc20Tokens: `0x${string}`[];
     erc20Amounts: bigint[];
     erc721Tokens: `0x${string}`[];
@@ -44,36 +44,14 @@ export const makeTokenBundleClient = (
       ),
       [data],
     );
-  },
+  };
 
-  /**
-   * Encodes TokenBundleEscrowObligation.StatementData to bytes using type-based parameters.
-   * @param bundle - Bundle of tokens for payment
-   * @param demand - Custom demand details
-   * @returns the abi encoded StatementData as bytes
-   */
-  encodeEscrowStatement: (bundle: TokenBundle, demand: Demand) => {
-    const flatBundle = flattenTokenBundle(bundle);
-
-    return encodeAbiParameters(
-      parseAbiParameters(
-        "(address arbiter, bytes demand, address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
-      ),
-      [
-        {
-          ...flatBundle,
-          arbiter: demand.arbiter,
-          demand: demand.demand,
-        },
-      ],
-    );
-  },
   /**
    * Encodes TokenBundlePaymentObligation.StatementData to bytes using raw parameters.
    * @param data - StatementData object to encode
    * @returns the abi encoded StatementData as bytes
    */
-  encodePaymentStatementRaw: (data: {
+  const encodePaymentStatementRaw = (data: {
     erc20Tokens: `0x${string}`[];
     erc20Amounts: bigint[];
     erc721Tokens: `0x${string}`[];
@@ -89,294 +67,308 @@ export const makeTokenBundleClient = (
       ),
       [data],
     );
-  },
+  };
 
-  /**
-   * Encodes TokenBundlePaymentObligation.StatementData to bytes using type-based parameters.
-   * @param bundle - Bundle of tokens for payment
-   * @param payee - Address to receive the payment
-   * @returns the abi encoded StatementData as bytes
-   */
-  encodePaymentStatement: (bundle: TokenBundle, payee: `0x${string}`) => {
-    const flatBundle = flattenTokenBundle(bundle);
+  return {
+    encodeEscrowStatementRaw,
+    encodePaymentStatementRaw,
+    /**
+     * Encodes TokenBundleEscrowObligation.StatementData to bytes using type-based parameters.
+     * @param bundle - Bundle of tokens for payment
+     * @param demand - Custom demand details
+     * @returns the abi encoded StatementData as bytes
+     */
+    encodeEscrowStatement: (bundle: TokenBundle, demand: Demand) => {
+      const flatBundle = flattenTokenBundle(bundle);
 
-    return encodeAbiParameters(
-      parseAbiParameters(
-        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address payee)",
-      ),
-      [
-        {
-          ...flatBundle,
-          payee,
-        },
-      ],
-    );
-  },
-  /**
-   * Decodes TokenBundleEscrowObligation.StatementData from bytes.
-   * @param statementData - StatementData as abi encoded bytes
-   * @returns the decoded StatementData object
-   */
-  decodeEscrowStatement: (statementData: `0x${string}`) => {
-    return decodeAbiParameters(
-      parseAbiParameters(
-        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
-      ),
-      statementData,
-    )[0];
-  },
-  /**
-   * Decodes TokenBundlePaymentObligation.StatementData from bytes.
-   * @param statementData - StatementData as abi encoded bytes
-   * @returns the decoded StatementData object
-   */
-  decodePaymentStatement: (statementData: `0x${string}`) => {
-    return decodeAbiParameters(
-      parseAbiParameters(
-        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address payee)",
-      ),
-      statementData,
-    )[0];
-  },
-  /**
-   * Collects payment from an escrow after fulfillment
-   * @param buyAttestation - UID of the buy attestation
-   * @param fulfillment - UID of the fulfillment attestation
-   * @returns Transaction hash
-   */
-  collectPayment: async (
-    buyAttestation: `0x${string}`,
-    fulfillment: `0x${string}`,
-  ) => {
-    const hash = await viemClient.writeContract({
-      address: addresses.tokenBundleEscrowObligation,
-      abi: tokenBundleEscrowAbi.abi,
-      functionName: "collectPayment",
-      args: [buyAttestation, fulfillment],
-    });
-    return hash;
-  },
+      return encodeEscrowStatementRaw({
+        ...flatBundle,
+        arbiter: demand.arbiter,
+        demand: demand.demand,
+      });
+    },
 
-  /**
-   * Collects expired escrow funds
-   * @param buyAttestation - UID of the expired buy attestation
-   * @returns Transaction hash
-   */
-  collectExpired: async (buyAttestation: `0x${string}`) => {
-    const hash = await viemClient.writeContract({
-      address: addresses.tokenBundleEscrowObligation,
-      abi: tokenBundleEscrowAbi.abi,
-      functionName: "collectExpired",
-      args: [buyAttestation],
-    });
-    return hash;
-  },
+    /**
+     * Encodes TokenBundlePaymentObligation.StatementData to bytes using type-based parameters.
+     * @param bundle - Bundle of tokens for payment
+     * @param payee - Address to receive the payment
+     * @returns the abi encoded StatementData as bytes
+     */
+    encodePaymentStatement: (bundle: TokenBundle, payee: `0x${string}`) => {
+      const flatBundle = flattenTokenBundle(bundle);
 
-  /**
-   * Creates an escrow with a bundle of tokens for a custom demand
-   * @param price - Bundle of tokens for payment
-   * @param item - Custom demand details including arbiter and demand data
-   * @param expiration - Escrow expiration time (0 for no expiration)
-   * @returns Transaction hash and attestation
-   *
-   * @example
-   * ```ts
-   * const escrow = await client.tokenBundle.buyWithBundle(
-   *   tokenBundle,
-   *   { arbiter: arbitratorAddress, demand: encodedDemand },
-   *   0n,
-   * );
-   * ```
-   */
-  buyWithBundle: async (
-    price: TokenBundle,
-    item: Demand,
-    expiration: bigint,
-  ) => {
-    const hash = await viemClient.writeContract({
-      address: addresses.tokenBundleEscrowObligation,
-      abi: tokenBundleEscrowAbi.abi,
-      functionName: "makeStatement",
-      args: [
-        {
-          ...flattenTokenBundle(price),
-          ...item,
-        },
-        expiration,
-      ],
-    });
+      return encodePaymentStatementRaw({
+        ...flatBundle,
+        payee,
+      });
+    },
 
-    const attested = await getAttestedEventFromTxHash(viemClient, hash);
-    return { hash, attested };
-  },
+    /**
+     * Decodes TokenBundleEscrowObligation.StatementData from bytes.
+     * @param statementData - StatementData as abi encoded bytes
+     * @returns the decoded StatementData object
+     */
+    decodeEscrowStatement: (statementData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters(
+          "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
+        ),
+        statementData,
+      )[0];
+    },
+    /**
+     * Decodes TokenBundlePaymentObligation.StatementData from bytes.
+     * @param statementData - StatementData as abi encoded bytes
+     * @returns the decoded StatementData object
+     */
+    decodePaymentStatement: (statementData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters(
+          "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address payee)",
+        ),
+        statementData,
+      )[0];
+    },
+    /**
+     * Collects payment from an escrow after fulfillment
+     * @param buyAttestation - UID of the buy attestation
+     * @param fulfillment - UID of the fulfillment attestation
+     * @returns Transaction hash
+     */
+    collectPayment: async (
+      buyAttestation: `0x${string}`,
+      fulfillment: `0x${string}`,
+    ) => {
+      const hash = await viemClient.writeContract({
+        address: addresses.tokenBundleEscrowObligation,
+        abi: tokenBundleEscrowAbi.abi,
+        functionName: "collectPayment",
+        args: [buyAttestation, fulfillment],
+      });
+      return hash;
+    },
 
-  /**
-   * Creates a direct payment obligation with a bundle of tokens
-   * @param price - Bundle of tokens for payment
-   * @param payee - Address to receive the payment
-   * @returns Transaction hash and attestation
-   *
-   * @example
-   * ```ts
-   * const payment = await client.tokenBundle.payWithBundle(
-   *   tokenBundle,
-   *   receiverAddress,
-   * );
-   * ```
-   */
-  payWithBundle: async (price: TokenBundle, payee: `0x${string}`) => {
-    const hash = await viemClient.writeContract({
-      address: addresses.tokenBundlePaymentObligation,
-      abi: tokenBundlePaymentAbi.abi,
-      functionName: "makeStatement",
-      args: [
-        {
-          ...flattenTokenBundle(price),
-          payee,
-        },
-      ],
-    });
+    /**
+     * Collects expired escrow funds
+     * @param buyAttestation - UID of the expired buy attestation
+     * @returns Transaction hash
+     */
+    collectExpired: async (buyAttestation: `0x${string}`) => {
+      const hash = await viemClient.writeContract({
+        address: addresses.tokenBundleEscrowObligation,
+        abi: tokenBundleEscrowAbi.abi,
+        functionName: "collectExpired",
+        args: [buyAttestation],
+      });
+      return hash;
+    },
 
-    const attested = await getAttestedEventFromTxHash(viemClient, hash);
-    return { hash, attested };
-  },
+    /**
+     * Creates an escrow with a bundle of tokens for a custom demand
+     * @param price - Bundle of tokens for payment
+     * @param item - Custom demand details including arbiter and demand data
+     * @param expiration - Escrow expiration time (0 for no expiration)
+     * @returns Transaction hash and attestation
+     *
+     * @example
+     * ```ts
+     * const escrow = await client.tokenBundle.buyWithBundle(
+     *   tokenBundle,
+     *   { arbiter: arbitratorAddress, demand: encodedDemand },
+     *   0n,
+     * );
+     * ```
+     */
+    buyWithBundle: async (
+      price: TokenBundle,
+      item: Demand,
+      expiration: bigint,
+    ) => {
+      const hash = await viemClient.writeContract({
+        address: addresses.tokenBundleEscrowObligation,
+        abi: tokenBundleEscrowAbi.abi,
+        functionName: "makeStatement",
+        args: [
+          {
+            ...flattenTokenBundle(price),
+            ...item,
+          },
+          expiration,
+        ],
+      });
 
-  /**
-   * Creates an escrow for trading one bundle of tokens for another
-   * @param bid - Bundle of tokens offered
-   * @param ask - Bundle of tokens requested
-   * @param expiration - Escrow expiration time (0 for no expiration)
-   * @returns Transaction hash and attestation
-   *
-   * @example
-   * ```ts
-   * const escrow = await client.tokenBundle.buyBundleForBundle(
-   *   myTokenBundle,
-   *   theirTokenBundle,
-   *   0n,
-   * );
-   * ```
-   */
-  buyBundleForBundle: async (
-    bid: TokenBundle,
-    ask: TokenBundle,
-    expiration: bigint,
-  ) => {
-    const hash = await viemClient.writeContract({
-      address: addresses.tokenBundleBarterUtils,
-      abi: tokenBundleBarterUtilsAbi.abi,
-      functionName: "buyBundleForBundle",
-      args: [
-        {
-          ...flattenTokenBundle(bid),
-          arbiter: "0x0000000000000000000000000000000000000000",
-          demand: "0x",
-        },
-        { ...flattenTokenBundle(ask), payee: viemClient.account.address },
-        expiration,
-      ],
-    });
-    const attested = await getAttestedEventFromTxHash(viemClient, hash);
-    return { hash, attested };
-  },
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
+      return { hash, attested };
+    },
 
-  /**
-   * Fulfills a bundle-bundle trade
-   * @param buyAttestation - UID of the buy attestation to fulfill
-   * @returns Transaction hash
-   *
-   * @example
-   * ```ts
-   * const payment = await client.tokenBundle.payBundleForBundle(
-   *   escrow.attested.uid,
-   * );
-   * ```
-   */
-  payBundleForBundle: async (buyAttestation: `0x${string}`) => {
-    const hash = await viemClient.writeContract({
-      address: addresses.tokenBundleBarterUtils,
-      abi: tokenBundleBarterUtilsAbi.abi,
-      functionName: "payBundleForBundle",
-      args: [buyAttestation],
-    });
-    const attested = await getAttestedEventFromTxHash(viemClient, hash);
-    return { hash, attested };
-  },
+    /**
+     * Creates a direct payment obligation with a bundle of tokens
+     * @param price - Bundle of tokens for payment
+     * @param payee - Address to receive the payment
+     * @returns Transaction hash and attestation
+     *
+     * @example
+     * ```ts
+     * const payment = await client.tokenBundle.payWithBundle(
+     *   tokenBundle,
+     *   receiverAddress,
+     * );
+     * ```
+     */
+    payWithBundle: async (price: TokenBundle, payee: `0x${string}`) => {
+      const hash = await viemClient.writeContract({
+        address: addresses.tokenBundlePaymentObligation,
+        abi: tokenBundlePaymentAbi.abi,
+        functionName: "makeStatement",
+        args: [
+          {
+            ...flattenTokenBundle(price),
+            payee,
+          },
+        ],
+      });
 
-  /**
-   * Approves all tokens in a bundle for trading
-   * @param bundle - Bundle of tokens to approve
-   * @param purpose - Purpose of approval (escrow or payment)
-   * @returns Array of transaction hashes
-   *
-   * @example
-   * ```ts
-   * const approvals = await client.tokenBundle.approve(
-   *   tokenBundle,
-   *   "escrow"
-   * );
-   * ```
-   */
-  approve: async (bundle: TokenBundle, purpose: ApprovalPurpose) => {
-    // Get the appropriate contract address based on purpose
-    const target =
-      purpose === "escrow"
-        ? addresses.tokenBundleEscrowObligation
-        : addresses.tokenBundlePaymentObligation;
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
+      return { hash, attested };
+    },
 
-    // Prepare approval transactions for all token types
-    const approvalPromises: Promise<`0x${string}`>[] = [];
+    /**
+     * Creates an escrow for trading one bundle of tokens for another
+     * @param bid - Bundle of tokens offered
+     * @param ask - Bundle of tokens requested
+     * @param expiration - Escrow expiration time (0 for no expiration)
+     * @returns Transaction hash and attestation
+     *
+     * @example
+     * ```ts
+     * const escrow = await client.tokenBundle.buyBundleForBundle(
+     *   myTokenBundle,
+     *   theirTokenBundle,
+     *   0n,
+     * );
+     * ```
+     */
+    buyBundleForBundle: async (
+      bid: TokenBundle,
+      ask: TokenBundle,
+      expiration: bigint,
+    ) => {
+      const hash = await viemClient.writeContract({
+        address: addresses.tokenBundleBarterUtils,
+        abi: tokenBundleBarterUtilsAbi.abi,
+        functionName: "buyBundleForBundle",
+        args: [
+          {
+            ...flattenTokenBundle(bid),
+            arbiter: "0x0000000000000000000000000000000000000000",
+            demand: "0x",
+          },
+          { ...flattenTokenBundle(ask), payee: viemClient.account.address },
+          expiration,
+        ],
+      });
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
+      return { hash, attested };
+    },
 
-    // Process ERC20 tokens in parallel
-    bundle.erc20s.forEach((token) => {
-      approvalPromises.push(
-        viemClient.writeContract({
-          address: token.address,
-          abi: erc20Abi.abi,
-          functionName: "approve",
-          args: [target, token.value],
-        }),
+    /**
+     * Fulfills a bundle-bundle trade
+     * @param buyAttestation - UID of the buy attestation to fulfill
+     * @returns Transaction hash
+     *
+     * @example
+     * ```ts
+     * const payment = await client.tokenBundle.payBundleForBundle(
+     *   escrow.attested.uid,
+     * );
+     * ```
+     */
+    payBundleForBundle: async (buyAttestation: `0x${string}`) => {
+      const hash = await viemClient.writeContract({
+        address: addresses.tokenBundleBarterUtils,
+        abi: tokenBundleBarterUtilsAbi.abi,
+        functionName: "payBundleForBundle",
+        args: [buyAttestation],
+      });
+      const attested = await getAttestedEventFromTxHash(viemClient, hash);
+      return { hash, attested };
+    },
+
+    /**
+     * Approves all tokens in a bundle for trading
+     * @param bundle - Bundle of tokens to approve
+     * @param purpose - Purpose of approval (escrow or payment)
+     * @returns Array of transaction hashes
+     *
+     * @example
+     * ```ts
+     * const approvals = await client.tokenBundle.approve(
+     *   tokenBundle,
+     *   "escrow"
+     * );
+     * ```
+     */
+    approve: async (bundle: TokenBundle, purpose: ApprovalPurpose) => {
+      // Get the appropriate contract address based on purpose
+      const target =
+        purpose === "escrow"
+          ? addresses.tokenBundleEscrowObligation
+          : addresses.tokenBundlePaymentObligation;
+
+      // Prepare approval transactions for all token types
+      const approvalPromises: Promise<`0x${string}`>[] = [];
+
+      // Process ERC20 tokens in parallel
+      bundle.erc20s.forEach((token) => {
+        approvalPromises.push(
+          viemClient.writeContract({
+            address: token.address,
+            abi: erc20Abi.abi,
+            functionName: "approve",
+            args: [target, token.value],
+          }),
+        );
+      });
+
+      // Process ERC721 tokens
+      // Group by token contract to use setApprovalForAll when possible
+      const erc721AddressesSet = new Set(
+        bundle.erc721s.map((token) => token.address),
       );
-    });
 
-    // Process ERC721 tokens
-    // Group by token contract to use setApprovalForAll when possible
-    const erc721AddressesSet = new Set(
-      bundle.erc721s.map((token) => token.address),
-    );
+      // For contracts with multiple tokens, use setApprovalForAll in parallel
+      erc721AddressesSet.forEach((address) => {
+        approvalPromises.push(
+          viemClient.writeContract({
+            address: address,
+            abi: erc721Abi.abi,
+            functionName: "setApprovalForAll",
+            args: [target, true],
+          }),
+        );
+      });
 
-    // For contracts with multiple tokens, use setApprovalForAll in parallel
-    erc721AddressesSet.forEach((address) => {
-      approvalPromises.push(
-        viemClient.writeContract({
-          address: address,
-          abi: erc721Abi.abi,
-          functionName: "setApprovalForAll",
-          args: [target, true],
-        }),
+      // Process ERC1155 tokens
+      // Group by token contract to use setApprovalForAll
+      const erc1155AddressesSet = new Set(
+        bundle.erc1155s.map((token) => token.address),
       );
-    });
 
-    // Process ERC1155 tokens
-    // Group by token contract to use setApprovalForAll
-    const erc1155AddressesSet = new Set(
-      bundle.erc1155s.map((token) => token.address),
-    );
+      // For ERC1155, always use setApprovalForAll in parallel
+      erc1155AddressesSet.forEach((address) => {
+        approvalPromises.push(
+          viemClient.writeContract({
+            address: address,
+            abi: erc1155Abi.abi,
+            functionName: "setApprovalForAll",
+            args: [target, true],
+          }),
+        );
+      });
 
-    // For ERC1155, always use setApprovalForAll in parallel
-    erc1155AddressesSet.forEach((address) => {
-      approvalPromises.push(
-        viemClient.writeContract({
-          address: address,
-          abi: erc1155Abi.abi,
-          functionName: "setApprovalForAll",
-          args: [target, true],
-        }),
-      );
-    });
-
-    // Execute all approval transactions in parallel
-    const results = await Promise.all(approvalPromises);
-    return results;
-  },
-});
+      // Execute all approval transactions in parallel
+      const results = await Promise.all(approvalPromises);
+      return results;
+    },
+  };
+};
