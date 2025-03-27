@@ -55,9 +55,9 @@ export const makeErc20Client = (
    */
   const signPermit = async (props: Eip2612Props) => {
     const types = {
-      Permit: parseAbiParameters(
+      Permit: parseAbiParameter(
         "(address owner, address spender, uint256 value, uint256 nonce, uint256 deadline)",
-      ),
+      ).components,
     };
     const domainData = {
       name: props.erc20Name,
