@@ -15,7 +15,10 @@ import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { foundry } from "viem/chains";
 import { $ } from "bun";
 import { makeClient } from "../../src";
-import { createTokenTestExtension } from "./tokenTestUtils";
+import {
+  createTokenTestExtension,
+  type AlkahestTestActions,
+} from "./tokenTestUtils";
 
 // Import contract artifacts
 import ERC20EscrowObligation from "@contracts/ERC20EscrowObligation.json";
