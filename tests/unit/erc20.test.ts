@@ -277,7 +277,7 @@ describe("ERC20 Tests", () => {
       );
     });
 
-    test("testPermitAndBuyERC721WithERC20", async () => {
+    test("testPermitAndBuyErc721WithErc20", async () => {
       const bidAmount = parseEther("100");
       const erc721TokenId = 1n;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
@@ -295,7 +295,7 @@ describe("ERC20 Tests", () => {
       );
     });
 
-    test("testBuyERC1155WithERC20", async () => {
+    test("testBuyErc1155WithErc20", async () => {
       const bidAmount = parseEther("100");
       const tokenId = 1n;
       const amount = 50n;
@@ -319,7 +319,7 @@ describe("ERC20 Tests", () => {
       );
     });
 
-    test("testPermitAndBuyERC1155WithERC20", async () => {
+    test("testPermitAndBuyErc1155WithErc20", async () => {
       const bidAmount = parseEther("100");
       const tokenId = 1n;
       const amount = 50n;
@@ -338,7 +338,7 @@ describe("ERC20 Tests", () => {
       );
     });
 
-    test("testBuyBundleWithERC20", async () => {
+    test("testBuyBundleWithErc20", async () => {
       const bidAmount = parseEther("100");
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
