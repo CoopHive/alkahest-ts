@@ -15,6 +15,7 @@ import type {
 } from "../types";
 import {
   decodeAbiParameters,
+  encodeAbiParameters,
   hexToNumber,
   parseAbiParameters,
   slice,
@@ -94,6 +95,39 @@ export const makeErc20Client = (
   };
 
   return {
+    /**
+     * Encodes ERC20EscrowObligation.StatementData to bytes.
+     * @param data - StatementData object to encode
+     * @returns the abi encoded StatementData as bytes
+     */
+    encodeEscrowStatement: (data: {
+      arbiter: `0x${string}`;
+      demand: `0x${string}`;
+      token: `0x${string}`;
+      amount: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters(
+          "(address arbiter, bytes demand, address token, uint256 amount)",
+        ),
+        [data],
+      );
+    },
+    /**
+     * Encodes ERC20PaymentObligation.StatementData to bytes.
+     * @param data - StatementData object to encode
+     * @returns the abi encoded StatementData as bytes
+     */
+    encodePaymentStatement: (data: {
+      token: `0x${string}`;
+      amount: bigint;
+      payee: `0x${string}`;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(address token, uint256 amount, address payee)"),
+        [data],
+      );
+    },
     /**
      * Decodes ERC20EscrowObligation.StatementData from bytes.
      * @param statementData - StatementData as abi encoded bytes

@@ -12,12 +12,61 @@ import { abi as tokenBundlePaymentAbi } from "../contracts/TokenBundlePaymentObl
 import { abi as erc20Abi } from "../contracts/ERC20Permit";
 import { abi as erc721Abi } from "../contracts/IERC721";
 import { abi as erc1155Abi } from "../contracts/IERC1155";
-import { decodeAbiParameters, parseAbiParameters } from "viem";
+import {
+  decodeAbiParameters,
+  encodeAbiParameters,
+  parseAbiParameters,
+} from "viem";
 
 export const makeTokenBundleClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => ({
+  /**
+   * Encodes TokenBundleEscrowObligation.StatementData to bytes.
+   * @param data - StatementData object to encode
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodeEscrowStatement: (data: {
+    erc20Tokens: `0x${string}`[];
+    erc20Amounts: bigint[];
+    erc721Tokens: `0x${string}`[];
+    erc721TokenIds: bigint[];
+    erc1155Tokens: `0x${string}`[];
+    erc1155TokenIds: bigint[];
+    erc1155Amounts: bigint[];
+    arbiter: `0x${string}`;
+    demand: `0x${string}`;
+  }) => {
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address arbiter, bytes demand)",
+      ),
+      [data],
+    );
+  },
+  /**
+   * Encodes TokenBundlePaymentObligation.StatementData to bytes.
+   * @param data - StatementData object to encode
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodePaymentStatement: (data: {
+    erc20Tokens: `0x${string}`[];
+    erc20Amounts: bigint[];
+    erc721Tokens: `0x${string}`[];
+    erc721TokenIds: bigint[];
+    erc1155Tokens: `0x${string}`[];
+    erc1155TokenIds: bigint[];
+    erc1155Amounts: bigint[];
+    payee: `0x${string}`;
+  }) => {
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address payee)",
+      ),
+      [data],
+    );
+  },
   /**
    * Decodes TokenBundleEscrowObligation.StatementData from bytes.
    * @param statementData - StatementData as abi encoded bytes
@@ -173,7 +222,11 @@ export const makeTokenBundleClient = (
       abi: tokenBundleBarterUtilsAbi.abi,
       functionName: "buyBundleForBundle",
       args: [
-        { ...flattenTokenBundle(bid), arbiter: "0x0000000000000000000000000000000000000000", demand: "0x" },
+        {
+          ...flattenTokenBundle(bid),
+          arbiter: "0x0000000000000000000000000000000000000000",
+          demand: "0x",
+        },
         { ...flattenTokenBundle(ask), payee: viemClient.account.address },
         expiration,
       ],
@@ -228,16 +281,16 @@ export const makeTokenBundleClient = (
 
     // Prepare approval transactions for all token types
     const approvalPromises: Promise<`0x${string}`>[] = [];
-    
+
     // Process ERC20 tokens in parallel
-    bundle.erc20s.forEach(token => {
+    bundle.erc20s.forEach((token) => {
       approvalPromises.push(
         viemClient.writeContract({
           address: token.address,
           abi: erc20Abi.abi,
           functionName: "approve",
           args: [target, token.value],
-        })
+        }),
       );
     });
 
@@ -248,14 +301,14 @@ export const makeTokenBundleClient = (
     );
 
     // For contracts with multiple tokens, use setApprovalForAll in parallel
-    erc721AddressesSet.forEach(address => {
+    erc721AddressesSet.forEach((address) => {
       approvalPromises.push(
         viemClient.writeContract({
           address: address,
           abi: erc721Abi.abi,
           functionName: "setApprovalForAll",
           args: [target, true],
-        })
+        }),
       );
     });
 
@@ -266,14 +319,14 @@ export const makeTokenBundleClient = (
     );
 
     // For ERC1155, always use setApprovalForAll in parallel
-    erc1155AddressesSet.forEach(address => {
+    erc1155AddressesSet.forEach((address) => {
       approvalPromises.push(
         viemClient.writeContract({
           address: address,
           abi: erc1155Abi.abi,
           functionName: "setApprovalForAll",
           args: [target, true],
-        })
+        }),
       );
     });
 

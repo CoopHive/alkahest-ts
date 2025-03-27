@@ -17,12 +17,49 @@ import { abi as erc721BarterUtilsAbi } from "../contracts/ERC721BarterCrossToken
 import { abi as erc721EscrowAbi } from "../contracts/ERC721EscrowObligation";
 import { abi as erc721PaymentAbi } from "../contracts/ERC721PaymentObligation";
 import { abi as erc721Abi } from "../contracts/IERC721";
-import { decodeAbiParameters, parseAbiParameters } from "viem";
+import {
+  decodeAbiParameters,
+  encodeAbiParameters,
+  parseAbiParameters,
+} from "viem";
 
 export const makeErc721Client = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => ({
+  /**
+   * Encodes ERC721EscrowObligation.StatementData to bytes.
+   * @param data - StatementData object to encode
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodeEscrowStatement: (data: {
+    token: `0x${string}`;
+    tokenId: bigint;
+    arbiter: `0x${string}`;
+    demand: `0x${string}`;
+  }) => {
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address token, uint256 tokenId, address arbiter, bytes demand)",
+      ),
+      [data],
+    );
+  },
+  /**
+   * Encodes ERC721PaymentObligation.StatementData to bytes.
+   * @param data - StatementData object to encode
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodePaymentStatement: (data: {
+    token: `0x${string}`;
+    tokenId: bigint;
+    payee: `0x${string}`;
+  }) => {
+    return encodeAbiParameters(
+      parseAbiParameters("(address token, uint256 tokenId, address payee)"),
+      [data],
+    );
+  },
   /**
    * Decodes ERC721EscrowObligation.StatementData from bytes.
    * @param statementData - StatementData as abi encoded bytes

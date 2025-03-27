@@ -1,4 +1,8 @@
-import { decodeAbiParameters, parseAbiParameters } from "viem";
+import {
+  decodeAbiParameters,
+  encodeAbiParameters,
+  parseAbiParameters,
+} from "viem";
 import type { ViemClient } from "../utils";
 import { getAttestation, getAttestedEventFromTxHash } from "../utils";
 
@@ -63,6 +67,9 @@ export const makeStringObligationClient = (
     });
 
   return {
+    encode: (data: { item: string }) => {
+      return encodeAbiParameters(parseAbiParameters("(string item)"), [data]);
+    },
     decode,
     decodeJson: <T>(statementData: `0x${string}`) => {
       const decoded = decode(statementData);

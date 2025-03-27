@@ -17,12 +17,53 @@ import { abi as erc1155BarterUtilsAbi } from "../contracts/ERC1155BarterCrossTok
 import { abi as erc1155EscrowAbi } from "../contracts/ERC1155EscrowObligation";
 import { abi as erc1155PaymentAbi } from "../contracts/ERC1155PaymentObligation";
 import { abi as erc1155Abi } from "../contracts/IERC1155";
-import { decodeAbiParameters, parseAbiParameters } from "viem";
+import {
+  decodeAbiParameters,
+  encodeAbiParameters,
+  parseAbiParameters,
+} from "viem";
 
 export const makeErc1155Client = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => ({
+  /**
+   * Encodes ERC1155EscrowObligation.StatementData to bytes.
+   * @param data - StatementData object to encode
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodeEscrowStatement: (data: {
+    token: `0x${string}`;
+    tokenId: bigint;
+    amount: bigint;
+    arbiter: `0x${string}`;
+    demand: `0x${string}`;
+  }) => {
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address token, uint256 tokenId, uint256 amount, address arbiter, bytes demand)",
+      ),
+      [data],
+    );
+  },
+  /**
+   * Encodes ERC1155PaymentObligation.StatementData to bytes.
+   * @param data - StatementData object to encode
+   * @returns the abi encoded StatementData as bytes
+   */
+  encodePaymentStatement: (data: {
+    token: `0x${string}`;
+    tokenId: bigint;
+    amount: bigint;
+    payee: `0x${string}`;
+  }) => {
+    return encodeAbiParameters(
+      parseAbiParameters(
+        "(address token, uint256 tokenId, uint256 amount, address payee)",
+      ),
+      [data],
+    );
+  },
   /**
    * Decodes ERC1155EscrowObligation.StatementData from bytes.
    * @param statementData - StatementData as abi encoded bytes
