@@ -351,7 +351,9 @@ describe("ERC20 Tests", () => {
 
       // Verify transfers
       expect(compareAddresses(aliceOwnsToken, alice)).toBe(true);
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(erc20Amount);
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
+        erc20Amount,
+      );
     });
 
     test("testPermitAndPayErc20ForErc721", async () => {
@@ -406,7 +408,9 @@ describe("ERC20 Tests", () => {
 
       // Verify transfers
       expect(compareAddresses(aliceOwnsToken, alice)).toBe(true);
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(erc20Amount);
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
+        erc20Amount,
+      );
     });
 
     test("testBuyErc1155WithErc20", async () => {
@@ -513,7 +517,9 @@ describe("ERC20 Tests", () => {
       );
 
       // Verify transfers
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(erc20Amount);
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
+        erc20Amount,
+      );
       expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(
         amount,
       );
@@ -573,7 +579,9 @@ describe("ERC20 Tests", () => {
       );
 
       // Verify transfers
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(erc20Amount);
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
+        erc20Amount,
+      );
       expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(
         amount,
       );
@@ -635,28 +643,32 @@ describe("ERC20 Tests", () => {
     });
 
     test("testPayErc20ForBundle", async () => {
-      // We'll simplify the bundle to just include ERC20 tokens
-      // since bundle approvals can be complex
-      const bidAmount = parseEther("100");
-      const erc20Amount = parseEther("5");
+      const erc20Amount = parseEther("100");
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
+      const bobErc20Amount = parseEther("5");
+      const erc1155TokenId = 1n;
+      const erc1155Amount = 20n;
+      const bobTokenId = 1n;
 
-      // Create token bundle that only includes ERC20 tokens that Bob owns
+      // Create token bundle that Bob will escrow
       const bundle = {
-        erc20s: [{ address: bobErc20Token, value: erc20Amount }],
-        erc721s: [],
-        erc1155s: [],
+        erc20s: [{ address: bobErc20Token, value: bobErc20Amount / 2n }],
+        erc721s: [{ address: bobErc721Token, id: bobTokenId }],
+        erc1155s: [
+          {
+            address: bobErc1155Token,
+            id: erc1155TokenId,
+            value: erc1155Amount / 2n,
+          },
+        ],
       };
 
       // Bob approves his tokens and creates the bundle escrow
-      await bobClient.erc20.approve(
-        { address: bobErc20Token, value: erc20Amount },
-        "escrow",
-      );
+      await bobClient.bundle.approve(bundle, "escrow");
 
       // Create ERC20 payment statement for Alice's tokens
       const erc20PaymentStatement = bobClient.erc20.encodePaymentStatement(
-        { address: aliceErc20Token, value: bidAmount },
+        { address: aliceErc20Token, value: erc20Amount },
         bob,
       );
 
@@ -681,9 +693,14 @@ describe("ERC20 Tests", () => {
         alice,
       );
 
+      const aliceInitialBalanceErc1155 = await testClient.getErc1155Balance(
+        { address: bobErc1155Token, id: erc1155TokenId },
+        alice,
+      );
+
       // Alice approves her tokens for payment
       await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: bidAmount },
+        { address: aliceErc20Token, value: erc20Amount },
         "payment",
       );
 
@@ -707,9 +724,27 @@ describe("ERC20 Tests", () => {
         alice,
       );
 
+      const aliceFinalBalanceErc1155 = await testClient.getErc1155Balance(
+        { address: bobErc1155Token, id: erc1155TokenId },
+        alice,
+      );
+
+      const aliceOwnsToken = await testClient.getErc721Owner({
+        address: bobErc721Token,
+        id: bobTokenId,
+      });
+
       // Verify transfers
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(bidAmount);
-      expect(aliceFinalBalanceBobErc20 - aliceInitialBalanceBobErc20).toBe(erc20Amount);
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
+        erc20Amount,
+      );
+      expect(aliceFinalBalanceBobErc20 - aliceInitialBalanceBobErc20).toBe(
+        bobErc20Amount / 2n,
+      );
+      expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(
+        erc1155Amount / 2n,
+      );
+      expect(compareAddresses(aliceOwnsToken, alice)).toBe(true);
     });
   });
 });
