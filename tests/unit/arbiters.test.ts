@@ -18,199 +18,61 @@ import {
   expect,
   test,
 } from "bun:test";
-import { makeClient } from "../../src";
-import { createAnvil } from "@viem/anvil";
+import { encodeAbiParameters, parseAbiParameters } from "viem";
 import {
-  createWalletClient,
-  http,
-  createTestClient,
-  publicActions,
-  walletActions,
-  parseEther,
-  getAddress,
-  nonceManager,
-  parseEventLogs,
-  decodeAbiParameters,
-  parseAbiParameters,
-  encodeAbiParameters,
-} from "viem";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { foundry } from "viem/chains";
-import { $ } from "bun";
+  setupTestEnvironment,
+  teardownTestEnvironment,
+  type TestContext,
+} from "../utils/setup";
 
-// Import contract artifacts
+// Import contract artifacts needed for tests
 import TrivialArbiter from "../../src/contracts/TrivialArbiter.json";
 import TrustedPartyArbiter from "../../src/contracts/TrustedPartyArbiter.json";
 import TrustedOracleArbiter from "../../src/contracts/TrustedOracleArbiter.json";
 import SpecificAttestationArbiter from "../../src/contracts/SpecificAttestationArbiter.json";
+import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
 
 describe("Arbiters Tests", () => {
-  // Anvil instance
-  const anvil = createAnvil();
-  let anvilInitState: `0x${string}`;
-
-  const chain = foundry;
-  const transport = http("http://127.0.0.1:8545", { timeout: 60_000 });
-
-  // Client instances
-  let aliceClient: ReturnType<typeof makeClient>;
-  let bobClient: ReturnType<typeof makeClient>;
-  let oracleClient: ReturnType<typeof makeClient>;
-  const testClient = createTestClient({
-    mode: "anvil",
-    account: privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    }),
-    chain,
-    transport,
-  })
-    .extend(walletActions)
-    .extend(publicActions);
-
-  // Addresses
+  // Test context and variables
+  let testContext: TestContext;
   let alice: `0x${string}`;
   let bob: `0x${string}`;
-  let oracle: `0x${string}`;
+  let aliceClient: TestContext["aliceClient"];
+  let bobClient: TestContext["bobClient"];
+  let testClient: TestContext["testClient"];
 
-  // Contract addresses - will be populated when contracts are deployed
-  const localAddresses = {
-    trivialArbiter: "" as `0x${string}`,
-    trustedPartyArbiter: "" as `0x${string}`,
-    trustedOracleArbiter: "" as `0x${string}`,
-    specificAttestationArbiter: "" as `0x${string}`,
-  };
+  // Additional oracle account
+  let oracle: `0x${string}`;
+  let oracleClient: (typeof testContext)["aliceClient"];
 
   beforeAll(async () => {
-    // Start anvil
-    await anvil.start();
+    // Setup test environment
+    testContext = await setupTestEnvironment();
 
-    // Setup accounts
-    const aliceAccount = privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    });
-    const bobAccount = privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    });
-    const oracleAccount = privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    });
+    // Extract the values we need for tests
+    alice = testContext.alice;
+    bob = testContext.bob;
+    aliceClient = testContext.aliceClient;
+    bobClient = testContext.bobClient;
+    testClient = testContext.testClient;
 
-    alice = aliceAccount.address;
-    bob = bobAccount.address;
-    oracle = oracleAccount.address;
-
-    // Create wallet clients
-    const aliceWalletClient = createWalletClient({
-      account: aliceAccount,
-      chain,
-      transport,
-    }).extend(publicActions);
-
-    const bobWalletClient = createWalletClient({
-      account: bobAccount,
-      chain,
-      transport,
-    }).extend(publicActions);
-
-    const oracleWalletClient = createWalletClient({
-      account: oracleAccount,
-      chain,
-      transport,
-    }).extend(publicActions);
-
-    // Fund accounts with ETH
-    await testClient.setBalance({
-      address: testClient.account.address,
-      value: parseEther("10"),
-    });
-    await testClient.setBalance({
-      address: alice,
-      value: parseEther("10"),
-    });
-    await testClient.setBalance({
-      address: bob,
-      value: parseEther("10"),
-    });
-    await testClient.setBalance({
-      address: oracle,
-      value: parseEther("10"),
-    });
-
-    // Deploy the arbiters
-    const trivialArbiterHash = await testClient.deployContract({
-      abi: TrivialArbiter.abi,
-      bytecode: TrivialArbiter.bytecode.object as `0x${string}`,
-      args: [],
-    });
-    const trivialArbiterReceipt = await testClient.waitForTransactionReceipt({
-      hash: trivialArbiterHash,
-    });
-
-    localAddresses.trivialArbiter =
-      trivialArbiterReceipt.contractAddress as `0x${string}`;
-
-    const trustedPartyArbiterHash = await testClient.deployContract({
-      abi: TrustedPartyArbiter.abi,
-      bytecode: TrustedPartyArbiter.bytecode.object as `0x${string}`,
-      args: [],
-    });
-
-    const trustedPartyArbiterReceipt =
-      await testClient.waitForTransactionReceipt({
-        hash: trustedPartyArbiterHash,
-      });
-
-    localAddresses.trustedPartyArbiter =
-      trustedPartyArbiterReceipt.contractAddress as `0x${string}`;
-
-    const trustedOracleArbiterHash = await testClient.deployContract({
-      abi: TrustedOracleArbiter.abi,
-      bytecode: TrustedOracleArbiter.bytecode.object as `0x${string}`,
-      args: [],
-    });
-
-    const trustedOracleArbiterReceipt =
-      await testClient.waitForTransactionReceipt({
-        hash: trustedOracleArbiterHash,
-      });
-
-    localAddresses.trustedOracleArbiter =
-      trustedOracleArbiterReceipt.contractAddress as `0x${string}`;
-
-    const specificAttestationArbiterHash = await testClient.deployContract({
-      abi: SpecificAttestationArbiter.abi,
-      bytecode: SpecificAttestationArbiter.bytecode.object as `0x${string}`,
-      args: [],
-    });
-
-    const specificAttestationArbiterReceipt =
-      await testClient.waitForTransactionReceipt({
-        hash: specificAttestationArbiterHash,
-      });
-
-    localAddresses.specificAttestationArbiter =
-      specificAttestationArbiterReceipt.contractAddress as `0x${string}`;
-
-    // Create clients with local contract addresses
-    aliceClient = makeClient(aliceWalletClient, {
-      ...localAddresses,
-    });
-    bobClient = makeClient(bobWalletClient, {
-      ...localAddresses,
-    });
-    oracleClient = makeClient(oracleWalletClient, {
-      ...localAddresses,
-    });
-
-    anvilInitState = await testClient.dumpState();
+    // We'll use Bob as the oracle for simplicity
+    oracle = bob;
+    oracleClient = bobClient;
   });
 
   beforeEach(async () => {
-    await testClient.loadState({ state: anvilInitState });
+    // Reset to initial state before each test
+    if (testContext.anvilInitState) {
+      await testContext.testClient.loadState({
+        state: testContext.anvilInitState,
+      });
+    }
   });
 
   afterAll(async () => {
-    await $`pkill anvil`;
+    // Clean up
+    await teardownTestEnvironment(testContext);
   });
 
   describe("TrivialArbiter", () => {
@@ -240,7 +102,7 @@ describe("Arbiters Tests", () => {
 
       // Check that the arbiter returns true
       const result = await testClient.readContract({
-        address: localAddresses.trivialArbiter,
+        address: testContext.addresses.trivialArbiter,
         abi: TrivialArbiter.abi,
         functionName: "checkStatement",
         args: [attestation, demand, counteroffer],
@@ -260,7 +122,7 @@ describe("Arbiters Tests", () => {
         "0x000000000000000000000000000000000000000000000000000000000000002a" as `0x${string}`; // 42 in hex
 
       const result2 = await testClient.readContract({
-        address: localAddresses.trivialArbiter,
+        address: testContext.addresses.trivialArbiter,
         abi: TrivialArbiter.abi,
         functionName: "checkStatement",
         args: [attestation2, demand2, counteroffer2],
@@ -299,14 +161,12 @@ describe("Arbiters Tests", () => {
 
       // Create demand data with the correct creator and TrivialArbiter as base arbiter (will return true)
       const demandData = {
-        baseArbiter: localAddresses.trivialArbiter,
+        baseArbiter: testContext.addresses.trivialArbiter,
         baseDemand: "0x" as `0x${string}`,
         creator: creator,
       };
 
       // Encode the demand data
-      // Note: We're using encodeAbiParameters directly as the arbiters client's encodeTrustedPartyDemand
-      // now has the correct field order (baseArbiter, baseDemand, creator)
       const demand = encodeAbiParameters(
         parseAbiParameters(
           "(address baseArbiter, bytes baseDemand, address creator)",
@@ -319,7 +179,7 @@ describe("Arbiters Tests", () => {
 
       // Check statement should return true
       const result = await testClient.readContract({
-        address: localAddresses.trustedPartyArbiter,
+        address: testContext.addresses.trustedPartyArbiter,
         abi: TrustedPartyArbiter.abi,
         functionName: "checkStatement",
         args: [attestation, demand, counteroffer],
@@ -347,7 +207,7 @@ describe("Arbiters Tests", () => {
 
       // Create demand data with the correct creator
       const demandData = {
-        baseArbiter: localAddresses.trivialArbiter,
+        baseArbiter: testContext.addresses.trivialArbiter,
         baseDemand: "0x" as `0x${string}`,
         creator: creator,
       };
@@ -366,7 +226,7 @@ describe("Arbiters Tests", () => {
       // Check statement should revert with NotTrustedParty
       try {
         await testClient.readContract({
-          address: localAddresses.trustedPartyArbiter,
+          address: testContext.addresses.trustedPartyArbiter,
           abi: TrustedPartyArbiter.abi,
           functionName: "checkStatement",
           args: [attestation, demand, counteroffer],
@@ -416,7 +276,7 @@ describe("Arbiters Tests", () => {
 
       // Check statement - should be false initially since no decision has been made
       const result = await testClient.readContract({
-        address: localAddresses.trustedOracleArbiter,
+        address: testContext.addresses.trustedOracleArbiter,
         abi: TrustedOracleArbiter.abi,
         functionName: "checkStatement",
         args: [attestation, demand, counteroffer],
@@ -457,7 +317,7 @@ describe("Arbiters Tests", () => {
 
       // Initially the decision should be false (default value)
       const initialResult = await testClient.readContract({
-        address: localAddresses.trustedOracleArbiter,
+        address: testContext.addresses.trustedOracleArbiter,
         abi: TrustedOracleArbiter.abi,
         functionName: "checkStatement",
         args: [attestation, demand, counteroffer],
@@ -479,7 +339,7 @@ describe("Arbiters Tests", () => {
 
       // Now the decision should be true
       const finalResult = await testClient.readContract({
-        address: localAddresses.trustedOracleArbiter,
+        address: testContext.addresses.trustedOracleArbiter,
         abi: TrustedOracleArbiter.abi,
         functionName: "checkStatement",
         args: [attestation, demand, counteroffer],
@@ -491,7 +351,7 @@ describe("Arbiters Tests", () => {
     test("testCheckStatementWithDifferentOracles", async () => {
       // Set up two different oracles with different decisions
       const oracle1 = oracle;
-      const oracle2 = bob;
+      const oracle2 = alice;
 
       // Oracle 1 makes a positive decision
       const arbitrateHash1 =
@@ -506,10 +366,11 @@ describe("Arbiters Tests", () => {
       });
 
       // Oracle 2 makes a negative decision
-      const arbitrateHash2 = await bobClient.arbiters.arbitrateAsTrustedOracle(
-        statementUid,
-        false,
-      );
+      const arbitrateHash2 =
+        await aliceClient.arbiters.arbitrateAsTrustedOracle(
+          statementUid,
+          false,
+        );
 
       // Wait for transaction receipt
       await testClient.waitForTransactionReceipt({
@@ -543,7 +404,7 @@ describe("Arbiters Tests", () => {
         "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
 
       const result1 = await testClient.readContract({
-        address: localAddresses.trustedOracleArbiter,
+        address: testContext.addresses.trustedOracleArbiter,
         abi: TrustedOracleArbiter.abi,
         functionName: "checkStatement",
         args: [attestation, demand1, counteroffer],
@@ -555,10 +416,11 @@ describe("Arbiters Tests", () => {
       const demandData2 = {
         oracle: oracle2,
       };
-      const demand2 = bobClient.arbiters.encodeTrustedOracleDemand(demandData2);
+      const demand2 =
+        aliceClient.arbiters.encodeTrustedOracleDemand(demandData2);
 
       const result2 = await testClient.readContract({
-        address: localAddresses.trustedOracleArbiter,
+        address: testContext.addresses.trustedOracleArbiter,
         abi: TrustedOracleArbiter.abi,
         functionName: "checkStatement",
         args: [attestation, demand2, counteroffer],
@@ -568,8 +430,8 @@ describe("Arbiters Tests", () => {
     });
 
     test("testCheckStatementWithNoDecision", async () => {
-      // Test with an oracle that hasn't made a decision
-      const newOracle = alice;
+      // Create a new oracle address that hasn't made a decision
+      const newOracle = privateKeyToAddress(generatePrivateKey());
 
       // Create the attestation
       const attestation = {
@@ -600,7 +462,7 @@ describe("Arbiters Tests", () => {
 
       // Check with the new oracle - should be false (default value)
       const result = await testClient.readContract({
-        address: localAddresses.trustedOracleArbiter,
+        address: testContext.addresses.trustedOracleArbiter,
         abi: TrustedOracleArbiter.abi,
         functionName: "checkStatement",
         args: [attestation, demand, counteroffer],
@@ -645,7 +507,7 @@ describe("Arbiters Tests", () => {
 
       // Check statement - should return true
       const result = await testClient.readContract({
-        address: localAddresses.specificAttestationArbiter,
+        address: testContext.addresses.specificAttestationArbiter,
         abi: SpecificAttestationArbiter.abi,
         functionName: "checkStatement",
         args: [attestation, demand, counteroffer],
@@ -688,7 +550,7 @@ describe("Arbiters Tests", () => {
       // Check statement should revert with NotDemandedAttestation
       try {
         await testClient.readContract({
-          address: localAddresses.specificAttestationArbiter,
+          address: testContext.addresses.specificAttestationArbiter,
           abi: SpecificAttestationArbiter.abi,
           functionName: "checkStatement",
           args: [attestation, demand, counteroffer],

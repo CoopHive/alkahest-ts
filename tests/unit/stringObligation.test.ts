@@ -6,176 +6,51 @@ import {
   expect,
   test,
 } from "bun:test";
-import { makeClient } from "../../src";
-import { createAnvil } from "@viem/anvil";
 import {
-  createWalletClient,
-  http,
-  createTestClient,
-  publicActions,
-  walletActions,
-  parseEther,
-  nonceManager,
   encodeAbiParameters,
   parseAbiParameters,
 } from "viem";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { foundry } from "viem/chains";
-import { $ } from "bun";
-
-// Import contract artifacts
-import StringObligation from "@contracts/StringObligation.json";
-
-// Import implementation contracts from fixtures
-import EAS from "../fixtures/EAS.json";
-import SchemaRegistry from "../fixtures/SchemaRegistry.json";
-import { getAttestedEventFromTxHash } from "../../src/utils";
+import {
+  setupTestEnvironment,
+  teardownTestEnvironment,
+  type TestContext,
+} from "../utils/setup";
 import { z } from "zod";
-import { type, Type } from "arktype";
+import { type } from "arktype";
 
 describe("StringObligation Tests", () => {
-  // Anvil instance
-  const anvil = createAnvil();
-  let anvilInitState: `0x${string}`;
-
-  const chain = foundry;
-  const transport = http("http://127.0.0.1:8545", { timeout: 60_000 });
-
-  // Client instances
-  let aliceClient: ReturnType<typeof makeClient>;
-  let bobClient: ReturnType<typeof makeClient>;
-  const testClient = createTestClient({
-    mode: "anvil",
-    account: privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    }),
-    chain,
-    transport,
-  })
-    .extend(walletActions)
-    .extend(publicActions);
-
-  // Addresses
+  // Test context and variables
+  let testContext: TestContext;
   let alice: `0x${string}`;
   let bob: `0x${string}`;
-
-  // Contract addresses - will be populated when contracts are deployed
-  const localAddresses = {
-    eas: "" as `0x${string}`,
-    easSchemaRegistry: "" as `0x${string}`,
-    stringObligation: "" as `0x${string}`,
-  };
+  let aliceClient: TestContext["aliceClient"];
+  let bobClient: TestContext["bobClient"];
+  let testClient: TestContext["testClient"];
 
   beforeAll(async () => {
-    
-    // Start anvil
-    await anvil.start();
-    
+    // Setup test environment
+    testContext = await setupTestEnvironment();
 
-    // Setup accounts like in Solidity tests
-    
-    const aliceAccount = privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    });
-    const bobAccount = privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    });
-
-    alice = aliceAccount.address;
-    bob = bobAccount.address;
-    
-
-    // Create wallet clients for Alice and Bob
-    
-    const aliceWalletClient = createWalletClient({
-      account: aliceAccount,
-      chain,
-      transport,
-    }).extend(publicActions);
-
-    const bobWalletClient = createWalletClient({
-      account: bobAccount,
-      chain,
-      transport,
-    }).extend(publicActions);
-    
-
-    // Fund accounts with ETH
-    await testClient.setBalance({
-      address: testClient.account.address,
-      value: parseEther("10"),
-    });
-    await testClient.setBalance({
-      address: alice,
-      value: parseEther("10"),
-    });
-    await testClient.setBalance({
-      address: bob,
-      value: parseEther("10"),
-    });
-
-    // Deploy EAS contracts first
-    
-    const schemaRegistryHash = await testClient.deployContract({
-      abi: SchemaRegistry.abi,
-      bytecode: SchemaRegistry.bytecode.object as `0x${string}`,
-      args: [],
-    });
-    
-
-    const schemaRegistryReceipt = await testClient.waitForTransactionReceipt({
-      hash: schemaRegistryHash,
-    });
-
-    localAddresses.easSchemaRegistry =
-      schemaRegistryReceipt.contractAddress as `0x${string}`;
-    
-
-    
-    const easHash = await testClient.deployContract({
-      abi: EAS.abi,
-      bytecode: EAS.bytecode.object as `0x${string}`,
-      args: [localAddresses.easSchemaRegistry],
-    });
-    
-
-    const easReceipt = await testClient.waitForTransactionReceipt({
-      hash: easHash,
-    });
-
-    localAddresses.eas = easReceipt.contractAddress as `0x${string}`;
-    
-
-    // Deploy StringObligation
-    
-    const stringObligationHash = await testClient.deployContract({
-      abi: StringObligation.abi,
-      bytecode: StringObligation.bytecode.object as `0x${string}`,
-      args: [localAddresses.eas, localAddresses.easSchemaRegistry],
-    });
-    
-
-    const stringObligationReceipt = await testClient.waitForTransactionReceipt({
-      hash: stringObligationHash,
-    });
-
-    localAddresses.stringObligation =
-      stringObligationReceipt.contractAddress as `0x${string}`;
-    
-
-    // Create clients with local contract addresses
-    aliceClient = makeClient(aliceWalletClient, localAddresses);
-    bobClient = makeClient(bobWalletClient, localAddresses);
-    anvilInitState = await testClient.dumpState();
-    
+    // Extract the values we need for tests
+    alice = testContext.alice;
+    bob = testContext.bob;
+    aliceClient = testContext.aliceClient;
+    bobClient = testContext.bobClient;
+    testClient = testContext.testClient;
   });
 
   beforeEach(async () => {
-    await testClient.loadState({ state: anvilInitState });
+    // Reset to initial state before each test
+    if (testContext.anvilInitState) {
+      await testContext.testClient.loadState({
+        state: testContext.anvilInitState,
+      });
+    }
   });
 
   afterAll(async () => {
-    await $`pkill anvil`;
+    // Clean up
+    await teardownTestEnvironment(testContext);
   });
 
   describe("StringObligation", () => {
@@ -392,8 +267,6 @@ describe("StringObligation Tests", () => {
         encodedData,
         TestType,
       );
-
-      
 
       // Verify decoded data - should be the string value directly
       expect(decoded).toEqual(data);

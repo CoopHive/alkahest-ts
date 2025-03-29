@@ -6,245 +6,52 @@ import {
   expect,
   test,
 } from "bun:test";
-import { makeClient } from "../../src";
-import { createAnvil } from "@viem/anvil";
 import {
-  createWalletClient,
-  http,
-  createTestClient,
-  publicActions,
-  walletActions,
-  parseEther,
-  getAddress,
-  nonceManager,
-  parseEventLogs,
   decodeAbiParameters,
   parseAbiParameters,
   parseAbi,
+  parseEventLogs,
 } from "viem";
-import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import { foundry } from "viem/chains";
 import { $ } from "bun";
 import {
-  compareAddresses,
-  createTokenTestExtension,
-} from "../utils/tokenTestUtils";
-
-// Import contract artifacts from src/contracts where available
-import AttestationEscrowObligation from "@contracts/AttestationEscrowObligation.json";
-import AttestationEscrowObligation2 from "@contracts/AttestationEscrowObligation2.json";
-import AttestationBarterUtils from "@contracts/AttestationBarterUtils.json";
-import StringObligation from "@contracts/StringObligation.json";
-import TrivialArbiter from "@contracts/TrivialArbiter.json";
-
-// Import implementation contracts from fixtures
-// These are needed because they have bytecode for deployment (interfaces don't)
-import EAS from "../fixtures/EAS.json";
-import SchemaRegistry from "../fixtures/SchemaRegistry.json";
+  setupTestEnvironment,
+  teardownTestEnvironment,
+  type TestContext,
+} from "../utils/setup";
 
 describe("Attestation Tests", () => {
-  // Anvil instance
-  const anvil = createAnvil();
-  let anvilInitState: `0x${string}`;
-
-  const chain = foundry;
-  const transport = http("http://127.0.0.1:8545", { timeout: 60_000 });
-
-  // Client instances
-  let aliceClient: ReturnType<typeof makeClient>;
-  let bobClient: ReturnType<typeof makeClient>;
-  const testClient = createTestClient({
-    mode: "anvil",
-    account: privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    }),
-    chain,
-    transport,
-  })
-    .extend(walletActions)
-    .extend(publicActions)
-    .extend(createTokenTestExtension());
-
-  // Addresses
+  // Test context and variables
+  let testContext: TestContext;
   let alice: `0x${string}`;
   let bob: `0x${string}`;
-
-  // Contract addresses - will be populated when contracts are deployed
-  const localAddresses = {
-    eas: "" as `0x${string}`,
-    easSchemaRegistry: "" as `0x${string}`,
-    attestationEscrowObligation: "" as `0x${string}`,
-    attestationEscrowObligation2: "" as `0x${string}`,
-    attestationBarterUtils: "" as `0x${string}`,
-    stringObligation: "" as `0x${string}`,
-    trivialArbiter: "" as `0x${string}`,
-  };
+  let aliceClient: TestContext["aliceClient"];
+  let bobClient: TestContext["bobClient"];
+  let testClient: TestContext["testClient"];
 
   beforeAll(async () => {
-    // Start anvil
-    await anvil.start();
+    // Setup test environment
+    testContext = await setupTestEnvironment();
 
-    // Setup accounts like in Solidity tests
-
-    const aliceAccount = privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    });
-    const bobAccount = privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    });
-
-    alice = aliceAccount.address;
-    bob = bobAccount.address;
-
-    // Create wallet clients for Alice and Bob
-
-    const aliceWalletClient = createWalletClient({
-      account: aliceAccount,
-      chain,
-      transport,
-    }).extend(publicActions);
-
-    const bobWalletClient = createWalletClient({
-      account: bobAccount,
-      chain,
-      transport,
-    }).extend(publicActions);
-
-    // Fund accounts with ETH
-    await testClient.setBalance({
-      address: testClient.account.address,
-      value: parseEther("10"),
-    });
-    await testClient.setBalance({
-      address: alice,
-      value: parseEther("10"),
-    });
-    await testClient.setBalance({
-      address: bob,
-      value: parseEther("10"),
-    });
-
-    // Deploy EAS contracts first
-
-    const schemaRegistryHash = await testClient.deployContract({
-      abi: SchemaRegistry.abi,
-      bytecode: SchemaRegistry.bytecode.object as `0x${string}`,
-      args: [],
-    });
-
-    const schemaRegistryReceipt = await testClient.waitForTransactionReceipt({
-      hash: schemaRegistryHash,
-    });
-
-    localAddresses.easSchemaRegistry =
-      schemaRegistryReceipt.contractAddress as `0x${string}`;
-
-    const easHash = await testClient.deployContract({
-      abi: EAS.abi,
-      bytecode: EAS.bytecode.object as `0x${string}`,
-      args: [localAddresses.easSchemaRegistry],
-    });
-
-    const easReceipt = await testClient.waitForTransactionReceipt({
-      hash: easHash,
-    });
-
-    localAddresses.eas = easReceipt.contractAddress as `0x${string}`;
-
-    // Deploy AttestationEscrowObligation
-
-    const attestationEscrowObligationHash = await testClient.deployContract({
-      abi: AttestationEscrowObligation.abi,
-      bytecode: AttestationEscrowObligation.bytecode.object as `0x${string}`,
-      args: [localAddresses.eas, localAddresses.easSchemaRegistry],
-    });
-
-    const attestationEscrowObligationReceipt =
-      await testClient.waitForTransactionReceipt({
-        hash: attestationEscrowObligationHash,
-      });
-
-    localAddresses.attestationEscrowObligation =
-      attestationEscrowObligationReceipt.contractAddress as `0x${string}`;
-
-    // Deploy AttestationEscrowObligation2
-
-    const attestationEscrowObligation2Hash = await testClient.deployContract({
-      abi: AttestationEscrowObligation2.abi,
-      bytecode: AttestationEscrowObligation2.bytecode.object as `0x${string}`,
-      args: [localAddresses.eas, localAddresses.easSchemaRegistry],
-    });
-
-    const attestationEscrowObligation2Receipt =
-      await testClient.waitForTransactionReceipt({
-        hash: attestationEscrowObligation2Hash,
-      });
-
-    localAddresses.attestationEscrowObligation2 =
-      attestationEscrowObligation2Receipt.contractAddress as `0x${string}`;
-
-    // Deploy StringObligation
-
-    const stringObligationHash = await testClient.deployContract({
-      abi: StringObligation.abi,
-      bytecode: StringObligation.bytecode.object as `0x${string}`,
-      args: [localAddresses.eas, localAddresses.easSchemaRegistry],
-    });
-
-    const stringObligationReceipt = await testClient.waitForTransactionReceipt({
-      hash: stringObligationHash,
-    });
-
-    localAddresses.stringObligation =
-      stringObligationReceipt.contractAddress as `0x${string}`;
-
-    // Deploy TrivialArbiter
-
-    const trivialArbiterHash = await testClient.deployContract({
-      abi: TrivialArbiter.abi,
-      bytecode: TrivialArbiter.bytecode.object as `0x${string}`,
-      args: [],
-    });
-
-    const trivialArbiterReceipt = await testClient.waitForTransactionReceipt({
-      hash: trivialArbiterHash,
-    });
-
-    localAddresses.trivialArbiter =
-      trivialArbiterReceipt.contractAddress as `0x${string}`;
-
-    // Deploy AttestationBarterUtils
-
-    const attestationBarterUtilsHash = await testClient.deployContract({
-      abi: AttestationBarterUtils.abi,
-      bytecode: AttestationBarterUtils.bytecode.object as `0x${string}`,
-      args: [
-        localAddresses.eas,
-        localAddresses.easSchemaRegistry,
-        localAddresses.attestationEscrowObligation2,
-      ],
-    });
-
-    const attestationBarterUtilsReceipt =
-      await testClient.waitForTransactionReceipt({
-        hash: attestationBarterUtilsHash,
-      });
-
-    localAddresses.attestationBarterUtils =
-      attestationBarterUtilsReceipt.contractAddress as `0x${string}`;
-
-    // Create clients with local contract addresses
-    aliceClient = makeClient(aliceWalletClient, localAddresses);
-    bobClient = makeClient(bobWalletClient, localAddresses);
-    anvilInitState = await testClient.dumpState();
+    // Extract the values we need for tests
+    alice = testContext.alice;
+    bob = testContext.bob;
+    aliceClient = testContext.aliceClient;
+    bobClient = testContext.bobClient;
+    testClient = testContext.testClient;
   });
 
   beforeEach(async () => {
-    await testClient.loadState({ state: anvilInitState });
+    // Reset to initial state before each test
+    if (testContext.anvilInitState) {
+      await testContext.testClient.loadState({
+        state: testContext.anvilInitState,
+      });
+    }
   });
 
   afterAll(async () => {
-    await $`pkill anvil`;
+    // Clean up
+    await teardownTestEnvironment(testContext);
   });
 
   // Register a test schema for testing creating attestations
@@ -255,7 +62,7 @@ describe("Attestation Tests", () => {
     // Register schema using the SDK function
     const hash = await aliceClient.attestation.registerSchema(
       uniqueSchemaName,
-      localAddresses.attestationBarterUtils,
+      testContext.addresses.attestationBarterUtils,
       true,
     );
 
@@ -312,7 +119,7 @@ describe("Attestation Tests", () => {
             },
           },
           {
-            arbiter: localAddresses.trivialArbiter,
+            arbiter: testContext.addresses.trivialArbiter,
             demand,
           },
           expiration,
@@ -361,7 +168,7 @@ describe("Attestation Tests", () => {
             },
           },
           {
-            arbiter: localAddresses.trivialArbiter,
+            arbiter: testContext.addresses.trivialArbiter,
             demand: demandData,
           },
           expiration,
@@ -465,7 +272,7 @@ describe("Attestation Tests", () => {
         await aliceClient.attestation.buyWithAttestation2(
           preExistingAttestationId,
           {
-            arbiter: localAddresses.trivialArbiter,
+            arbiter: testContext.addresses.trivialArbiter,
             demand: demandData,
           },
           expiration,
@@ -486,8 +293,10 @@ describe("Attestation Tests", () => {
 
       // Get the attestation schema ID - matches line 116
       const schemaId = (await testClient.readContract({
-        address: localAddresses.attestationEscrowObligation2,
-        abi: AttestationEscrowObligation2.abi,
+        address: testContext.addresses.attestationEscrowObligation2,
+        abi: parseAbi([
+          "function ATTESTATION_SCHEMA() view returns (bytes32)",
+        ]),
         functionName: "ATTESTATION_SCHEMA",
         args: [],
       })) as `0x${string}`;
@@ -508,9 +317,6 @@ describe("Attestation Tests", () => {
       // 1. attestationUid matches the preExistingAttestationId
       // 2. arbiter address matches the mockArbiter
       // We've already verified the most important aspects - the attestation exists with the right schema
-
-      // If in the future we need to decode the data directly, we would need to ensure
-      // compatible ABI encoding/decoding between Solidity and TypeScript
     });
 
     test("testCollectPayment", async () => {
@@ -528,7 +334,7 @@ describe("Attestation Tests", () => {
         await aliceClient.attestation.buyWithAttestation2(
           preExistingAttestationId,
           {
-            arbiter: localAddresses.trivialArbiter,
+            arbiter: testContext.addresses.trivialArbiter,
             demand: demandData,
           },
           expiration,
@@ -569,8 +375,10 @@ describe("Attestation Tests", () => {
 
       // Get the validation schema ID from the obligation contract - line 196-199
       const validationSchemaId = (await testClient.readContract({
-        address: localAddresses.attestationEscrowObligation2,
-        abi: AttestationEscrowObligation2.abi,
+        address: testContext.addresses.attestationEscrowObligation2,
+        abi: parseAbi([
+          "function VALIDATION_SCHEMA() view returns (bytes32)",
+        ]),
         functionName: "VALIDATION_SCHEMA",
         args: [],
       })) as `0x${string}`;
@@ -610,7 +418,7 @@ describe("Attestation Tests", () => {
       const schema = `uint256 value${Date.now()}`;
       const hash = await aliceClient.attestation.registerSchema(
         schema,
-        localAddresses.attestationBarterUtils,
+        testContext.addresses.attestationBarterUtils,
         true,
       );
 
@@ -624,7 +432,7 @@ describe("Attestation Tests", () => {
       const uniqueSchemaName = `bool value${Date.now()}`;
       const registerHash = await aliceClient.attestation.registerSchema(
         uniqueSchemaName,
-        localAddresses.attestationBarterUtils,
+        testContext.addresses.attestationBarterUtils,
         true,
       );
 
@@ -658,7 +466,7 @@ describe("Attestation Tests", () => {
       const uniqueSchemaName = `bool value${Date.now()}`;
       const registerHash = await aliceClient.attestation.registerSchema(
         uniqueSchemaName,
-        localAddresses.attestationBarterUtils,
+        testContext.addresses.attestationBarterUtils,
         true,
       );
 
@@ -689,7 +497,7 @@ describe("Attestation Tests", () => {
         await aliceClient.attestation.buyWithAttestation2(
           attestationUid,
           {
-            arbiter: localAddresses.trivialArbiter,
+            arbiter: testContext.addresses.trivialArbiter,
             demand: demandData,
           },
           BigInt(Math.floor(Date.now() / 1000) + 2 * 86400), // 2 days expiration
