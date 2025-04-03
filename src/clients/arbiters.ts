@@ -67,10 +67,14 @@ export const makeArbitersClient = (
    * @param demand - struct DemandData {address oracle}
    * @returns abi encoded bytes
    */
-  encodeTrustedOracleDemand: (demand: { oracle: `0x${string}` }) => {
-    return encodeAbiParameters(parseAbiParameters("(address oracle)"), [
-      demand,
-    ]);
+  encodeTrustedOracleDemand: (demand: {
+    oracle: `0x${string}`;
+    data: `0x${string}`;
+  }) => {
+    return encodeAbiParameters(
+      parseAbiParameters("(address oracle, bytes data)"),
+      [demand],
+    );
   },
   /**
    * Decodes TrustedOracleArbiter.DemandData from bytes.
