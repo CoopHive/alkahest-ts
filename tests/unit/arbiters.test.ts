@@ -80,25 +80,24 @@ describe("Arbiters Tests", () => {
     test("testCheckStatementAlwaysReturnsTrue", async () => {
       // Create a test attestation (values don't matter for TrivialArbiter)
       const attestation = {
-        uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+        uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         time: BigInt(Math.floor(Date.now() / 1000)),
         expirationTime: 0n,
         revocationTime: 0n,
         refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient:
-          "0x0000000000000000000000000000000000000000" as `0x${string}`,
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
+        recipient: "0x0000000000000000000000000000000000000000" as const,
+        attester: "0x0000000000000000000000000000000000000000" as const,
         revocable: true,
-        data: "0x" as `0x${string}`,
+        data: "0x" as const,
       };
 
       // Empty demand data
-      const demand = "0x" as `0x${string}`;
+      const demand = "0x" as const;
       const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       // Check that the arbiter returns true
       const result = await testClient.readContract({
@@ -114,12 +113,12 @@ describe("Arbiters Tests", () => {
       // Try with different values, should still return true
       const attestation2 = {
         ...attestation,
-        uid: "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`,
+        uid: "0x0000000000000000000000000000000000000000000000000000000000000001" as const,
       };
 
-      const demand2 = "0x736f6d652064617461" as `0x${string}`; // "some data" in hex
+      const demand2 = "0x736f6d652064617461" as const; // "some data" in hex
       const counteroffer2 =
-        "0x000000000000000000000000000000000000000000000000000000000000002a" as `0x${string}`; // 42 in hex
+        "0x000000000000000000000000000000000000000000000000000000000000002a" as const; // 42 in hex
 
       const result2 = await testClient.readContract({
         address: testContext.addresses.trivialArbiter,
@@ -137,32 +136,30 @@ describe("Arbiters Tests", () => {
     // Mirrors test/unit/arbiters/TrustedPartyArbiter.t.sol
 
     // Create mock addresses for testing
-    const creator =
-      "0x0000000000000000000000000000000000000123" as `0x${string}`;
-    const nonCreator =
-      "0x0000000000000000000000000000000000000456" as `0x${string}`;
+    const creator = "0x0000000000000000000000000000000000000123" as const;
+    const nonCreator = "0x0000000000000000000000000000000000000456" as const;
 
     test("testCheckStatementWithCorrectCreator", async () => {
       // Create a test attestation with the correct recipient (creator)
       const attestation = {
-        uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+        uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         time: BigInt(Math.floor(Date.now() / 1000)),
         expirationTime: 0n,
         revocationTime: 0n,
         refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         recipient: creator,
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+        attester: "0x0000000000000000000000000000000000000000" as const,
         revocable: true,
-        data: "0x" as `0x${string}`,
+        data: "0x" as const,
       };
 
       // Create demand data with the correct creator and TrivialArbiter as base arbiter (will return true)
       const demandData = {
         baseArbiter: testContext.addresses.trivialArbiter,
-        baseDemand: "0x" as `0x${string}`,
+        baseDemand: "0x" as const,
         creator: creator,
       };
 
@@ -175,7 +172,7 @@ describe("Arbiters Tests", () => {
       );
 
       const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       // Check statement should return true
       const result = await testClient.readContract({
@@ -191,24 +188,24 @@ describe("Arbiters Tests", () => {
     test("testCheckStatementWithIncorrectCreator", async () => {
       // Create a test attestation with an incorrect recipient (not the creator)
       const attestation = {
-        uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+        uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         time: BigInt(Math.floor(Date.now() / 1000)),
         expirationTime: 0n,
         revocationTime: 0n,
         refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         recipient: nonCreator, // Different from creator
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+        attester: "0x0000000000000000000000000000000000000000" as const,
         revocable: true,
-        data: "0x" as `0x${string}`,
+        data: "0x" as const,
       };
 
       // Create demand data with the correct creator
       const demandData = {
         baseArbiter: testContext.addresses.trivialArbiter,
-        baseDemand: "0x" as `0x${string}`,
+        baseDemand: "0x" as const,
         creator: creator,
       };
 
@@ -221,7 +218,7 @@ describe("Arbiters Tests", () => {
       );
 
       const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       // Check statement should revert with NotTrustedParty
       try {
@@ -243,36 +240,36 @@ describe("Arbiters Tests", () => {
   describe("TrustedOracleArbiter", () => {
     // Mirrors test/unit/arbiters/TrustedOracleArbiter.t.sol
     const statementUid =
-      "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`;
+      "0x0000000000000000000000000000000000000000000000000000000000000001" as const;
 
     test("testConstructor", async () => {
       // Create an attestation with the statement UID
       const attestation = {
         uid: statementUid,
         schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         time: BigInt(Math.floor(Date.now() / 1000)),
         expirationTime: 0n,
         revocationTime: 0n,
         refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient:
-          "0x0000000000000000000000000000000000000000" as `0x${string}`,
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
+        recipient: "0x0000000000000000000000000000000000000000" as const,
+        attester: "0x0000000000000000000000000000000000000000" as const,
         revocable: true,
-        data: "0x" as `0x${string}`,
+        data: "0x" as const,
       };
 
       // Create demand data
       const demandData = {
         oracle: oracle,
+        data: "0x" as const,
       };
 
       // Encode demand data
       const demand =
         oracleClient.arbiters.encodeTrustedOracleDemand(demandData);
       const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       // Check statement - should be false initially since no decision has been made
       const result = await testClient.readContract({
@@ -291,29 +288,29 @@ describe("Arbiters Tests", () => {
       const attestation = {
         uid: statementUid,
         schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         time: BigInt(Math.floor(Date.now() / 1000)),
         expirationTime: 0n,
         revocationTime: 0n,
         refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient:
-          "0x0000000000000000000000000000000000000000" as `0x${string}`,
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
+        recipient: "0x0000000000000000000000000000000000000000" as const,
+        attester: "0x0000000000000000000000000000000000000000" as const,
         revocable: true,
-        data: "0x" as `0x${string}`,
+        data: "0x" as const,
       };
 
       // Create demand data
       const demandData = {
         oracle: oracle,
+        data: "0x" as const,
       };
 
       // Encode demand data
       const demand =
         oracleClient.arbiters.encodeTrustedOracleDemand(demandData);
       const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       // Initially the decision should be false (default value)
       const initialResult = await testClient.readContract({
@@ -381,27 +378,27 @@ describe("Arbiters Tests", () => {
       const attestation = {
         uid: statementUid,
         schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         time: BigInt(Math.floor(Date.now() / 1000)),
         expirationTime: 0n,
         revocationTime: 0n,
         refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient:
-          "0x0000000000000000000000000000000000000000" as `0x${string}`,
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
+        recipient: "0x0000000000000000000000000000000000000000" as const,
+        attester: "0x0000000000000000000000000000000000000000" as const,
         revocable: true,
-        data: "0x" as `0x${string}`,
+        data: "0x" as const,
       };
 
       // Check with oracle1 - should be true
       const demandData1 = {
         oracle: oracle1,
+        data: "0x" as const,
       };
       const demand1 =
         oracleClient.arbiters.encodeTrustedOracleDemand(demandData1);
       const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       const result1 = await testClient.readContract({
         address: testContext.addresses.trustedOracleArbiter,
@@ -415,6 +412,7 @@ describe("Arbiters Tests", () => {
       // Check with oracle2 - should be false
       const demandData2 = {
         oracle: oracle2,
+        data: "0x" as const,
       };
       const demand2 =
         aliceClient.arbiters.encodeTrustedOracleDemand(demandData2);
@@ -437,28 +435,28 @@ describe("Arbiters Tests", () => {
       const attestation = {
         uid: statementUid,
         schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         time: BigInt(Math.floor(Date.now() / 1000)),
         expirationTime: 0n,
         revocationTime: 0n,
         refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient:
-          "0x0000000000000000000000000000000000000000" as `0x${string}`,
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
+        recipient: "0x0000000000000000000000000000000000000000" as const,
+        attester: "0x0000000000000000000000000000000000000000" as const,
         revocable: true,
-        data: "0x" as `0x${string}`,
+        data: "0x" as const,
       };
 
       // Create demand data
       const demandData = {
         oracle: newOracle,
+        data: "0x" as const,
       };
 
       // Encode demand data
       const demand = aliceClient.arbiters.encodeTrustedOracleDemand(demandData);
       const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       // Check with the new oracle - should be false (default value)
       const result = await testClient.readContract({
@@ -477,21 +475,20 @@ describe("Arbiters Tests", () => {
     test("testCheckStatementWithCorrectUID", async () => {
       // Create a test attestation
       const uid =
-        "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000001" as const;
       const attestation = {
         uid: uid,
         schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         time: BigInt(Math.floor(Date.now() / 1000)),
         expirationTime: 0n,
         revocationTime: 0n,
         refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient:
-          "0x0000000000000000000000000000000000000000" as `0x${string}`,
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
+        recipient: "0x0000000000000000000000000000000000000000" as const,
+        attester: "0x0000000000000000000000000000000000000000" as const,
         revocable: true,
-        data: "0x" as `0x${string}`,
+        data: "0x" as const,
       };
 
       // Create demand data with matching UID
@@ -503,7 +500,7 @@ describe("Arbiters Tests", () => {
       const demand =
         aliceClient.arbiters.encodeSpecificAttestationDemand(demandData);
       const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       // Check statement - should return true
       const result = await testClient.readContract({
@@ -519,33 +516,32 @@ describe("Arbiters Tests", () => {
     test("testCheckStatementWithIncorrectUID", async () => {
       // Create a test attestation
       const uid =
-        "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000001" as const;
       const attestation = {
         uid: uid,
         schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
         time: BigInt(Math.floor(Date.now() / 1000)),
         expirationTime: 0n,
         revocationTime: 0n,
         refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient:
-          "0x0000000000000000000000000000000000000000" as `0x${string}`,
-        attester: "0x0000000000000000000000000000000000000000" as `0x${string}`,
+          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
+        recipient: "0x0000000000000000000000000000000000000000" as const,
+        attester: "0x0000000000000000000000000000000000000000" as const,
         revocable: true,
-        data: "0x" as `0x${string}`,
+        data: "0x" as const,
       };
 
       // Create demand data with non-matching UID
       const demandData = {
-        uid: "0x0000000000000000000000000000000000000000000000000000000000000002" as `0x${string}`,
+        uid: "0x0000000000000000000000000000000000000000000000000000000000000002" as const,
       };
 
       // Encode demand data
       const demand =
         aliceClient.arbiters.encodeSpecificAttestationDemand(demandData);
       const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
+        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       // Check statement should revert with NotDemandedAttestation
       try {
