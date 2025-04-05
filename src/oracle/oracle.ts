@@ -1,4 +1,11 @@
-import type { AbiParameter, DecodeAbiParametersReturnType } from "viem";
+import {
+  type AbiEvent,
+  type AbiParameter,
+  type BlockNumber,
+  type BlockTag,
+  type DecodeAbiParametersReturnType,
+  type GetLogsParameters,
+} from "viem";
 import type { ChainAddresses } from "../types";
 import type { ViemClient } from "../utils";
 
@@ -10,19 +17,30 @@ export const makeOracleClient = (
     listenAndArbitrate: async <
       T extends readonly AbiParameter[],
       U extends readonly AbiParameter[],
-      V extends readonly AbiParameter[],
+      const abiEvent extends AbiEvent | undefined = undefined,
+      const abiEvents extends
+        | readonly AbiEvent[]
+        | readonly unknown[]
+        | undefined = abiEvent extends AbiEvent ? [abiEvent] : undefined,
+      strict extends boolean | undefined = undefined,
+      fromBlock extends BlockNumber | BlockTag | undefined = undefined,
+      toBlock extends BlockNumber | BlockTag | undefined = undefined,
     >(params: {
-      contract: `0x${string}`;
-      statementAbi: T;
-      demandAbi: U;
-      eventAbi: V;
-      getAttestationUidFromEvent: (
-        event: DecodeAbiParametersReturnType<V>,
-      ) => `0x${string}`;
+      getLogsArgs: GetLogsParameters<
+        abiEvent | undefined,
+        abiEvents,
+        strict,
+        fromBlock,
+        toBlock
+      >;
+      abis: { statement: T; demand: U };
+      getAttestationUidFromEvent: (event: abiEvent) => `0x${string}`;
       arbitrate: (
         statement: DecodeAbiParametersReturnType<T>,
         demand: DecodeAbiParametersReturnType<U>,
       ) => Promise<boolean | null>;
-    }) => {},
+    }) => {
+      const logs = await viemClient.getLogs(params.getLogsArgs);
+    },
   };
 };
