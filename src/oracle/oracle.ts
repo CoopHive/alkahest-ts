@@ -30,15 +30,7 @@ type ArbitrateParams<
   };
   statementAbi: T;
   getAttestationUidFromEvent: (
-    event: GetEventArgs<
-      abiEvents,
-      abiEvent["name"],
-      {
-        EnableUnion: false;
-        IndexedOnly: false;
-        Required: strict extends boolean ? strict : false;
-      }
-    >,
+    event: LogEventType<abiEvent, abiEvents, strict>,
   ) => `0x${string}`;
   arbitrate: (
     statement: DecodeAbiParametersReturnType<T>,
