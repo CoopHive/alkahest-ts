@@ -7,9 +7,6 @@ import {
   type BlockTag,
   type DecodeAbiParametersReturnType,
   type GetEventArgs,
-  type GetLogsParameters,
-  type Log,
-  type MaybeAbiEventName,
 } from "viem";
 import type { ChainAddresses } from "../types";
 import { getAttestation, type ViemClient } from "../utils";
