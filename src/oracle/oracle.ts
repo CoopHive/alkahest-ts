@@ -45,6 +45,20 @@ type ArbitrateParams<
   ) => Promise<boolean | null>;
 };
 
+type LogEventType<
+  abiEvent extends AbiEvent,
+  abiEvents extends readonly AbiEvent[] = [abiEvent],
+  strict extends boolean | undefined = undefined,
+> = GetEventArgs<
+  abiEvents,
+  abiEvent["name"],
+  {
+    EnableUnion: false;
+    IndexedOnly: false;
+    Required: strict extends boolean ? strict : false;
+  }
+>;
+
 export const makeOracleClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
@@ -63,15 +77,7 @@ export const makeOracleClient = (
     const decisions = await Promise.all(
       logs.map(async (log) => {
         const uid = params.getAttestationUidFromEvent(
-          log.args as GetEventArgs<
-            abiEvents,
-            abiEvent["name"],
-            {
-              EnableUnion: false;
-              IndexedOnly: false;
-              Required: strict extends boolean ? strict : false;
-            }
-          >,
+          log.args as LogEventType<abiEvent, abiEvents, strict>,
         );
         const attestation = await getAttestation(viemClient, uid);
 
@@ -124,15 +130,7 @@ export const makeOracleClient = (
           await Promise.all(
             logs.map(async (log) => {
               const uid = params.getAttestationUidFromEvent(
-                log.args as GetEventArgs<
-                  abiEvents,
-                  abiEvent["name"],
-                  {
-                    EnableUnion: false;
-                    IndexedOnly: false;
-                    Required: strict extends boolean ? strict : false;
-                  }
-                >,
+                log.args as LogEventType<abiEvent, abiEvents, strict>,
               );
               const attestation = await getAttestation(viemClient, uid);
 
