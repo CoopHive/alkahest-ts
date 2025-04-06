@@ -49,7 +49,7 @@ export const makeOracleClient = (
       functionName: "arbitrate",
       args: [uid, decision],
     });
-    return { hash, statement, decision };
+    return { hash, log, statement, decision };
   };
 
   const arbitratePast = async <T extends readonly AbiParameter[]>(
