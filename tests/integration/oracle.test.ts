@@ -83,17 +83,23 @@ test("trivialListenAndArbitrate", async () => {
     contractAddress: testContext.addresses.stringObligation,
     statementAbi: parseAbiParameters("(string item)"),
     arbitrate: async (_statement) => true,
+    onAfterArbitrate: async (decision) => {
+      expect(decision?.log.args.uid).toEqual(fulfillment.uid);
+      expect(decision?.statement[0].item).toEqual("foo");
+      expect(decision?.decision).toBe(true);
+    },
   });
 
   const { attested: fulfillment } =
     await testContext.bobClient.stringObligation.makeStatement("foo");
 
-  unwatch();
-
+  await Bun.sleep(2000);
   const collectionHash = await testContext.bobClient.erc20.collectPayment(
     escrow.uid,
     fulfillment.uid,
   );
 
   expect(collectionHash).toBeTruthy();
+
+  unwatch();
 });
