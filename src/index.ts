@@ -4,25 +4,25 @@ import {
   publicActions,
   type Account,
   type Chain,
-  type TestClient,
   type Transport,
   type WalletClient,
 } from "viem";
+import { makeArbitersClient } from "./clients/arbiters";
+import { makeAttestationClient } from "./clients/attestation";
+import { makeErc1155Client } from "./clients/erc1155";
+import { makeErc20Client } from "./clients/erc20";
+import { makeErc721Client } from "./clients/erc721";
+import { makeStringObligationClient } from "./clients/stringObligation";
+import { makeTokenBundleClient } from "./clients/tokenBundle";
 import {
   contractAddresses as defaultContractAddresses,
   supportedChains,
 } from "./config";
-import { makeErc20Client } from "./clients/erc20";
-import { makeErc721Client } from "./clients/erc721";
-import { makeErc1155Client } from "./clients/erc1155";
-import { makeTokenBundleClient } from "./clients/tokenBundle";
-import { makeAttestationClient } from "./clients/attestation";
-import { makeStringObligationClient } from "./clients/stringObligation";
+import { makeOracleClient } from "./oracle/oracle";
+import type { ChainAddresses } from "./types";
+import { getAttestation } from "./utils";
 
 import { abi as easAbi } from "./contracts/IEAS";
-import { makeArbitersClient } from "./clients/arbiters";
-import { getAttestation } from "./utils";
-import type { ChainAddresses } from "./types";
 
 /**
  * Creates an Alkahest client for interacting with the protocol
@@ -179,6 +179,8 @@ export const makeClient = (
     /** Utilities for StringObligation */
     stringObligation: makeStringObligationClient(viemClient, addresses),
 
+    oracle: makeOracleClient(viemClient, addresses),
+
     /** The underlying Viem client */
     viemClient,
 
@@ -264,5 +266,5 @@ export const makeClient = (
   };
 };
 
-export * from "./types";
 export * from "./config";
+export * from "./types";
