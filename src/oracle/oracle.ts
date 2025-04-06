@@ -1,16 +1,9 @@
 import {
   decodeAbiParameters,
   parseAbiItem,
-  parseAbiParameter,
-  parseAbiParameters,
-  type AbiEvent,
   type AbiParameter,
   type Address,
-  type BlockNumber,
-  type BlockTag,
   type DecodeAbiParametersReturnType,
-  type GetEventArgs,
-  type GetLogsReturnType,
   type Log,
 } from "viem";
 import type { ChainAddresses } from "../types";
