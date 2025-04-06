@@ -63,9 +63,9 @@ export const makeOracleClient = (
     params: ArbitrateParams<T>,
   ) => {
     const logs = await viemClient.getLogs({
-      address: params.contractAddress,
+      address: addresses.eas,
       event: attestedEvent,
-      args: { recipient: params.recipient },
+      args: { recipient: params.recipient, attester: params.contractAddress },
       fromBlock: "earliest",
       toBlock: "latest",
     });
@@ -83,9 +83,9 @@ export const makeOracleClient = (
       const decisions = await arbitratePast(params);
 
       const unwatch = viemClient.watchEvent({
-        address: params.contractAddress,
+        address: addresses.eas,
         event: attestedEvent,
-        args: { recipient: params.recipient },
+        args: { recipient: params.recipient, attester: params.contractAddress },
         onLogs: async (logs) => {
           await Promise.all(logs.map(async (log) => arbitrateLog(params, log)));
         },
