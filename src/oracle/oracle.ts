@@ -74,6 +74,7 @@ export const makeOracleClient = (
       params: ArbitrateParams<T> & {
         onAfterArbitrate?: (decision: {
           hash: `0x${string}`;
+          log: Log<bigint, number, boolean, typeof attestedEvent>;
           statement: DecodeAbiParametersReturnType<T>;
           decision: boolean | null;
         }) => Promise<void>;
@@ -93,6 +94,7 @@ export const makeOracleClient = (
                 params.onAfterArbitrate(
                   decision as {
                     hash: `0x${string}`;
+                    log: Log<bigint, number, boolean, typeof attestedEvent>;
                     statement: DecodeAbiParametersReturnType<T>;
                     decision: boolean | null;
                   },
