@@ -40,7 +40,7 @@ export const makeOracleClient = (
     log: Log<bigint, number, boolean, typeof attestedEvent>,
   ) => {
     const uid = log.args.uid!;
-    const attestation = await getAttestation(viemClient, uid);
+    const attestation = await getAttestation(viemClient, uid, addresses);
 
     const statement = decodeAbiParameters(
       params.statementAbi,
