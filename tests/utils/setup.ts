@@ -10,6 +10,7 @@ import {
   type PublicActions,
   type WalletActions,
   type TestClient,
+  webSocket,
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { foundry } from "viem/chains";
@@ -131,7 +132,9 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   await anvil.start();
 
   const chain = foundry;
-  const transport = http("http://127.0.0.1:8545", { timeout: 60_000 });
+  const transport = http("http://127.0.0.1:8545", {
+    timeout: 60_000,
+  });
 
   // Create test accounts
   console.log("Creating test accounts");
@@ -147,7 +150,9 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   // Create test client for deployment
   const testClient = createTestClient({
     mode: "anvil",
-    account: privateKeyToAccount(generatePrivateKey(), { nonceManager }),
+    account: privateKeyToAccount(generatePrivateKey(), {
+      nonceManager,
+    }),
     chain,
     transport,
   })
@@ -175,12 +180,14 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     account: aliceAccount,
     chain,
     transport,
+    pollingInterval: 1000,
   }).extend(publicActions);
 
   const bobWalletClient = createWalletClient({
     account: bobAccount,
     chain,
     transport,
+    pollingInterval: 1000,
   }).extend(publicActions);
 
   // Initialize addresses object

@@ -254,12 +254,10 @@ export const makeClient = (
           address: contractAddress,
           event: fulfillmentEvent,
           args: { payment: buyAttestation },
-          pollingInterval: 1000,
           onLogs: (logs) => {
             resolve(logs[0].args);
             unwatch();
           },
-          fromBlock: 1n,
         });
       });
     },
