@@ -103,6 +103,7 @@ export const makeOracleClient = (
           );
         },
         fromBlock: 1n,
+        pollingInterval: 1000,
       });
 
       return { decisions, unwatch };
