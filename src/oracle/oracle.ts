@@ -56,7 +56,7 @@ export const makeOracleClient = (
       functionName: "arbitrate",
       args: [uid, decision],
     });
-    return { hash, decision };
+    return { hash, statement, decision };
   };
 
   const arbitratePast = async <T extends readonly AbiParameter[]>(
@@ -70,7 +70,7 @@ export const makeOracleClient = (
       toBlock: "latest",
     });
     const decisions = await Promise.all(
-      logs.map(async (log) => arbitrateLog(params, log)),
+      logs.map((log) => arbitrateLog(params, log)),
     );
 
     return decisions;
@@ -78,7 +78,13 @@ export const makeOracleClient = (
   return {
     arbitratePast,
     listenAndArbitrate: async <T extends readonly AbiParameter[]>(
-      params: ArbitrateParams<T>,
+      params: ArbitrateParams<T> & {
+        onAfterArbitrate?: (decision: {
+          hash: `0x${string}`;
+          statement: DecodeAbiParametersReturnType<T>;
+          decision: boolean | null;
+        }) => Promise<void>;
+      },
     ) => {
       const decisions = await arbitratePast(params);
 
@@ -87,7 +93,19 @@ export const makeOracleClient = (
         event: attestedEvent,
         args: { recipient: params.recipient, attester: params.contractAddress },
         onLogs: async (logs) => {
-          await Promise.all(logs.map(async (log) => arbitrateLog(params, log)));
+          await Promise.all(
+            logs.map(async (log) => {
+              const decision = await arbitrateLog(params, log);
+              params.onAfterArbitrate &&
+                params.onAfterArbitrate(
+                  decision as {
+                    hash: `0x${string}`;
+                    statement: DecodeAbiParametersReturnType<T>;
+                    decision: boolean | null;
+                  },
+                );
+            }),
+          );
         },
         fromBlock: 1n,
       });
