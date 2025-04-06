@@ -8,10 +8,10 @@ import {
   http,
   nonceManager,
 } from "viem";
-import { abi as jobResultObligationAbi } from "../../src/contracts/JobResultObligation";
-
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
+
+import { abi as jobResultObligationAbi } from "../../src/contracts/JobResultObligation";
 
 let clientBuyer: ReturnType<typeof makeClient>;
 let clientSeller: ReturnType<typeof makeClient>;
