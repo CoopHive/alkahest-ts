@@ -88,12 +88,13 @@ test("trivialListenAndArbitrate", async () => {
       expect(decision?.statement[0].item).toEqual("foo");
       expect(decision?.decision).toBe(true);
     },
+    pollingInterval: 50,
   });
 
   const { attested: fulfillment } =
     await testContext.bobClient.stringObligation.makeStatement("foo");
 
-  await Bun.sleep(2000);
+  await Bun.sleep(100);
   const collectionHash = await testContext.bobClient.erc20.collectPayment(
     escrow.uid,
     fulfillment.uid,
