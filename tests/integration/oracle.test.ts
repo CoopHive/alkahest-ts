@@ -52,7 +52,43 @@ test("trivialArbitratePast", async () => {
     arbitrate: async (_statement) => true,
   });
 
-  console.log("decisions: ", decisions);
+  decisions.forEach(($) => expect($?.decision).toBe(true));
+
+  const collectionHash = await testContext.bobClient.erc20.collectPayment(
+    escrow.uid,
+    fulfillment.uid,
+  );
+
+  expect(collectionHash).toBeTruthy();
+});
+
+test("trivialListenAndArbitrate", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("string mockData"), ["foo"]),
+  });
+
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrate({
+    contractAddress: testContext.addresses.stringObligation,
+    statementAbi: parseAbiParameters("(string item)"),
+    arbitrate: async (_statement) => true,
+  });
+
+  const { attested: fulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement("foo");
+
+  unwatch();
 
   const collectionHash = await testContext.bobClient.erc20.collectPayment(
     escrow.uid,
