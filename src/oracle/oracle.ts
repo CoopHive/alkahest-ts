@@ -1,5 +1,8 @@
 import {
   decodeAbiParameters,
+  parseAbiItem,
+  parseAbiParameter,
+  parseAbiParameters,
   type AbiEvent,
   type AbiParameter,
   type Address,
@@ -7,143 +10,84 @@ import {
   type BlockTag,
   type DecodeAbiParametersReturnType,
   type GetEventArgs,
+  type GetLogsReturnType,
+  type Log,
 } from "viem";
 import type { ChainAddresses } from "../types";
 import { getAttestation, type ViemClient } from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
 
-type ArbitrateParams<
-  T extends readonly AbiParameter[],
-  abiEvent extends AbiEvent,
-  abiEvents extends readonly AbiEvent[] = [abiEvent],
-  strict extends boolean | undefined = undefined,
-  fromBlock extends BlockNumber | BlockTag | undefined = undefined,
-  toBlock extends BlockNumber | BlockTag | undefined = undefined,
-> = {
-  getLogsArgs: {
-    address?: Address | Address[];
-    event: abiEvent;
-    args?: any;
-    fromBlock?: fromBlock;
-    toBlock?: toBlock;
-  };
+type ArbitrateParams<T extends readonly AbiParameter[]> = {
+  contractAddress: Address | Address[];
+  recipient?: Address;
   statementAbi: T;
-  getAttestationUidFromEvent: (
-    event: LogEventType<abiEvent, abiEvents, strict>,
-  ) => `0x${string}`;
   arbitrate: (
     statement: DecodeAbiParametersReturnType<T>,
   ) => Promise<boolean | null>;
 };
 
-type LogEventType<
-  abiEvent extends AbiEvent,
-  abiEvents extends readonly AbiEvent[] = [abiEvent],
-  strict extends boolean | undefined = undefined,
-> = GetEventArgs<
-  abiEvents,
-  abiEvent["name"],
-  {
-    EnableUnion: false;
-    IndexedOnly: false;
-    Required: strict extends boolean ? strict : false;
-  }
->;
-
 export const makeOracleClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
-  const arbitratePast = async <
-    T extends readonly AbiParameter[],
-    const abiEvent extends AbiEvent,
-    const abiEvents extends readonly AbiEvent[] = [abiEvent],
-    strict extends boolean | undefined = undefined,
-    fromBlock extends BlockNumber | BlockTag | undefined = undefined,
-    toBlock extends BlockNumber | BlockTag | undefined = undefined,
-  >(
-    params: ArbitrateParams<T, abiEvent, abiEvents, strict, fromBlock, toBlock>,
+  const attestedEvent = parseAbiItem(
+    "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)",
+  );
+
+  const arbitrateLog = async <T extends readonly AbiParameter[]>(
+    params: ArbitrateParams<T>,
+    log: Log<bigint, number, boolean, typeof attestedEvent>,
   ) => {
-    const logs = await viemClient.getLogs(params.getLogsArgs);
+    const uid = log.args.uid!;
+    const attestation = await getAttestation(viemClient, uid);
+
+    const statement = decodeAbiParameters(
+      params.statementAbi,
+      attestation.data,
+    );
+
+    const decision = await params.arbitrate(statement);
+    if (decision === null) return null;
+
+    const hash = await viemClient.writeContract({
+      address: addresses.trustedOracleArbiter,
+      abi: trustedOracleArbiterAbi.abi,
+      functionName: "arbitrate",
+      args: [uid, decision],
+    });
+    return { hash, decision };
+  };
+
+  const arbitratePast = async <T extends readonly AbiParameter[]>(
+    params: ArbitrateParams<T>,
+  ) => {
+    const logs = await viemClient.getLogs({
+      address: params.contractAddress,
+      event: attestedEvent,
+      args: { recipient: params.recipient },
+      fromBlock: "earliest",
+      toBlock: "latest",
+    });
     const decisions = await Promise.all(
-      logs.map(async (log) => {
-        const uid = params.getAttestationUidFromEvent(
-          log.args as LogEventType<abiEvent, abiEvents, strict>,
-        );
-        const attestation = await getAttestation(viemClient, uid);
-
-        const statement = decodeAbiParameters(
-          params.statementAbi,
-          attestation.data,
-        );
-
-        const decision = await params.arbitrate(statement);
-        if (decision === null) return null;
-
-        const hash = await viemClient.writeContract({
-          address: addresses.trustedOracleArbiter,
-          abi: trustedOracleArbiterAbi.abi,
-          functionName: "arbitrate",
-          args: [uid, decision],
-        });
-        return { hash, decision };
-      }),
+      logs.map(async (log) => arbitrateLog(params, log)),
     );
 
     return decisions;
   };
   return {
     arbitratePast,
-    listenAndArbitrate: async <
-      T extends readonly AbiParameter[],
-      const abiEvent extends AbiEvent,
-      const abiEvents extends readonly AbiEvent[] = [abiEvent],
-      strict extends boolean | undefined = undefined,
-      fromBlock extends BlockNumber | BlockTag | undefined = undefined,
-      toBlock extends BlockNumber | BlockTag | undefined = undefined,
-    >(
-      params: ArbitrateParams<
-        T,
-        abiEvent,
-        abiEvents,
-        strict,
-        fromBlock,
-        toBlock
-      >,
+    listenAndArbitrate: async <T extends readonly AbiParameter[]>(
+      params: ArbitrateParams<T>,
     ) => {
       const decisions = await arbitratePast(params);
 
       const unwatch = viemClient.watchEvent({
-        address: params.getLogsArgs.address,
-        event: params.getLogsArgs.event,
-        args: params.getLogsArgs.args,
+        address: params.contractAddress,
+        event: attestedEvent,
+        args: { recipient: params.recipient },
         onLogs: async (logs) => {
-          await Promise.all(
-            logs.map(async (log) => {
-              const uid = params.getAttestationUidFromEvent(
-                log.args as LogEventType<abiEvent, abiEvents, strict>,
-              );
-              const attestation = await getAttestation(viemClient, uid);
-
-              const statement = decodeAbiParameters(
-                params.statementAbi,
-                attestation.data,
-              );
-
-              const decision = await params.arbitrate(statement);
-              if (decision === null) return null;
-
-              const hash = await viemClient.writeContract({
-                address: addresses.trustedOracleArbiter,
-                abi: trustedOracleArbiterAbi.abi,
-                functionName: "arbitrate",
-                args: [uid, decision],
-              });
-
-              return { hash, decision };
-            }),
-          );
+          await Promise.all(logs.map(async (log) => arbitrateLog(params, log)));
         },
         fromBlock: 1n,
       });
