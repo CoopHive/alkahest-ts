@@ -1,25 +1,10 @@
 import { afterAll, beforeAll, beforeEach, expect, test } from "bun:test";
-import { contractAddresses, makeClient } from "../../src";
-import {
-  decodeAbiParameters,
-  encodeAbiParameters,
-  parseAbiParameters,
-  createWalletClient,
-  http,
-  nonceManager,
-  parseAbiParameter,
-  parseAbiItem,
-} from "viem";
-import { privateKeyToAccount } from "viem/accounts";
-import { baseSepolia } from "viem/chains";
+import { encodeAbiParameters, parseAbiParameters } from "viem";
 import {
   setupTestEnvironment,
   teardownTestEnvironment,
   type TestContext,
 } from "../utils/setup";
-
-let clientBuyer: ReturnType<typeof makeClient>;
-let clientSeller: ReturnType<typeof makeClient>;
 
 let testContext: TestContext;
 
