@@ -78,6 +78,7 @@ export const makeOracleClient = (
           statement: DecodeAbiParametersReturnType<T>;
           decision: boolean | null;
         }) => Promise<void>;
+        pollingInterval?: number;
       },
     ) => {
       const decisions = await arbitratePast(params);
@@ -102,6 +103,7 @@ export const makeOracleClient = (
             }),
           );
         },
+        pollingInterval: params.pollingInterval,
       });
 
       return { decisions, unwatch };

@@ -231,6 +231,7 @@ export const makeClient = (
     waitForFulfillment: async (
       contractAddress: `0x${string}`,
       buyAttestation: `0x${string}`,
+      pollingInterval?: number,
     ): Promise<{
       payment?: `0x${string}` | undefined;
       fulfillment?: `0x${string}` | undefined;
@@ -258,6 +259,7 @@ export const makeClient = (
             resolve(logs[0].args);
             unwatch();
           },
+          pollingInterval,
         });
       });
     },
