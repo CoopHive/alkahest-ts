@@ -40,6 +40,9 @@ export const makeOracleClient = (
     const uid = log.args.uid!;
     const attestation = await getAttestation(viemClient, uid, addresses);
 
+    if (attestation.refUID != params.fulfillment.refUid) return null;
+    if (attestation.expirationTime < Date.now() / 1000) return null;
+    if (attestation.revocationTime < Date.now() / 1000) return null;
     const statement = decodeAbiParameters(
       params.fulfillment.statementAbi,
       attestation.data,
