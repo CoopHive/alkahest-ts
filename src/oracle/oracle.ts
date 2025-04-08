@@ -260,6 +260,9 @@ export const makeOracleClient = (
             arbiterDemand,
             escrowAttestation.data,
           );
+          if (escrowArbiterDemand[0].arbiter != addresses.trustedOracleArbiter)
+            return null;
+
           const escrowDemand = decodeAbiParameters(
             params.escrow.demandAbi,
             escrowArbiterDemand[0].demand,
