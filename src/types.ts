@@ -104,3 +104,16 @@ export type TokenBundleFlat = {
 };
 
 export type ApprovalPurpose = "escrow" | "payment";
+
+export type Attestation = {
+  uid: `0x${string}`;
+  schema: `0x${string}`;
+  time: bigint;
+  expirationTime: bigint;
+  revocationTime: bigint;
+  refUID: `0x${string}`;
+  recipient: `0x${string}`;
+  attester: `0x${string}`;
+  revocable: boolean;
+  data: `0x${string}`;
+};
