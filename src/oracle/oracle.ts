@@ -28,8 +28,8 @@ export const makeOracleClient = (
     "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)",
   );
 
-  const arbitrateLog = async <T extends readonly AbiParameter[]>(
-    params: ArbitrateParams<T>,
+  const arbitrateLog = async <StatementData extends readonly AbiParameter[]>(
+    params: ArbitrateParams<StatementData>,
     log: Log<bigint, number, boolean, typeof attestedEvent>,
   ) => {
     const uid = log.args.uid!;
@@ -70,12 +70,12 @@ export const makeOracleClient = (
   };
   return {
     arbitratePast,
-    listenAndArbitrate: async <T extends readonly AbiParameter[]>(
-      params: ArbitrateParams<T> & {
+    listenAndArbitrate: async <StatementData extends readonly AbiParameter[]>(
+      params: ArbitrateParams<StatementData> & {
         onAfterArbitrate?: (decision: {
           hash: `0x${string}`;
           log: Log<bigint, number, boolean, typeof attestedEvent>;
-          statement: DecodeAbiParametersReturnType<T>;
+          statement: DecodeAbiParametersReturnType<StatementData>;
           decision: boolean | null;
         }) => Promise<void>;
         pollingInterval?: number;
@@ -96,7 +96,7 @@ export const makeOracleClient = (
                   decision as {
                     hash: `0x${string}`;
                     log: Log<bigint, number, boolean, typeof attestedEvent>;
-                    statement: DecodeAbiParametersReturnType<T>;
+                    statement: DecodeAbiParametersReturnType<StatementData>;
                     decision: boolean | null;
                   },
                 );
