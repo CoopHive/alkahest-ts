@@ -266,16 +266,33 @@ export const makeOracleClient = (
           );
 
           const fulfillmentsForEscrow = fulfillments.filter(
-            ($) => $.attestation.refUID == escrowAttestation.uid,
+            ($) =>
+              $.attestation.refUID == escrowAttestation.uid &&
+              ($.attestation.expirationTime === 0n ||
+                $.attestation.expirationTime > Date.now() / 1000) &&
+              ($.attestation.revocationTime === 0n ||
+                $.attestation.revocationTime > Date.now() / 1000),
           );
 
           return await Promise.all(
             fulfillmentsForEscrow.map(async ($) => {
-              await params.arbitrate(escrowDemand, $.statement);
+              const decision = await params.arbitrate(
+                escrowDemand,
+                $.statement,
+              );
+              if (decision === null) return null;
+
+              const hash = await viemClient.writeContract({
+                address: addresses.trustedOracleArbiter,
+                abi: trustedOracleArbiterAbi.abi,
+                functionName: "arbitrate",
+                args: [$.attestation.uid, decision],
+              });
+              return { hash, log: $.log, statement: $.statement, decision };
             }),
           ).then((decisions) => decisions.filter(($) => $ !== null));
         }),
-      );
+      ).then((decisions) => decisions.filter(($) => $ !== null).flat());
       return decisions;
     },
   };
