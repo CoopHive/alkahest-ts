@@ -47,8 +47,10 @@ test("trivialArbitratePast", async () => {
     await testContext.bobClient.stringObligation.makeStatement("foo");
 
   const decisions = await testContext.bobClient.oracle.arbitratePast({
-    contractAddress: testContext.addresses.stringObligation,
-    statementAbi: parseAbiParameters("(string item)"),
+    fulfillment: {
+      address: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
     arbitrate: async (_statement) => true,
   });
 
@@ -80,8 +82,10 @@ test("trivialListenAndArbitrate", async () => {
     );
 
   const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrate({
-    contractAddress: testContext.addresses.stringObligation,
-    statementAbi: parseAbiParameters("(string item)"),
+    fulfillment: {
+      address: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
     arbitrate: async (_statement) => true,
     onAfterArbitrate: async (decision) => {
       expect(decision?.log.args.uid).toEqual(fulfillment.uid);
@@ -129,8 +133,10 @@ test("conditionalArbitratePast", async () => {
     await testContext.bobClient.stringObligation.makeStatement("bad");
 
   const decisions = await testContext.bobClient.oracle.arbitratePast({
-    contractAddress: testContext.addresses.stringObligation,
-    statementAbi: parseAbiParameters("(string item)"),
+    fulfillment: {
+      address: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
     arbitrate: async (_statement) => _statement[0].item === "good",
   });
 
@@ -171,8 +177,10 @@ test("conditionalListenAndArbitrate", async () => {
     );
 
   const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrate({
-    contractAddress: testContext.addresses.stringObligation,
-    statementAbi: parseAbiParameters("(string item)"),
+    fulfillment: {
+      address: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
     arbitrate: async (_statement) => _statement[0].item === "good",
     onAfterArbitrate: async (decision) => {
       expect(decision?.decision).toBe(decision?.statement[0].item === "good");
