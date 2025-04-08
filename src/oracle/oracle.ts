@@ -1,6 +1,7 @@
 import {
   decodeAbiParameters,
   parseAbiItem,
+  parseAbiParameters,
   type AbiParameter,
   type Address,
   type DecodeAbiParametersReturnType,
@@ -25,6 +26,32 @@ type ArbitrateParams<StatementData extends readonly AbiParameter[]> = {
   ) => Promise<boolean | null>;
 };
 
+type ArbitrateEscrowParams<
+  StatementData extends readonly AbiParameter[],
+  DemandData extends readonly AbiParameter[],
+> = {
+  escrow: {
+    demandAbi: DemandData;
+    attester?: Address | Address[];
+    recipient?: Address;
+    schemaUid?: `0x${string}`;
+    uid?: `0x${string}`;
+    refUid?: `0x${string}`;
+  };
+  fulfillment: {
+    statementAbi: StatementData;
+    attester?: Address | Address[];
+    recipient?: Address;
+    schemaUid?: `0x${string}`;
+    uid?: `0x${string}`;
+    // refUid?: `0x${string}`; refUid needed to match fulfillment with escrow
+  };
+  arbitrate: (
+    demand: DecodeAbiParametersReturnType<DemandData>,
+    statement: DecodeAbiParametersReturnType<StatementData>,
+  ) => Promise<boolean | null>;
+};
+
 export const makeOracleClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
@@ -32,6 +59,7 @@ export const makeOracleClient = (
   const attestedEvent = parseAbiItem(
     "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)",
   );
+  const arbiterDemand = parseAbiParameters("(address arbiter, bytes demand)");
 
   const arbitrateLog = async <StatementData extends readonly AbiParameter[]>(
     params: ArbitrateParams<StatementData>,
@@ -55,6 +83,7 @@ export const makeOracleClient = (
       attestation.revocationTime < Date.now() / 1000
     )
       return null;
+
     const statement = decodeAbiParameters(
       params.fulfillment.statementAbi,
       attestation.data,
@@ -93,9 +122,10 @@ export const makeOracleClient = (
             !params.fulfillment.uid || $.args.uid === params.fulfillment.uid,
         ),
       );
+
     const decisions = await Promise.all(
       logs.map((log) => arbitrateLog(params, log)),
-    ).then((logs) => logs.filter(($) => $ !== null));
+    ).then((decisions) => decisions.filter(($) => $ !== null));
 
     return decisions;
   };
@@ -154,6 +184,99 @@ export const makeOracleClient = (
       });
 
       return { decisions, unwatch };
+    },
+    arbitratePastForEscrow: async <
+      StatementData extends readonly AbiParameter[],
+      DemandData extends readonly AbiParameter[],
+    >(
+      params: ArbitrateEscrowParams<StatementData, DemandData>,
+    ) => {
+      const escrowLogsP = viemClient
+        .getLogs({
+          address: addresses.eas,
+          event: attestedEvent,
+          args: {
+            attester: params.fulfillment.attester,
+            recipient: params.fulfillment.recipient,
+            schemaUID: params.fulfillment.schemaUid,
+          },
+          fromBlock: "earliest",
+          toBlock: "latest",
+        })
+        .then((logs) =>
+          logs.filter(
+            ($) => params.escrow.uid && $.args.uid === params.escrow.uid,
+          ),
+        );
+
+      const fulfillmentsP = viemClient
+        .getLogs({
+          address: addresses.eas,
+          event: attestedEvent,
+          args: {
+            recipient: params.fulfillment.recipient,
+            attester: params.fulfillment.attester,
+          },
+          fromBlock: "earliest",
+          toBlock: "latest",
+        })
+        .then((logs) =>
+          Promise.all(
+            logs
+              .filter(
+                ($) =>
+                  !params.fulfillment.uid ||
+                  $.args.uid === params.fulfillment.uid,
+              )
+              .map(async (log) => {
+                const attestation = await getAttestation(
+                  viemClient,
+                  log.args.uid!,
+                  addresses,
+                );
+                const statement = decodeAbiParameters(
+                  params.fulfillment.statementAbi,
+                  attestation.data,
+                );
+
+                return { log, attestation, statement };
+              }),
+          ),
+        );
+
+      const [escrowLogs, fulfillments] = await Promise.all([
+        escrowLogsP,
+        fulfillmentsP,
+      ]);
+
+      const decisions = await Promise.all(
+        escrowLogs.map(async (escrowLog) => {
+          const escrowAttestation = await getAttestation(
+            viemClient,
+            escrowLog.args.uid!,
+            addresses,
+          );
+          const escrowArbiterDemand = decodeAbiParameters(
+            arbiterDemand,
+            escrowAttestation.data,
+          );
+          const escrowDemand = decodeAbiParameters(
+            params.escrow.demandAbi,
+            escrowArbiterDemand[0].demand,
+          );
+
+          const fulfillmentsForEscrow = fulfillments.filter(
+            ($) => $.attestation.refUID == escrowAttestation.uid,
+          );
+
+          return await Promise.all(
+            fulfillmentsForEscrow.map(async ($) => {
+              await params.arbitrate(escrowDemand, $.statement);
+            }),
+          ).then((decisions) => decisions.filter(($) => $ !== null));
+        }),
+      );
+      return decisions;
     },
   };
 };
