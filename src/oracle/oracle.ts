@@ -7,7 +7,7 @@ import {
   type DecodeAbiParametersReturnType,
   type Log,
 } from "viem";
-import type { ChainAddresses } from "../types";
+import type { Attestation, ChainAddresses } from "../types";
 import { getAttestation, type ViemClient } from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
@@ -98,7 +98,7 @@ export const makeOracleClient = (
       functionName: "arbitrate",
       args: [uid, decision],
     });
-    return { hash, log, statement, decision };
+    return { hash, attestation, statement, decision };
   };
 
   const arbitratePast = async <T extends readonly AbiParameter[]>(
@@ -135,7 +135,7 @@ export const makeOracleClient = (
       params: ArbitrateParams<StatementData> & {
         onAfterArbitrate?: (decision: {
           hash: `0x${string}`;
-          log: Log<bigint, number, boolean, typeof attestedEvent>;
+          attestation: Attestation;
           statement: DecodeAbiParametersReturnType<StatementData>;
           decision: boolean | null;
         }) => Promise<void>;
@@ -173,7 +173,7 @@ export const makeOracleClient = (
                   params.onAfterArbitrate(
                     decision as {
                       hash: `0x${string}`;
-                      log: Log<bigint, number, boolean, typeof attestedEvent>;
+                      attestation: Attestation;
                       statement: DecodeAbiParametersReturnType<StatementData>;
                       decision: boolean | null;
                     },
