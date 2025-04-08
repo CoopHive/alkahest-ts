@@ -13,10 +13,12 @@ import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbite
 
 type ArbitrateParams<StatementData extends readonly AbiParameter[]> = {
   fulfillment: {
-    address: Address | Address[];
     statementAbi: StatementData;
+    attester?: Address | Address[];
     recipient?: Address;
+    schemaUid?: `0x${string}`;
     uid?: `0x${string}`;
+    refUid?: `0x${string}`;
   };
   arbitrate: (
     statement: DecodeAbiParametersReturnType<StatementData>,
@@ -63,8 +65,9 @@ export const makeOracleClient = (
         address: addresses.eas,
         event: attestedEvent,
         args: {
+          attester: params.fulfillment.attester,
           recipient: params.fulfillment.recipient,
-          attester: params.fulfillment.address,
+          schemaUID: params.fulfillment.schemaUid,
         },
         fromBlock: "earliest",
         toBlock: "latest",
@@ -100,8 +103,9 @@ export const makeOracleClient = (
         address: addresses.eas,
         event: attestedEvent,
         args: {
+          attester: params.fulfillment.attester,
           recipient: params.fulfillment.recipient,
-          attester: params.fulfillment.address,
+          schemaUID: params.fulfillment.schemaUid,
         },
         onLogs: async (logs) =>
           await Promise.all(
