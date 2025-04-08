@@ -95,7 +95,7 @@ export const makeOracleClient = (
       );
     const decisions = await Promise.all(
       logs.map((log) => arbitrateLog(params, log)),
-    );
+    ).then((logs) => logs.filter(($) => $ !== null));
 
     return decisions;
   };
@@ -138,7 +138,8 @@ export const makeOracleClient = (
                   return;
 
                 const decision = await arbitrateLog(params, log);
-                params.onAfterArbitrate &&
+                decision !== null &&
+                  params.onAfterArbitrate &&
                   params.onAfterArbitrate(
                     decision as {
                       hash: `0x${string}`;
