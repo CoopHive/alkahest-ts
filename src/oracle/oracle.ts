@@ -39,7 +39,7 @@ export const makeOracleClient = (
     const attestation = await getAttestation(viemClient, uid, addresses);
 
     const statement = decodeAbiParameters(
-      params.statementAbi,
+      params.fulfillment.statementAbi,
       attestation.data,
     );
 
@@ -58,13 +58,23 @@ export const makeOracleClient = (
   const arbitratePast = async <T extends readonly AbiParameter[]>(
     params: ArbitrateParams<T>,
   ) => {
-    const logs = await viemClient.getLogs({
-      address: addresses.eas,
-      event: attestedEvent,
-      args: { recipient: params.recipient, attester: params.contractAddress },
-      fromBlock: "earliest",
-      toBlock: "latest",
-    });
+    const logs = await viemClient
+      .getLogs({
+        address: addresses.eas,
+        event: attestedEvent,
+        args: {
+          recipient: params.fulfillment.recipient,
+          attester: params.fulfillment.address,
+        },
+        fromBlock: "earliest",
+        toBlock: "latest",
+      })
+      .then((logs) =>
+        logs.filter(
+          ($) =>
+            !params.fulfillment.uid || $.args.uid === params.fulfillment.uid,
+        ),
+      );
     const decisions = await Promise.all(
       logs.map((log) => arbitrateLog(params, log)),
     );
@@ -89,23 +99,37 @@ export const makeOracleClient = (
       const unwatch = viemClient.watchEvent({
         address: addresses.eas,
         event: attestedEvent,
-        args: { recipient: params.recipient, attester: params.contractAddress },
-        onLogs: async (logs) => {
-          await Promise.all(
-            logs.map(async (log) => {
-              const decision = await arbitrateLog(params, log);
-              params.onAfterArbitrate &&
-                params.onAfterArbitrate(
-                  decision as {
-                    hash: `0x${string}`;
-                    log: Log<bigint, number, boolean, typeof attestedEvent>;
-                    statement: DecodeAbiParametersReturnType<StatementData>;
-                    decision: boolean | null;
-                  },
-                );
-            }),
-          );
+        args: {
+          recipient: params.fulfillment.recipient,
+          attester: params.fulfillment.address,
         },
+        onLogs: async (logs) =>
+          await Promise.all(
+            logs
+              .filter(
+                ($) =>
+                  !params.fulfillment.uid ||
+                  $.args.uid === params.fulfillment.uid,
+              )
+              .map(async (log) => {
+                if (
+                  params.fulfillment.uid &&
+                  log.args.uid !== params.fulfillment.uid
+                )
+                  return;
+
+                const decision = await arbitrateLog(params, log);
+                params.onAfterArbitrate &&
+                  params.onAfterArbitrate(
+                    decision as {
+                      hash: `0x${string}`;
+                      log: Log<bigint, number, boolean, typeof attestedEvent>;
+                      statement: DecodeAbiParametersReturnType<StatementData>;
+                      decision: boolean | null;
+                    },
+                  );
+              }),
+          ),
         pollingInterval: params.pollingInterval,
       });
 
