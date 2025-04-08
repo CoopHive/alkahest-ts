@@ -11,12 +11,15 @@ import { getAttestation, type ViemClient } from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
 
-type ArbitrateParams<T extends readonly AbiParameter[]> = {
-  contractAddress: Address | Address[];
-  recipient?: Address;
-  statementAbi: T;
+type ArbitrateParams<StatementData extends readonly AbiParameter[]> = {
+  fulfillment: {
+    address: Address | Address[];
+    statementAbi: StatementData;
+    recipient?: Address;
+    uid?: `0x${string}`;
+  };
   arbitrate: (
-    statement: DecodeAbiParametersReturnType<T>,
+    statement: DecodeAbiParametersReturnType<StatementData>,
   ) => Promise<boolean | null>;
 };
 
