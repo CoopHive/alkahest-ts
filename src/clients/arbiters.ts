@@ -83,7 +83,7 @@ export const makeArbitersClient = (
    */
   decodeTrustedOracleDemand: (demandData: `0x${string}`) => {
     return decodeAbiParameters(
-      parseAbiParameters("(address oracle)"),
+      parseAbiParameters("(address oracle, bytes data)"),
       demandData,
     )[0];
   },
