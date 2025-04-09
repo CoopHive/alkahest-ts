@@ -65,6 +65,22 @@ describe("ERC20 Tests", () => {
     await teardownTestEnvironment(testContext);
   });
 
+  test("testEncodeAndDecode", () => {
+    const data = {
+      arbiter: testContext.addresses.trivialArbiter,
+      demand: "0x1234" as `0x${string}`,
+      token: aliceErc20Token,
+      amount: parseEther("100"),
+    };
+
+    const encoded = aliceClient.erc20.encodeEscrowStatementRaw(data);
+    const decoded = aliceClient.erc20.decodeEscrowStatement(encoded);
+    expect(decoded.amount).toEqual(data.amount);
+    expect(compareAddresses(decoded.token, data.token)).toBeTruthy();
+    expect(compareAddresses(decoded.arbiter, data.arbiter)).toBeTruthy();
+    expect(decoded.demand.startsWith(data.demand)).toBeTruthy();
+  });
+
   describe("ERC20BarterUtils", () => {
     test("testBuyErc20ForErc20", async () => {
       const bidAmount = parseEther("100");
