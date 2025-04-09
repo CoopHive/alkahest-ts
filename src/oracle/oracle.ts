@@ -11,7 +11,6 @@ import type { Attestation, ChainAddresses } from "../types";
 import { getAttestation, type ViemClient } from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
-import { abi as schemaRegistryAbi } from "../contracts/ISchemaRegistry";
 
 type ArbitrateParams<StatementData extends readonly AbiParameter[]> = {
   fulfillment: {
