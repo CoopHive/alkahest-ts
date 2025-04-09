@@ -88,7 +88,7 @@ test("trivialListenAndArbitrate", async () => {
     },
     arbitrate: async (_statement) => true,
     onAfterArbitrate: async (decision) => {
-      expect(decision?.log.args.uid).toEqual(fulfillment.uid);
+      expect(decision?.attestation.uid).toEqual(fulfillment.uid);
       expect(decision?.statement[0].item).toEqual("foo");
       expect(decision?.decision).toBe(true);
     },
