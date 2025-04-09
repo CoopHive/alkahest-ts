@@ -205,7 +205,7 @@ export const makeOracleClient = (
         })
         .then((logs) =>
           logs.filter(
-            ($) => params.escrow.uid && $.args.uid === params.escrow.uid,
+            ($) => !params.escrow.uid || $.args.uid === params.escrow.uid,
           ),
         );
 
