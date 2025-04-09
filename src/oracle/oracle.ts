@@ -196,9 +196,9 @@ export const makeOracleClient = (
           address: addresses.eas,
           event: attestedEvent,
           args: {
-            attester: params.fulfillment.attester,
-            recipient: params.fulfillment.recipient,
-            schemaUID: params.fulfillment.schemaUid,
+            attester: params.escrow.attester,
+            recipient: params.escrow.recipient,
+            schemaUID: params.escrow.schemaUid,
           },
           fromBlock: "earliest",
           toBlock: "latest",
