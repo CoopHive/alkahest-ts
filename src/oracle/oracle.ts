@@ -284,7 +284,7 @@ export const makeOracleClient = (
 
           if (
             statementData.arbiter.toLowerCase() !=
-            addresses.trustedOracleArbiter
+            addresses.trustedOracleArbiter.toLowerCase()
           )
             return null;
 
