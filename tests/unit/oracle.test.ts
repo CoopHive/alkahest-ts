@@ -238,9 +238,6 @@ test("trivialArbitratePastEscrow", async () => {
   const decisions = await testContext.bobClient.oracle.arbitratePastForEscrow({
     escrow: {
       attester: testContext.addresses.erc20EscrowObligation,
-      statementAbi: parseAbiParameters(
-        "(address arbiter, bytes demand, address token, uint256 amount)",
-      ),
       demandAbi: parseAbiParameters("(string mockDemand)"),
     },
     fulfillment: {
