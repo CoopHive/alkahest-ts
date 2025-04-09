@@ -282,7 +282,10 @@ export const makeOracleClient = (
             escrowAttestation.data,
           )[0] as ArbiterDemandStatementData<EscrowStatementData>;
 
-          if (statementData.arbiter != addresses.trustedOracleArbiter)
+          if (
+            statementData.arbiter.toLowerCase() !=
+            addresses.trustedOracleArbiter
+          )
             return null;
 
           const trustedOracleDemand = decodeAbiParameters(
