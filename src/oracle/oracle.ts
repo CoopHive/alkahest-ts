@@ -18,6 +18,7 @@ type ConstrainedAbi<T extends readonly AbiParameter[], U> =
 
 type ArbiterDemandStatementData<T extends readonly AbiParameter[]> =
   ConstrainedAbi<T, { arbiter: Address; demand: `0x${string}` }>;
+
 type ArbitrateParams<StatementData extends readonly AbiParameter[]> = {
   fulfillment: {
     statementAbi: StatementData;
@@ -276,22 +277,14 @@ export const makeOracleClient = (
             args: [escrowAttestation.schema],
           });
 
-          console.log("SCHEMA: ", schema);
-
-          console.log("ATTESTATION: ", escrowAttestation);
-
-          console.log("decoding arbiter and demand");
           const statementData = decodeAbiParameters(
             params.escrow.statementAbi,
             escrowAttestation.data,
           )[0] as ArbiterDemandStatementData<EscrowStatementData>;
 
-          console.log("statementData: ", statementData);
-
           if (statementData.arbiter != addresses.trustedOracleArbiter)
             return null;
 
-          console.log("decoding trusted oracle demand");
           const trustedOracleDemand = decodeAbiParameters(
             parseAbiParameters("(address oracle, bytes data)"),
             statementData.demand,
