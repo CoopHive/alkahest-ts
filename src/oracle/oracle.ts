@@ -263,13 +263,6 @@ export const makeOracleClient = (
             addresses,
           );
 
-          const schema = await viemClient.readContract({
-            address: addresses.easSchemaRegistry,
-            abi: schemaRegistryAbi.abi,
-            functionName: "getSchema",
-            args: [escrowAttestation.schema],
-          });
-
           const statementData = decodeAbiParameters(
             arbiterDemandAbi,
             escrowAttestation.data,
