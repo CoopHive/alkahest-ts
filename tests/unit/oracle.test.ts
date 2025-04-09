@@ -209,3 +209,55 @@ test("conditionalListenAndArbitrate", async () => {
 
   unwatch();
 });
+
+test("trivialArbitratePastEscrow", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
+  });
+
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  const { attested: fulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "foo",
+      escrow.uid,
+    );
+
+  const decisions = await testContext.bobClient.oracle.arbitratePastForEscrow({
+    escrow: {
+      attester: testContext.addresses.erc20EscrowObligation,
+      statementAbi: parseAbiParameters(
+        "(address arbiter, bytes demand, address token, uint256 amount)",
+      ),
+      demandAbi: parseAbiParameters("(string mockDemand)"),
+    },
+    fulfillment: {
+      attester: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
+    arbitrate: async (_demand, _statement) => true,
+  });
+
+  console.log("DECISIONS: ", decisions);
+
+  decisions.forEach(($) => expect($?.decision).toBe(true));
+
+  const collectionHash = await testContext.bobClient.erc20.collectPayment(
+    escrow.uid,
+    fulfillment.uid,
+  );
+
+  expect(collectionHash).toBeTruthy();
+});
