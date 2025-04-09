@@ -60,6 +60,12 @@ export const makeOracleClient = (
   const attestedEvent = parseAbiItem(
     "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)",
   );
+  const arbiterDemandAbi = parseAbiParameters(
+    "(address arbiter, bytes demand)",
+  );
+  const trustedOracleDemandAbi = parseAbiParameters(
+    "(address oracle, bytes data)",
+  );
 
   const arbitrateLog = async <StatementData extends readonly AbiParameter[]>(
     params: ArbitrateParams<StatementData>,
@@ -265,7 +271,7 @@ export const makeOracleClient = (
           });
 
           const statementData = decodeAbiParameters(
-            parseAbiParameters("(address arbiter, bytes demand)"),
+            arbiterDemandAbi,
             escrowAttestation.data,
           )[0];
 
@@ -276,7 +282,7 @@ export const makeOracleClient = (
             return null;
 
           const trustedOracleDemand = decodeAbiParameters(
-            parseAbiParameters("(address oracle, bytes data)"),
+            trustedOracleDemandAbi,
             statementData.demand,
           )[0];
 
