@@ -11,7 +11,13 @@ import type { Attestation, ChainAddresses } from "../types";
 import { getAttestation, type ViemClient } from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
+import { abi as schemaRegistryAbi } from "../contracts/ISchemaRegistry";
 
+type ConstrainedAbi<T extends readonly AbiParameter[], U> =
+  DecodeAbiParametersReturnType<T> extends [U] ? U : never;
+
+type ArbiterDemandStatementData<T extends readonly AbiParameter[]> =
+  ConstrainedAbi<T, { arbiter: Address; demand: `0x${string}` }>;
 type ArbitrateParams<StatementData extends readonly AbiParameter[]> = {
   fulfillment: {
     statementAbi: StatementData;
@@ -27,10 +33,12 @@ type ArbitrateParams<StatementData extends readonly AbiParameter[]> = {
 };
 
 type ArbitrateEscrowParams<
-  StatementData extends readonly AbiParameter[],
+  EscrowStatementData extends readonly AbiParameter[],
+  FulfillmentStatementData extends readonly AbiParameter[],
   DemandData extends readonly AbiParameter[],
 > = {
   escrow: {
+    statementAbi: EscrowStatementData;
     demandAbi: DemandData;
     attester?: Address | Address[];
     recipient?: Address;
@@ -39,7 +47,7 @@ type ArbitrateEscrowParams<
     refUid?: `0x${string}`;
   };
   fulfillment: {
-    statementAbi: StatementData;
+    statementAbi: FulfillmentStatementData;
     attester?: Address | Address[];
     recipient?: Address;
     schemaUid?: `0x${string}`;
@@ -48,7 +56,7 @@ type ArbitrateEscrowParams<
   };
   arbitrate: (
     demand: DecodeAbiParametersReturnType<DemandData>,
-    statement: DecodeAbiParametersReturnType<StatementData>,
+    statement: DecodeAbiParametersReturnType<FulfillmentStatementData>,
   ) => Promise<boolean | null>;
 };
 
@@ -59,7 +67,6 @@ export const makeOracleClient = (
   const attestedEvent = parseAbiItem(
     "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)",
   );
-  const arbiterDemand = parseAbiParameters("(address arbiter, bytes demand)");
 
   const arbitrateLog = async <StatementData extends readonly AbiParameter[]>(
     params: ArbitrateParams<StatementData>,
@@ -186,10 +193,15 @@ export const makeOracleClient = (
       return { decisions, unwatch };
     },
     arbitratePastForEscrow: async <
-      StatementData extends readonly AbiParameter[],
+      EscrowStatementData extends readonly AbiParameter[],
+      FulfillmentStatementData extends readonly AbiParameter[],
       DemandData extends readonly AbiParameter[],
     >(
-      params: ArbitrateEscrowParams<StatementData, DemandData>,
+      params: ArbitrateEscrowParams<
+        EscrowStatementData,
+        FulfillmentStatementData,
+        DemandData
+      >,
     ) => {
       const escrowLogsP = viemClient
         .getLogs({
@@ -256,16 +268,38 @@ export const makeOracleClient = (
             escrowLog.args.uid!,
             addresses,
           );
-          const escrowArbiterDemand = decodeAbiParameters(
-            arbiterDemand,
+
+          const schema = await viemClient.readContract({
+            address: addresses.easSchemaRegistry,
+            abi: schemaRegistryAbi.abi,
+            functionName: "getSchema",
+            args: [escrowAttestation.schema],
+          });
+
+          console.log("SCHEMA: ", schema);
+
+          console.log("ATTESTATION: ", escrowAttestation);
+
+          console.log("decoding arbiter and demand");
+          const statementData = decodeAbiParameters(
+            params.escrow.statementAbi,
             escrowAttestation.data,
-          );
-          if (escrowArbiterDemand[0].arbiter != addresses.trustedOracleArbiter)
+          )[0] as ArbiterDemandStatementData<EscrowStatementData>;
+
+          console.log("statementData: ", statementData);
+
+          if (statementData.arbiter != addresses.trustedOracleArbiter)
             return null;
+
+          console.log("decoding trusted oracle demand");
+          const trustedOracleDemand = decodeAbiParameters(
+            parseAbiParameters("(address oracle, bytes data)"),
+            statementData.demand,
+          )[0];
 
           const escrowDemand = decodeAbiParameters(
             params.escrow.demandAbi,
-            escrowArbiterDemand[0].demand,
+            trustedOracleDemand.data,
           );
 
           const fulfillmentsForEscrow = fulfillments.filter(
