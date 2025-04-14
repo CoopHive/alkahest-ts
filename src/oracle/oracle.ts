@@ -96,13 +96,16 @@ export const makeOracleClient = (
     "(address oracle, bytes data)",
   );
 
-  const getStatements = async (filterArgs: {
-    recipient?: Address | Address[];
-    attester?: Address | Address[];
-    schemaUID?: `0x${string}` | `0x${string}`[];
-    uid?: `0x${string}` | `0x${string}`[];
-    refUID?: `0x${string}` | `0x${string}`[];
-  }) => {
+  const getStatements = async <StatementData extends readonly AbiParameter[]>(
+    filterArgs: {
+      recipient?: Address | Address[];
+      attester?: Address | Address[];
+      schemaUID?: `0x${string}` | `0x${string}`[];
+      uid?: `0x${string}` | `0x${string}`[];
+      refUID?: `0x${string}` | `0x${string}`[];
+    },
+    statementAbi: StatementData,
+  ) => {
     const logs = (
       await viemClient.getLogs({
         address: addresses.eas,
@@ -126,8 +129,17 @@ export const makeOracleClient = (
       )
     ).filter(($) => validateAttestationIntrinsics($, filterArgs));
 
-    return logs.map((log, i) => ({ log, attestation: attestations[i] }));
+    const statements = attestations.map(($) =>
+      decodeAbiParameters(statementAbi, $.data),
+    );
+
+    return logs.map((log, i) => ({
+      log,
+      attestation: attestations[i],
+      statement: statements[i],
+    }));
   };
+
   const arbitrateOnchain = async (
     statementUid: `0x${string}`,
     decision: boolean | null,
@@ -162,7 +174,10 @@ export const makeOracleClient = (
   const arbitratePast = async <T extends readonly AbiParameter[]>(
     params: ArbitrateParams<T>,
   ) => {
-    const logs = await getStatements(params.fulfillment);
+    const logs = await getStatements(
+      params.fulfillment,
+      params.fulfillment.statementAbi,
+    );
 
     const decisions = await Promise.all(
       logs.map(({ log, attestation }) => arbitrateLog(params, log)),
@@ -177,52 +192,39 @@ export const makeOracleClient = (
   >(
     params: ArbitrateEscrowParams<StatementData, DemandData>,
   ) => {
-    const escrowsP = getStatements(params.escrow).then((logs) =>
-      Promise.all(
-        logs.map(async ({ log, attestation }) => {
+    const escrowsP = getStatements(params.escrow, arbiterDemandAbi).then(
+      (logs) =>
+        Promise.all(
+          logs.map(async ({ log, attestation, statement }) => {
+            if (
+              statement[0].arbiter.toLowerCase() !=
+              addresses.trustedOracleArbiter.toLowerCase()
+            )
+              return null;
 
-          const statement = decodeAbiParameters(
-            arbiterDemandAbi,
-            attestation.data,
-          )[0];
+            const trustedOracleDemand = decodeAbiParameters(
+              trustedOracleDemandAbi,
+              statement[0].demand,
+            )[0];
 
-          if (
-            statement.arbiter.toLowerCase() !=
-            addresses.trustedOracleArbiter.toLowerCase()
-          )
-            return null;
+            const demand = decodeAbiParameters(
+              params.escrow.demandAbi,
+              trustedOracleDemand.data,
+            );
 
-          const trustedOracleDemand = decodeAbiParameters(
-            trustedOracleDemandAbi,
-            statement.demand,
-          )[0];
-
-          const demand = decodeAbiParameters(
-            params.escrow.demandAbi,
-            trustedOracleDemand.data,
-          );
-
-          return {
-            log,
-            attestation,
-            statement,
-            demand,
-          };
-        }),
-      ),
+            return {
+              log,
+              attestation,
+              statement,
+              demand,
+            };
+          }),
+        ),
     );
 
-    const fulfillmentsP = getStatements(params.fulfillment).then((logs) =>
-      Promise.all(
-        logs.map(async ({ log, attestation }) => {
-          const statement = decodeAbiParameters(
-            params.fulfillment.statementAbi,
-            attestation.data,
-          );
-
-          return { log, attestation, statement };
-        }),
-      ),
+    const fulfillmentsP = getStatements(
+      params.fulfillment,
+      params.fulfillment.statementAbi,
     );
 
     const [escrows, fulfillments] = await Promise.all([
