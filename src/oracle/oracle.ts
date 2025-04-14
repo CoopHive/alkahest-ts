@@ -67,6 +67,7 @@ const validateAttestationIntrinsics = (
 
   if (params.refUID && !params.refUID.includes(attestation.refUID))
     return false;
+
   if (
     attestation.expirationTime !== 0n &&
     attestation.expirationTime < Date.now() / 1000
@@ -150,8 +151,6 @@ export const makeOracleClient = (
             !params.fulfillment.uid || $.args.uid === params.fulfillment.uid,
         ),
       );
-
-    console.log("LOGS: ", logs);
 
     const decisions = await Promise.all(
       logs.map((log) => arbitrateLog(params, log)),
