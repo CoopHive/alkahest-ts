@@ -52,6 +52,27 @@ type ArbitrateEscrowParams<
   ) => Promise<boolean | null>;
 };
 
+const validateAttestationIntrinsics = (
+  attestation: Attestation,
+  params: {
+    refUid?: `0x${string}`;
+  },
+) => {
+  if (params.refUid && attestation.refUID !== params.refUid) return false;
+  if (
+    attestation.expirationTime !== 0n &&
+    attestation.expirationTime < Date.now() / 1000
+  )
+    return false;
+  if (
+    attestation.revocationTime !== 0n &&
+    attestation.revocationTime < Date.now() / 1000
+  )
+    return false;
+
+  return true;
+};
+
 export const makeOracleClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
@@ -73,20 +94,7 @@ export const makeOracleClient = (
     const uid = log.args.uid!;
     const attestation = await getAttestation(viemClient, uid, addresses);
 
-    if (
-      params.fulfillment.refUid &&
-      attestation.refUID != params.fulfillment.refUid
-    )
-      return null;
-    if (
-      attestation.expirationTime !== 0n &&
-      attestation.expirationTime < Date.now() / 1000
-    )
-      return null;
-    if (
-      attestation.revocationTime !== 0n &&
-      attestation.revocationTime < Date.now() / 1000
-    )
+    if (!validateAttestationIntrinsics(attestation, params.fulfillment))
       return null;
 
     const statement = decodeAbiParameters(
@@ -207,22 +215,7 @@ export const makeOracleClient = (
           addresses,
         );
 
-        if (
-          params.escrow.refUid &&
-          escrowAttestation.refUID !== params.escrow.refUid
-        )
-          return null;
-
-        if (
-          escrowAttestation.expirationTime !== 0n &&
-          escrowAttestation.expirationTime < Date.now() / 1000
-        )
-          return null;
-
-        if (
-          escrowAttestation.revocationTime !== 0n &&
-          escrowAttestation.revocationTime < Date.now() / 1000
-        )
+        if (!validateAttestationIntrinsics(escrowAttestation, params.escrow))
           return null;
 
         const statementData = decodeAbiParameters(
@@ -246,17 +239,15 @@ export const makeOracleClient = (
           trustedOracleDemand.data,
         );
 
-        const fulfillmentsForEscrow = fulfillments.filter(
-          ($) =>
-            $.attestation.refUID == escrowAttestation.uid &&
-            ($.attestation.expirationTime === 0n ||
-              $.attestation.expirationTime > Date.now() / 1000) &&
-            ($.attestation.revocationTime === 0n ||
-              $.attestation.revocationTime > Date.now() / 1000),
-        );
-
         return await Promise.all(
-          fulfillmentsForEscrow.map(async ($) => {
+          fulfillments.map(async ($) => {
+            if (
+              !validateAttestationIntrinsics($.attestation, {
+                refUid: escrowAttestation.uid,
+              })
+            )
+              return null;
+
             const decision = await params.arbitrate($.statement, escrowDemand);
             if (decision === null) return null;
 
@@ -376,19 +367,7 @@ export const makeOracleClient = (
               );
 
               if (
-                params.escrow.refUid &&
-                escrowAttestation.refUID !== params.escrow.refUid
-              )
-                return;
-
-              if (
-                escrowAttestation.expirationTime !== 0n &&
-                escrowAttestation.expirationTime < Date.now() / 1000
-              )
-                return;
-              if (
-                escrowAttestation.revocationTime !== 0n &&
-                escrowAttestation.revocationTime < Date.now() / 1000
+                !validateAttestationIntrinsics(escrowAttestation, params.escrow)
               )
                 return;
 
@@ -436,20 +415,10 @@ export const makeOracleClient = (
                         addresses,
                       );
 
-                      if (fulfillmentAttestation.refUID !== escrowLog.args.uid)
-                        return;
-
                       if (
-                        fulfillmentAttestation.expirationTime !== 0n &&
-                        fulfillmentAttestation.expirationTime <
-                          Date.now() / 1000
-                      )
-                        return;
-
-                      if (
-                        fulfillmentAttestation.revocationTime !== 0n &&
-                        fulfillmentAttestation.revocationTime <
-                          Date.now() / 1000
+                        !validateAttestationIntrinsics(fulfillmentAttestation, {
+                          refUid: escrowLog.args.uid,
+                        })
                       )
                         return;
 
