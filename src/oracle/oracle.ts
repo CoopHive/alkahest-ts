@@ -179,30 +179,30 @@ export const makeOracleClient = (
     const escrowsP = getStatements(params.escrow, arbiterDemandAbi).then(
       (statements) =>
         Promise.all(
-          logs.map(async ({ log, attestation, statement }) => {
-            if (
-              statement[0].arbiter.toLowerCase() !=
-              addresses.trustedOracleArbiter.toLowerCase()
+          statements
+            .filter(
+              ($) =>
+                $.statement[0].arbiter.toLowerCase() ===
+                addresses.trustedOracleArbiter.toLowerCase(),
             )
-              return null;
+            .map(async ({ log, attestation, statement }) => {
+              const trustedOracleDemand = decodeAbiParameters(
+                trustedOracleDemandAbi,
+                statement[0].demand,
+              )[0];
 
-            const trustedOracleDemand = decodeAbiParameters(
-              trustedOracleDemandAbi,
-              statement[0].demand,
-            )[0];
+              const demand = decodeAbiParameters(
+                params.escrow.demandAbi,
+                trustedOracleDemand.data,
+              );
 
-            const demand = decodeAbiParameters(
-              params.escrow.demandAbi,
-              trustedOracleDemand.data,
-            );
-
-            return {
-              log,
-              attestation,
-              statement,
-              demand,
-            };
-          }),
+              return {
+                log,
+                attestation,
+                statement,
+                demand,
+              };
+            }),
         ),
     );
 
@@ -217,32 +217,23 @@ export const makeOracleClient = (
     ]);
 
     const decisions = await Promise.all(
-      escrows
-        .filter(($) => $ !== null)
-        .map(async (escrow) => {
-          return await Promise.all(
-            fulfillments.map(async ($) => {
-              if (
-                !validateAttestationIntrinsics($.attestation, {
-                  refUID: escrow.attestation.uid,
-                })
-              )
-                return null;
+      escrows.map(async (escrow) => {
+        return await Promise.all(
+          fulfillments.map(async ($) => {
             const decision = await params.arbitrate($.statement, escrow.demand);
             if (decision === null) return null;
             const hash = await arbitrateOnchain($.attestation.uid, decision);
 
-
-              return {
-                hash,
-                log: $.log,
-                statement: $.statement,
-                demand: escrow.demand,
-                decision,
-              };
-            }),
-          ).then((decisions) => decisions.filter(($) => $ !== null));
-        }),
+            return {
+              hash,
+              log: $.log,
+              statement: $.statement,
+              demand: escrow.demand,
+              decision,
+            };
+          }),
+        ).then((decisions) => decisions.filter(($) => $ !== null));
+      }),
     ).then((decisions) => decisions.filter(($) => $ !== null).flat());
     return { decisions, escrows, fulfillments };
   };
@@ -285,9 +276,27 @@ export const makeOracleClient = (
                 )
                   return;
 
+                const attestation = await getAttestation(
+                  viemClient,
+                  log.args.uid!,
+                  addresses,
+                );
+
+                const statement = decodeAbiParameters(
+                  params.fulfillment.statementAbi,
+                  attestation.data,
+                );
                 const _decision = await params.arbitrate(statement);
                 if (_decision === null) return null;
                 const hash = await arbitrateOnchain(attestation.uid, _decision);
+
+                const decision = {
+                  hash,
+                  attestation,
+                  statement,
+                  decision: _decision,
+                };
+
                 decision !== null &&
                   params.onAfterArbitrate &&
                   params.onAfterArbitrate(
