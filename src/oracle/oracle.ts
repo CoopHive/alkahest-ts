@@ -102,9 +102,9 @@ export const makeOracleClient = (
     schemaUID?: `0x${string}` | `0x${string}`[];
     uid?: `0x${string}` | `0x${string}`[];
     refUID?: `0x${string}` | `0x${string}`[];
-  }) =>
-    await viemClient
-      .getLogs({
+  }) => {
+    const logs = (
+      await viemClient.getLogs({
         address: addresses.eas,
         event: attestedEvent,
         args: {
@@ -115,22 +115,19 @@ export const makeOracleClient = (
         fromBlock: "earliest",
         toBlock: "latest",
       })
-      .then((logs) =>
-        Promise.all(
-          logs
-            .filter(($) => !filterArgs.uid || $.args.uid === filterArgs.uid)
-            .map(async (log) => {
-              const attestation = await getAttestation(
-                viemClient,
-                log.args.uid!,
-                addresses,
-              );
+    ).filter(($) => !filterArgs.uid || $.args.uid === filterArgs.uid);
 
-              return { log, attestation };
-            }),
+    const attestations = (
+      await Promise.all(
+        logs.map(
+          async (log) =>
+            await getAttestation(viemClient, log.args.uid!, addresses),
         ),
-      );
+      )
+    ).filter(($) => validateAttestationIntrinsics($, filterArgs));
 
+    return logs.map((log, i) => ({ log, attestation: attestations[i] }));
+  };
   const arbitrateOnchain = async (
     statementUid: `0x${string}`,
     decision: boolean | null,
