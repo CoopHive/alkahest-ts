@@ -142,16 +142,8 @@ export const makeOracleClient = (
 
   const arbitrateOnchain = async (
     statementUid: `0x${string}`,
-    decision: boolean | null,
+    decision: boolean,
   ) =>
-    decision === null
-      ? null
-      : await viemClient.writeContract({
-          address: addresses.trustedOracleArbiter,
-          abi: trustedOracleArbiterAbi.abi,
-          functionName: "arbitrate",
-          args: [statementUid, decision],
-        });
 
   const arbitrateLog = async <StatementData extends readonly AbiParameter[]>(
     params: ArbitrateParams<StatementData>,
@@ -244,12 +236,10 @@ export const makeOracleClient = (
                 })
               )
                 return null;
+            const decision = await params.arbitrate($.statement, escrow.demand);
+            if (decision === null) return null;
+            const hash = await arbitrateOnchain($.attestation.uid, decision);
 
-              const decision = await params.arbitrate(
-                $.statement,
-                escrow.demand,
-              );
-              const hash = await arbitrateOnchain($.attestation.uid, decision);
 
               return {
                 hash,
@@ -303,7 +293,9 @@ export const makeOracleClient = (
                 )
                   return;
 
-                const decision = await arbitrateLog(params, log);
+                const _decision = await params.arbitrate(statement);
+                if (_decision === null) return null;
+                const hash = await arbitrateOnchain(attestation.uid, _decision);
                 decision !== null &&
                   params.onAfterArbitrate &&
                   params.onAfterArbitrate(
@@ -421,6 +413,7 @@ export const makeOracleClient = (
                         fulfillmentStatement,
                         escrowDemand,
                       );
+                      if (decision === null) return null;
                       await arbitrateOnchain(
                         fulfillmentAttestation.uid,
                         decision,
