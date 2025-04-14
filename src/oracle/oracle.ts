@@ -144,7 +144,6 @@ export const makeOracleClient = (
     statementUid: `0x${string}`,
     decision: boolean,
   ) =>
-
     await viemClient.writeContract({
       address: addresses.trustedOracleArbiter,
       abi: trustedOracleArbiterAbi.abi,
@@ -155,7 +154,7 @@ export const makeOracleClient = (
   const arbitratePast = async <T extends readonly AbiParameter[]>(
     params: ArbitrateParams<T>,
   ) => {
-    const logs = await getStatements(
+    const statements = await getStatements(
       params.fulfillment,
       params.fulfillment.statementAbi,
     );
@@ -178,7 +177,7 @@ export const makeOracleClient = (
     params: ArbitrateEscrowParams<StatementData, DemandData>,
   ) => {
     const escrowsP = getStatements(params.escrow, arbiterDemandAbi).then(
-      (logs) =>
+      (statements) =>
         Promise.all(
           logs.map(async ({ log, attestation, statement }) => {
             if (
