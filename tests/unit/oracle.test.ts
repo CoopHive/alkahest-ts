@@ -247,8 +247,6 @@ test("trivialArbitratePastEscrow", async () => {
     arbitrate: async (_demand, _statement) => true,
   });
 
-  console.log("DECISIONS: ", decisions);
-
   decisions.forEach(($) => expect($?.decision).toBe(true));
 
   const collectionHash = await testContext.bobClient.erc20.collectPayment(
