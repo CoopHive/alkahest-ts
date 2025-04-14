@@ -148,9 +148,6 @@ export const makeOracleClient = (
     const uid = log.args.uid!;
     const attestation = await getAttestation(viemClient, uid, addresses);
 
-    if (!validateAttestationIntrinsics(attestation, params.fulfillment))
-      return null;
-
     const statement = decodeAbiParameters(
       params.fulfillment.statementAbi,
       attestation.data,
@@ -183,8 +180,6 @@ export const makeOracleClient = (
     const escrowsP = getStatements(params.escrow).then((logs) =>
       Promise.all(
         logs.map(async ({ log, attestation }) => {
-          if (!validateAttestationIntrinsics(attestation, params.escrow))
-            return null;
 
           const statement = decodeAbiParameters(
             arbiterDemandAbi,
