@@ -284,10 +284,19 @@ export const makeOracleClient = (
                   addresses,
                 );
 
+                if (
+                  !validateAttestationIntrinsics(
+                    attestation,
+                    params.fulfillment,
+                  )
+                )
+                  return;
+
                 const statement = decodeAbiParameters(
                   params.fulfillment.statementAbi,
                   attestation.data,
                 );
+
                 const _decision = await params.arbitrate(statement);
                 if (_decision === null) return null;
                 const hash = await arbitrateOnchain(attestation.uid, _decision);
