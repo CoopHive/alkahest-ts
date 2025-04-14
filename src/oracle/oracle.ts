@@ -16,10 +16,10 @@ type ArbitrateParams<StatementData extends readonly AbiParameter[]> = {
   fulfillment: {
     statementAbi: StatementData;
     attester?: Address | Address[];
-    recipient?: Address;
-    schemaUID?: `0x${string}`;
-    uid?: `0x${string}`;
-    refUid?: `0x${string}`;
+    recipient?: Address | Address[];
+    schemaUID?: `0x${string}` | `0x${string}`[];
+    uid?: `0x${string}` | `0x${string}`[];
+    refUID?: `0x${string}` | `0x${string}`[];
   };
   arbitrate: (
     statement: DecodeAbiParametersReturnType<StatementData>,
@@ -33,18 +33,18 @@ type ArbitrateEscrowParams<
   escrow: {
     demandAbi: DemandData;
     attester?: Address | Address[];
-    recipient?: Address;
-    schemaUID?: `0x${string}`;
-    uid?: `0x${string}`;
-    refUid?: `0x${string}`;
+    recipient?: Address | Address[];
+    schemaUID?: `0x${string}` | `0x${string}`[];
+    uid?: `0x${string}` | `0x${string}`[];
+    refUID?: `0x${string}` | `0x${string}`[];
   };
   fulfillment: {
     statementAbi: StatementData;
     attester?: Address | Address[];
-    recipient?: Address;
-    schemaUID?: `0x${string}`;
-    uid?: `0x${string}`;
-    // refUid?: `0x${string}`; refUid needed to match fulfillment with escrow
+    recipient?: Address | Address[];
+    schemaUID?: `0x${string}` | `0x${string}`[];
+    uid?: `0x${string}` | `0x${string}`[];
+    // refUid?: `0x${string}` | `0x${string}`[]; refUid needed to match fulfillment with escrow
   };
   arbitrate: (
     statement: DecodeAbiParametersReturnType<StatementData>,
@@ -55,10 +55,18 @@ type ArbitrateEscrowParams<
 const validateAttestationIntrinsics = (
   attestation: Attestation,
   params: {
-    refUid?: `0x${string}`;
+    refUID?: `0x${string}` | `0x${string}`[];
   },
 ) => {
-  if (params.refUid && attestation.refUID !== params.refUid) return false;
+  if (
+    params.refUID &&
+    !Array.isArray(params.refUID) &&
+    params.refUID !== attestation.refUID
+  )
+    return false;
+
+  if (params.refUID && !params.refUID.includes(attestation.refUID))
+    return false;
   if (
     attestation.expirationTime !== 0n &&
     attestation.expirationTime < Date.now() / 1000
