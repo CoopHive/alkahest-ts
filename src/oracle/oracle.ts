@@ -47,8 +47,8 @@ type ArbitrateEscrowParams<
     // refUid?: `0x${string}`; refUid needed to match fulfillment with escrow
   };
   arbitrate: (
-    demand: DecodeAbiParametersReturnType<DemandData>,
     statement: DecodeAbiParametersReturnType<StatementData>,
+    demand: DecodeAbiParametersReturnType<DemandData>,
   ) => Promise<boolean | null>;
 };
 
