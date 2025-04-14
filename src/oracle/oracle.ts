@@ -134,6 +134,133 @@ export const makeOracleClient = (
 
     return decisions;
   };
+  const arbitratePastForEscrow = async <
+    StatementData extends readonly AbiParameter[],
+    DemandData extends readonly AbiParameter[],
+  >(
+    params: ArbitrateEscrowParams<StatementData, DemandData>,
+  ) => {
+    const escrowLogsP = viemClient
+      .getLogs({
+        address: addresses.eas,
+        event: attestedEvent,
+        args: {
+          attester: params.escrow.attester,
+          recipient: params.escrow.recipient,
+          schemaUID: params.escrow.schemaUid,
+        },
+        fromBlock: "earliest",
+        toBlock: "latest",
+      })
+      .then((logs) =>
+        logs.filter(
+          ($) => !params.escrow.uid || $.args.uid === params.escrow.uid,
+        ),
+      );
+
+    const fulfillmentsP = viemClient
+      .getLogs({
+        address: addresses.eas,
+        event: attestedEvent,
+        args: {
+          recipient: params.fulfillment.recipient,
+          attester: params.fulfillment.attester,
+        },
+        fromBlock: "earliest",
+        toBlock: "latest",
+      })
+      .then((logs) =>
+        Promise.all(
+          logs
+            .filter(
+              ($) =>
+                !params.fulfillment.uid ||
+                $.args.uid === params.fulfillment.uid,
+            )
+            .map(async (log) => {
+              const attestation = await getAttestation(
+                viemClient,
+                log.args.uid!,
+                addresses,
+              );
+              const statement = decodeAbiParameters(
+                params.fulfillment.statementAbi,
+                attestation.data,
+              );
+
+              return { log, attestation, statement };
+            }),
+        ),
+      );
+
+    const [escrowLogs, fulfillments] = await Promise.all([
+      escrowLogsP,
+      fulfillmentsP,
+    ]);
+
+    const decisions = await Promise.all(
+      escrowLogs.map(async (escrowLog) => {
+        const escrowAttestation = await getAttestation(
+          viemClient,
+          escrowLog.args.uid!,
+          addresses,
+        );
+
+        const statementData = decodeAbiParameters(
+          arbiterDemandAbi,
+          escrowAttestation.data,
+        )[0];
+
+        if (
+          statementData.arbiter.toLowerCase() !=
+          addresses.trustedOracleArbiter.toLowerCase()
+        )
+          return null;
+
+        const trustedOracleDemand = decodeAbiParameters(
+          trustedOracleDemandAbi,
+          statementData.demand,
+        )[0];
+
+        const escrowDemand = decodeAbiParameters(
+          params.escrow.demandAbi,
+          trustedOracleDemand.data,
+        );
+
+        const fulfillmentsForEscrow = fulfillments.filter(
+          ($) =>
+            $.attestation.refUID == escrowAttestation.uid &&
+            ($.attestation.expirationTime === 0n ||
+              $.attestation.expirationTime > Date.now() / 1000) &&
+            ($.attestation.revocationTime === 0n ||
+              $.attestation.revocationTime > Date.now() / 1000),
+        );
+
+        return await Promise.all(
+          fulfillmentsForEscrow.map(async ($) => {
+            const decision = await params.arbitrate($.statement, escrowDemand);
+            if (decision === null) return null;
+
+            const hash = await viemClient.writeContract({
+              address: addresses.trustedOracleArbiter,
+              abi: trustedOracleArbiterAbi.abi,
+              functionName: "arbitrate",
+              args: [$.attestation.uid, decision],
+            });
+            return {
+              hash,
+              log: $.log,
+              statement: $.statement,
+              demand: escrowDemand,
+              decision,
+            };
+          }),
+        ).then((decisions) => decisions.filter(($) => $ !== null));
+      }),
+    ).then((decisions) => decisions.filter(($) => $ !== null).flat());
+    return decisions;
+  };
+
   return {
     arbitratePast,
     listenAndArbitrate: async <StatementData extends readonly AbiParameter[]>(
@@ -190,7 +317,7 @@ export const makeOracleClient = (
 
       return { decisions, unwatch };
     },
-    arbitratePastForEscrow: async <
+    arbitratePastForEscrow,
       StatementData extends readonly AbiParameter[],
       DemandData extends readonly AbiParameter[],
     >(
