@@ -134,6 +134,7 @@ export const makeOracleClient = (
 
     return decisions;
   };
+
   const arbitratePastForEscrow = async <
     StatementData extends readonly AbiParameter[],
     DemandData extends readonly AbiParameter[],
@@ -205,6 +206,24 @@ export const makeOracleClient = (
           escrowLog.args.uid!,
           addresses,
         );
+
+        if (
+          params.escrow.refUid &&
+          escrowAttestation.refUID !== params.escrow.refUid
+        )
+          return null;
+
+        if (
+          escrowAttestation.expirationTime !== 0n &&
+          escrowAttestation.expirationTime < Date.now() / 1000
+        )
+          return null;
+
+        if (
+          escrowAttestation.revocationTime !== 0n &&
+          escrowAttestation.revocationTime < Date.now() / 1000
+        )
+          return null;
 
         const statementData = decodeAbiParameters(
           arbiterDemandAbi,
