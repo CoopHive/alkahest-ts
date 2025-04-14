@@ -421,7 +421,58 @@ export const makeOracleClient = (
                   recipient: params.fulfillment.recipient,
                   schemaUID: params.fulfillment.schemaUid,
                 },
-                onLogs: async (fulfillmentLogs) => {},
+                onLogs: async (fulfillmentLogs) => {
+                  await Promise.all([
+                    fulfillmentLogs.map(async (fulfillmentLog) => {
+                      if (
+                        params.fulfillment.uid &&
+                        fulfillmentLog.args.uid !== params.fulfillment.uid
+                      )
+                        return;
+
+                      const fulfillmentAttestation = await getAttestation(
+                        viemClient,
+                        fulfillmentLog.args.uid!,
+                        addresses,
+                      );
+
+                      if (fulfillmentAttestation.refUID !== escrowLog.args.uid)
+                        return;
+
+                      if (
+                        fulfillmentAttestation.expirationTime !== 0n &&
+                        fulfillmentAttestation.expirationTime <
+                          Date.now() / 1000
+                      )
+                        return;
+
+                      if (
+                        fulfillmentAttestation.revocationTime !== 0n &&
+                        fulfillmentAttestation.revocationTime <
+                          Date.now() / 1000
+                      )
+                        return;
+
+                      const fulfillmentStatement = decodeAbiParameters(
+                        params.fulfillment.statementAbi,
+                        fulfillmentAttestation.data,
+                      );
+
+                      const decision = await params.arbitrate(
+                        fulfillmentStatement,
+                        escrowDemand,
+                      );
+                      if (decision === null) return;
+
+                      await viemClient.writeContract({
+                        address: addresses.trustedOracleArbiter,
+                        abi: trustedOracleArbiterAbi.abi,
+                        functionName: "arbitrate",
+                        args: [fulfillmentAttestation.uid, decision],
+                      });
+                    }),
+                  ]);
+                },
               });
               unwatchHandles.push(unwatchHandle);
             }),
