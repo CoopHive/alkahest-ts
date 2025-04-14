@@ -159,7 +159,7 @@ export const makeOracleClient = (
       params.fulfillment.statementAbi,
     );
 
-    return (
+    const decisions = (
       await Promise.all(
         statements.map(async ({ attestation, statement }) => {
           const decision = await params.arbitrate(statement);
@@ -170,6 +170,8 @@ export const makeOracleClient = (
         }),
       )
     ).filter(($) => $ !== null);
+
+    return { decisions, fulfillments: statements };
   };
 
   const arbitratePastForEscrow = async <

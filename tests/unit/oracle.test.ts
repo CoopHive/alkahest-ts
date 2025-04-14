@@ -54,7 +54,7 @@ test("trivialArbitratePast", async () => {
     arbitrate: async (_statement) => true,
   });
 
-  decisions.forEach(($) => expect($?.decision).toBe(true));
+  decisions.decisions.forEach(($) => expect($?.decision).toBe(true));
 
   const collectionHash = await testContext.bobClient.erc20.collectPayment(
     escrow.uid,
@@ -140,7 +140,7 @@ test("conditionalArbitratePast", async () => {
     arbitrate: async (_statement) => _statement[0].item === "good",
   });
 
-  decisions.forEach(($) =>
+  decisions.decisions.forEach(($) =>
     expect($?.decision).toBe($?.statement[0].item === "good"),
   );
 
