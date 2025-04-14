@@ -159,15 +159,17 @@ export const makeOracleClient = (
       params.fulfillment.statementAbi,
     );
 
-    return await Promise.all(
-      statements.map(async ({ attestation, statement }) => {
-        const decision = await params.arbitrate(statement);
-        if (decision === null) return null;
-        const hash = await arbitrateOnchain(attestation.uid, decision);
+    return (
+      await Promise.all(
+        statements.map(async ({ attestation, statement }) => {
+          const decision = await params.arbitrate(statement);
+          if (decision === null) return null;
+          const hash = await arbitrateOnchain(attestation.uid, decision);
 
-        return { hash, attestation, statement, decision };
-      }),
-    );
+          return { hash, attestation, statement, decision };
+        }),
+      )
+    ).filter(($) => $ !== null);
   };
 
   const arbitratePastForEscrow = async <
