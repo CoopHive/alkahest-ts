@@ -87,6 +87,19 @@ export const makeOracleClient = (
     "(address oracle, bytes data)",
   );
 
+  const arbitrateOnchain = async (
+    statementUid: `0x${string}`,
+    decision: boolean | null,
+  ) =>
+    decision === null
+      ? null
+      : await viemClient.writeContract({
+          address: addresses.trustedOracleArbiter,
+          abi: trustedOracleArbiterAbi.abi,
+          functionName: "arbitrate",
+          args: [statementUid, decision],
+        });
+
   const arbitrateLog = async <StatementData extends readonly AbiParameter[]>(
     params: ArbitrateParams<StatementData>,
     log: Log<bigint, number, boolean, typeof attestedEvent>,
@@ -103,14 +116,8 @@ export const makeOracleClient = (
     );
 
     const decision = await params.arbitrate(statement);
-    if (decision === null) return null;
+    const hash = await arbitrateOnchain(uid, decision);
 
-    const hash = await viemClient.writeContract({
-      address: addresses.trustedOracleArbiter,
-      abi: trustedOracleArbiterAbi.abi,
-      functionName: "arbitrate",
-      args: [uid, decision],
-    });
     return { hash, attestation, statement, decision };
   };
 
@@ -249,14 +256,8 @@ export const makeOracleClient = (
               return null;
 
             const decision = await params.arbitrate($.statement, escrowDemand);
-            if (decision === null) return null;
+            const hash = await arbitrateOnchain($.attestation.uid, decision);
 
-            const hash = await viemClient.writeContract({
-              address: addresses.trustedOracleArbiter,
-              abi: trustedOracleArbiterAbi.abi,
-              functionName: "arbitrate",
-              args: [$.attestation.uid, decision],
-            });
             return {
               hash,
               log: $.log,
@@ -431,14 +432,10 @@ export const makeOracleClient = (
                         fulfillmentStatement,
                         escrowDemand,
                       );
-                      if (decision === null) return;
-
-                      await viemClient.writeContract({
-                        address: addresses.trustedOracleArbiter,
-                        abi: trustedOracleArbiterAbi.abi,
-                        functionName: "arbitrate",
-                        args: [fulfillmentAttestation.uid, decision],
-                      });
+                      await arbitrateOnchain(
+                        fulfillmentAttestation.uid,
+                        decision,
+                      );
                     }),
                   ]);
                 },
