@@ -127,7 +127,6 @@ export type TestContext = {
  * @returns TestContext object with all necessary test resources
  */
 export async function setupTestEnvironment(): Promise<TestContext> {
-  console.log("Launching anvil");
   const anvil = createAnvil();
   await anvil.start();
 
@@ -137,7 +136,6 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   });
 
   // Create test accounts
-  console.log("Creating test accounts");
   const aliceAccount = privateKeyToAccount(generatePrivateKey(), {
     nonceManager,
   });
@@ -161,7 +159,6 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     .extend(createTokenTestExtension());
 
   // Fund accounts with ETH
-  console.log("Funding accounts");
   await testClient.setBalance({
     address: testClient.account.address,
     value: parseEther("10"),
@@ -247,12 +244,10 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   }
 
   // Deploy EAS contracts
-  console.log("Deploying EAS contracts");
   addresses.easSchemaRegistry = await deployContract(SchemaRegistry);
   addresses.eas = await deployContract(EAS, [addresses.easSchemaRegistry]);
 
   // Deploy arbiters
-  console.log("Deploying arbiters");
   addresses.trivialArbiter = await deployContract(TrivialArbiter);
   addresses.trustedPartyArbiter = await deployContract(TrustedPartyArbiter);
   addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter);
@@ -261,7 +256,6 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   );
 
   // Deploy obligation contracts (all following same pattern with EAS and schema registry)
-  console.log("Deploying obligation contracts");
 
   // Helper to deploy obligation contracts
   async function deployObligation<
@@ -307,7 +301,6 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   addresses.stringObligation = await deployObligation(StringObligation);
 
   // Deploy barter utils
-  console.log("Deploying barter utils");
 
   // ERC20 barter utils with cross-token functionality
   addresses.erc20BarterUtils = await deployContract(ERC20BarterCrossToken, [
@@ -369,7 +362,6 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   );
 
   // Deploy mock tokens
-  console.log("Deploying mock tokens");
   mockAddresses.erc20A = await deployContract(MockERC20Permit, [
     "Token A",
     "TKA",
@@ -384,7 +376,6 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   mockAddresses.erc1155B = await deployContract(MockERC1155);
 
   // Distribute tokens to test accounts
-  console.log("Distributing tokens to test accounts");
 
   // Transfer ERC20 tokens
   await testClient.writeContract({
@@ -432,14 +423,11 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   });
 
   // Create Alkahest clients
-  console.log("Creating Alkahest clients");
   const aliceClient = makeClient(aliceWalletClient, addresses);
   const bobClient = makeClient(bobWalletClient, addresses);
 
   // Capture initial state for test resets
   const anvilInitState = await testClient.dumpState();
-
-  console.log("Test environment setup complete");
 
   return {
     anvil,
