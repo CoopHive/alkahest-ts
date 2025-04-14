@@ -145,23 +145,12 @@ export const makeOracleClient = (
     decision: boolean,
   ) =>
 
-  const arbitrateLog = async <StatementData extends readonly AbiParameter[]>(
-    params: ArbitrateParams<StatementData>,
-    log: Log<bigint, number, boolean, typeof attestedEvent>,
-  ) => {
-    const uid = log.args.uid!;
-    const attestation = await getAttestation(viemClient, uid, addresses);
-
-    const statement = decodeAbiParameters(
-      params.fulfillment.statementAbi,
-      attestation.data,
-    );
-
-    const decision = await params.arbitrate(statement);
-    const hash = await arbitrateOnchain(uid, decision);
-
-    return { hash, attestation, statement, decision };
-  };
+    await viemClient.writeContract({
+      address: addresses.trustedOracleArbiter,
+      abi: trustedOracleArbiterAbi.abi,
+      functionName: "arbitrate",
+      args: [statementUid, decision],
+    });
 
   const arbitratePast = async <T extends readonly AbiParameter[]>(
     params: ArbitrateParams<T>,
@@ -171,11 +160,15 @@ export const makeOracleClient = (
       params.fulfillment.statementAbi,
     );
 
-    const decisions = await Promise.all(
-      logs.map(({ log, attestation }) => arbitrateLog(params, log)),
-    ).then((decisions) => decisions.filter(($) => $ !== null));
+    return await Promise.all(
+      statements.map(async ({ attestation, statement }) => {
+        const decision = await params.arbitrate(statement);
+        if (decision === null) return null;
+        const hash = await arbitrateOnchain(attestation.uid, decision);
 
-    return decisions;
+        return { hash, attestation, statement, decision };
+      }),
+    );
   };
 
   const arbitratePastForEscrow = async <
