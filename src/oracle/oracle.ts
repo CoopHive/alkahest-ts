@@ -165,7 +165,7 @@ export const makeOracleClient = (
   >(
     params: ArbitrateEscrowParams<StatementData, DemandData>,
   ) => {
-    const escrowLogsP = viemClient
+    const escrowsP = viemClient
       .getLogs({
         address: addresses.eas,
         event: attestedEvent,
@@ -178,8 +178,49 @@ export const makeOracleClient = (
         toBlock: "latest",
       })
       .then((logs) =>
-        logs.filter(
-          ($) => !params.escrow.uid || $.args.uid === params.escrow.uid,
+        Promise.all(
+          logs
+            .filter(
+              ($) => !params.escrow.uid || $.args.uid === params.escrow.uid,
+            )
+            .map(async (log) => {
+              const attestation = await getAttestation(
+                viemClient,
+                log.args.uid!,
+                addresses,
+              );
+
+              if (!validateAttestationIntrinsics(attestation, params.escrow))
+                return null;
+
+              const statement = decodeAbiParameters(
+                arbiterDemandAbi,
+                attestation.data,
+              )[0];
+
+              if (
+                statement.arbiter.toLowerCase() !=
+                addresses.trustedOracleArbiter.toLowerCase()
+              )
+                return null;
+
+              const trustedOracleDemand = decodeAbiParameters(
+                trustedOracleDemandAbi,
+                statement.demand,
+              )[0];
+
+              const demand = decodeAbiParameters(
+                params.escrow.demandAbi,
+                trustedOracleDemand.data,
+              );
+
+              return {
+                log,
+                attestation,
+                statement,
+                demand,
+              };
+            }),
         ),
       );
 
@@ -219,67 +260,42 @@ export const makeOracleClient = (
         ),
       );
 
-    const [escrowLogs, fulfillments] = await Promise.all([
-      escrowLogsP,
+    const [escrows, fulfillments] = await Promise.all([
+      escrowsP,
       fulfillmentsP,
     ]);
 
     const decisions = await Promise.all(
-      escrowLogs.map(async (escrowLog) => {
-        const escrowAttestation = await getAttestation(
-          viemClient,
-          escrowLog.args.uid!,
-          addresses,
-        );
+      escrows
+        .filter(($) => $ !== null)
+        .map(async (escrow) => {
+          return await Promise.all(
+            fulfillments.map(async ($) => {
+              if (
+                !validateAttestationIntrinsics($.attestation, {
+                  refUID: escrow.attestation.uid,
+                })
+              )
+                return null;
 
-        if (!validateAttestationIntrinsics(escrowAttestation, params.escrow))
-          return null;
+              const decision = await params.arbitrate(
+                $.statement,
+                escrow.demand,
+              );
+              const hash = await arbitrateOnchain($.attestation.uid, decision);
 
-        const statementData = decodeAbiParameters(
-          arbiterDemandAbi,
-          escrowAttestation.data,
-        )[0];
-
-        if (
-          statementData.arbiter.toLowerCase() !=
-          addresses.trustedOracleArbiter.toLowerCase()
-        )
-          return null;
-
-        const trustedOracleDemand = decodeAbiParameters(
-          trustedOracleDemandAbi,
-          statementData.demand,
-        )[0];
-
-        const escrowDemand = decodeAbiParameters(
-          params.escrow.demandAbi,
-          trustedOracleDemand.data,
-        );
-
-        return await Promise.all(
-          fulfillments.map(async ($) => {
-            if (
-              !validateAttestationIntrinsics($.attestation, {
-                refUID: escrowAttestation.uid,
-              })
-            )
-              return null;
-
-            const decision = await params.arbitrate($.statement, escrowDemand);
-            const hash = await arbitrateOnchain($.attestation.uid, decision);
-
-            return {
-              hash,
-              log: $.log,
-              statement: $.statement,
-              demand: escrowDemand,
-              decision,
-            };
-          }),
-        ).then((decisions) => decisions.filter(($) => $ !== null));
-      }),
+              return {
+                hash,
+                log: $.log,
+                statement: $.statement,
+                demand: escrow.demand,
+                decision,
+              };
+            }),
+          ).then((decisions) => decisions.filter(($) => $ !== null));
+        }),
     ).then((decisions) => decisions.filter(($) => $ !== null).flat());
-    return decisions;
+    return { decisions, escrows, fulfillments };
   };
 
   return {
