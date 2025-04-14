@@ -136,7 +136,11 @@ export const makeOracleClient = (
       .getLogs({
         address: addresses.eas,
         event: attestedEvent,
-        args: params.fulfillment,
+        args: {
+          recipient: params.fulfillment.recipient,
+          attester: params.fulfillment.attester,
+          schemaUID: params.fulfillment.schemaUID,
+        },
         fromBlock: "earliest",
         toBlock: "latest",
       })
@@ -146,6 +150,8 @@ export const makeOracleClient = (
             !params.fulfillment.uid || $.args.uid === params.fulfillment.uid,
         ),
       );
+
+    console.log("LOGS: ", logs);
 
     const decisions = await Promise.all(
       logs.map((log) => arbitrateLog(params, log)),
@@ -164,7 +170,11 @@ export const makeOracleClient = (
       .getLogs({
         address: addresses.eas,
         event: attestedEvent,
-        args: params.escrow,
+        args: {
+          recipient: params.escrow.recipient,
+          attester: params.escrow.attester,
+          schemaUID: params.escrow.schemaUID,
+        },
         fromBlock: "earliest",
         toBlock: "latest",
       })
@@ -178,7 +188,11 @@ export const makeOracleClient = (
       .getLogs({
         address: addresses.eas,
         event: attestedEvent,
-        args: params.fulfillment,
+        args: {
+          recipient: params.fulfillment.recipient,
+          attester: params.fulfillment.attester,
+          schemaUID: params.fulfillment.schemaUID,
+        },
         fromBlock: "earliest",
         toBlock: "latest",
       })
@@ -247,7 +261,7 @@ export const makeOracleClient = (
           fulfillments.map(async ($) => {
             if (
               !validateAttestationIntrinsics($.attestation, {
-                refUid: escrowAttestation.uid,
+                refUID: escrowAttestation.uid,
               })
             )
               return null;
@@ -287,7 +301,11 @@ export const makeOracleClient = (
       const unwatch = viemClient.watchEvent({
         address: addresses.eas,
         event: attestedEvent,
-        args: params.fulfillment,
+        args: {
+          recipient: params.fulfillment.recipient,
+          attester: params.fulfillment.attester,
+          schemaUID: params.fulfillment.schemaUID,
+        },
         onLogs: async (logs) =>
           await Promise.all(
             logs
@@ -343,7 +361,11 @@ export const makeOracleClient = (
       const unwatchEscrow = viemClient.watchEvent({
         address: addresses.eas,
         event: attestedEvent,
-        args: params.escrow,
+        args: {
+          recipient: params.escrow.recipient,
+          attester: params.escrow.attester,
+          schemaUID: params.escrow.schemaUID,
+        },
         onLogs: async (escrowLogs) => {
           await Promise.all([
             escrowLogs.map(async (escrowLog) => {
@@ -403,7 +425,7 @@ export const makeOracleClient = (
 
                       if (
                         !validateAttestationIntrinsics(fulfillmentAttestation, {
-                          refUid: escrowLog.args.uid,
+                          refUID: escrowLog.args.uid,
                         })
                       )
                         return;
