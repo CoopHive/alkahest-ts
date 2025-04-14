@@ -17,7 +17,7 @@ type ArbitrateParams<StatementData extends readonly AbiParameter[]> = {
     statementAbi: StatementData;
     attester?: Address | Address[];
     recipient?: Address;
-    schemaUid?: `0x${string}`;
+    schemaUID?: `0x${string}`;
     uid?: `0x${string}`;
     refUid?: `0x${string}`;
   };
@@ -34,7 +34,7 @@ type ArbitrateEscrowParams<
     demandAbi: DemandData;
     attester?: Address | Address[];
     recipient?: Address;
-    schemaUid?: `0x${string}`;
+    schemaUID?: `0x${string}`;
     uid?: `0x${string}`;
     refUid?: `0x${string}`;
   };
@@ -42,7 +42,7 @@ type ArbitrateEscrowParams<
     statementAbi: StatementData;
     attester?: Address | Address[];
     recipient?: Address;
-    schemaUid?: `0x${string}`;
+    schemaUID?: `0x${string}`;
     uid?: `0x${string}`;
     // refUid?: `0x${string}`; refUid needed to match fulfillment with escrow
   };
@@ -128,11 +128,7 @@ export const makeOracleClient = (
       .getLogs({
         address: addresses.eas,
         event: attestedEvent,
-        args: {
-          attester: params.fulfillment.attester,
-          recipient: params.fulfillment.recipient,
-          schemaUID: params.fulfillment.schemaUid,
-        },
+        args: params.fulfillment,
         fromBlock: "earliest",
         toBlock: "latest",
       })
@@ -160,11 +156,7 @@ export const makeOracleClient = (
       .getLogs({
         address: addresses.eas,
         event: attestedEvent,
-        args: {
-          attester: params.escrow.attester,
-          recipient: params.escrow.recipient,
-          schemaUID: params.escrow.schemaUid,
-        },
+        args: params.escrow,
         fromBlock: "earliest",
         toBlock: "latest",
       })
@@ -178,10 +170,7 @@ export const makeOracleClient = (
       .getLogs({
         address: addresses.eas,
         event: attestedEvent,
-        args: {
-          recipient: params.fulfillment.recipient,
-          attester: params.fulfillment.attester,
-        },
+        args: params.fulfillment,
         fromBlock: "earliest",
         toBlock: "latest",
       })
@@ -290,11 +279,7 @@ export const makeOracleClient = (
       const unwatch = viemClient.watchEvent({
         address: addresses.eas,
         event: attestedEvent,
-        args: {
-          attester: params.fulfillment.attester,
-          recipient: params.fulfillment.recipient,
-          schemaUID: params.fulfillment.schemaUid,
-        },
+        args: params.fulfillment,
         onLogs: async (logs) =>
           await Promise.all(
             logs
@@ -350,11 +335,7 @@ export const makeOracleClient = (
       const unwatchEscrow = viemClient.watchEvent({
         address: addresses.eas,
         event: attestedEvent,
-        args: {
-          attester: params.escrow.attester,
-          recipient: params.escrow.recipient,
-          schemaUID: params.escrow.schemaUid,
-        },
+        args: params.escrow,
         onLogs: async (escrowLogs) => {
           await Promise.all([
             escrowLogs.map(async (escrowLog) => {
@@ -396,11 +377,7 @@ export const makeOracleClient = (
               const unwatchHandle = viemClient.watchEvent({
                 address: addresses.eas,
                 event: attestedEvent,
-                args: {
-                  attester: params.fulfillment.attester,
-                  recipient: params.fulfillment.recipient,
-                  schemaUID: params.fulfillment.schemaUid,
-                },
+                args: params.fulfillment,
                 onLogs: async (fulfillmentLogs) => {
                   await Promise.all([
                     fulfillmentLogs.map(async (fulfillmentLog) => {
