@@ -96,6 +96,29 @@ export const makeOracleClient = (
     "(address oracle, bytes data)",
   );
 
+  const getStatements = async (filterArgs: {
+    recipient?: Address | Address[];
+    attester?: Address | Address[];
+    schemaUID?: `0x${string}` | `0x${string}`[];
+    uid?: `0x${string}` | `0x${string}`[];
+    refUID?: `0x${string}` | `0x${string}`[];
+  }) =>
+    await viemClient
+      .getLogs({
+        address: addresses.eas,
+        event: attestedEvent,
+        args: {
+          recipient: filterArgs.recipient,
+          attester: filterArgs.attester,
+          schemaUID: filterArgs.schemaUID,
+        },
+        fromBlock: "earliest",
+        toBlock: "latest",
+      })
+      .then((logs) =>
+        logs.filter(($) => !filterArgs.uid || $.args.uid === filterArgs.uid),
+      );
+
   const arbitrateOnchain = async (
     statementUid: `0x${string}`,
     decision: boolean | null,
@@ -133,24 +156,7 @@ export const makeOracleClient = (
   const arbitratePast = async <T extends readonly AbiParameter[]>(
     params: ArbitrateParams<T>,
   ) => {
-    const logs = await viemClient
-      .getLogs({
-        address: addresses.eas,
-        event: attestedEvent,
-        args: {
-          recipient: params.fulfillment.recipient,
-          attester: params.fulfillment.attester,
-          schemaUID: params.fulfillment.schemaUID,
-        },
-        fromBlock: "earliest",
-        toBlock: "latest",
-      })
-      .then((logs) =>
-        logs.filter(
-          ($) =>
-            !params.fulfillment.uid || $.args.uid === params.fulfillment.uid,
-        ),
-      );
+    const logs = await getStatements(params.fulfillment);
 
     const decisions = await Promise.all(
       logs.map((log) => arbitrateLog(params, log)),
@@ -165,100 +171,66 @@ export const makeOracleClient = (
   >(
     params: ArbitrateEscrowParams<StatementData, DemandData>,
   ) => {
-    const escrowsP = viemClient
-      .getLogs({
-        address: addresses.eas,
-        event: attestedEvent,
-        args: {
-          recipient: params.escrow.recipient,
-          attester: params.escrow.attester,
-          schemaUID: params.escrow.schemaUID,
-        },
-        fromBlock: "earliest",
-        toBlock: "latest",
-      })
-      .then((logs) =>
-        Promise.all(
-          logs
-            .filter(
-              ($) => !params.escrow.uid || $.args.uid === params.escrow.uid,
-            )
-            .map(async (log) => {
-              const attestation = await getAttestation(
-                viemClient,
-                log.args.uid!,
-                addresses,
-              );
+    const escrowsP = getStatements(params.escrow).then((logs) =>
+      Promise.all(
+        logs.map(async (log) => {
+          const attestation = await getAttestation(
+            viemClient,
+            log.args.uid!,
+            addresses,
+          );
 
-              if (!validateAttestationIntrinsics(attestation, params.escrow))
-                return null;
+          if (!validateAttestationIntrinsics(attestation, params.escrow))
+            return null;
 
-              const statement = decodeAbiParameters(
-                arbiterDemandAbi,
-                attestation.data,
-              )[0];
+          const statement = decodeAbiParameters(
+            arbiterDemandAbi,
+            attestation.data,
+          )[0];
 
-              if (
-                statement.arbiter.toLowerCase() !=
-                addresses.trustedOracleArbiter.toLowerCase()
-              )
-                return null;
+          if (
+            statement.arbiter.toLowerCase() !=
+            addresses.trustedOracleArbiter.toLowerCase()
+          )
+            return null;
 
-              const trustedOracleDemand = decodeAbiParameters(
-                trustedOracleDemandAbi,
-                statement.demand,
-              )[0];
+          const trustedOracleDemand = decodeAbiParameters(
+            trustedOracleDemandAbi,
+            statement.demand,
+          )[0];
 
-              const demand = decodeAbiParameters(
-                params.escrow.demandAbi,
-                trustedOracleDemand.data,
-              );
+          const demand = decodeAbiParameters(
+            params.escrow.demandAbi,
+            trustedOracleDemand.data,
+          );
 
-              return {
-                log,
-                attestation,
-                statement,
-                demand,
-              };
-            }),
-        ),
-      );
+          return {
+            log,
+            attestation,
+            statement,
+            demand,
+          };
+        }),
+      ),
+    );
 
-    const fulfillmentsP = viemClient
-      .getLogs({
-        address: addresses.eas,
-        event: attestedEvent,
-        args: {
-          recipient: params.fulfillment.recipient,
-          attester: params.fulfillment.attester,
-          schemaUID: params.fulfillment.schemaUID,
-        },
-        fromBlock: "earliest",
-        toBlock: "latest",
-      })
-      .then((logs) =>
-        Promise.all(
-          logs
-            .filter(
-              ($) =>
-                !params.fulfillment.uid ||
-                $.args.uid === params.fulfillment.uid,
-            )
-            .map(async (log) => {
-              const attestation = await getAttestation(
-                viemClient,
-                log.args.uid!,
-                addresses,
-              );
-              const statement = decodeAbiParameters(
-                params.fulfillment.statementAbi,
-                attestation.data,
-              );
+    const fulfillmentsP = getStatements(params.fulfillment).then((logs) =>
+      Promise.all(
+        logs.map(async (log) => {
+          const attestation = await getAttestation(
+            viemClient,
+            log.args.uid!,
+            addresses,
+          );
+          const statement = decodeAbiParameters(
+            params.fulfillment.statementAbi,
+            attestation.data,
+          );
 
-              return { log, attestation, statement };
-            }),
-        ),
-      );
+          return { log, attestation, statement };
+        }),
+      ),
+    );
 
     const [escrows, fulfillments] = await Promise.all([
       escrowsP,
