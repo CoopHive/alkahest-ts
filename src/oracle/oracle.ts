@@ -116,7 +116,19 @@ export const makeOracleClient = (
         toBlock: "latest",
       })
       .then((logs) =>
-        logs.filter(($) => !filterArgs.uid || $.args.uid === filterArgs.uid),
+        Promise.all(
+          logs
+            .filter(($) => !filterArgs.uid || $.args.uid === filterArgs.uid)
+            .map(async (log) => {
+              const attestation = await getAttestation(
+                viemClient,
+                log.args.uid!,
+                addresses,
+              );
+
+              return { log, attestation };
+            }),
+        ),
       );
 
   const arbitrateOnchain = async (
@@ -159,7 +171,7 @@ export const makeOracleClient = (
     const logs = await getStatements(params.fulfillment);
 
     const decisions = await Promise.all(
-      logs.map((log) => arbitrateLog(params, log)),
+      logs.map(({ log, attestation }) => arbitrateLog(params, log)),
     ).then((decisions) => decisions.filter(($) => $ !== null));
 
     return decisions;
@@ -173,13 +185,7 @@ export const makeOracleClient = (
   ) => {
     const escrowsP = getStatements(params.escrow).then((logs) =>
       Promise.all(
-        logs.map(async (log) => {
-          const attestation = await getAttestation(
-            viemClient,
-            log.args.uid!,
-            addresses,
-          );
-
+        logs.map(async ({ log, attestation }) => {
           if (!validateAttestationIntrinsics(attestation, params.escrow))
             return null;
 
@@ -216,12 +222,7 @@ export const makeOracleClient = (
 
     const fulfillmentsP = getStatements(params.fulfillment).then((logs) =>
       Promise.all(
-        logs.map(async (log) => {
-          const attestation = await getAttestation(
-            viemClient,
-            log.args.uid!,
-            addresses,
-          );
+        logs.map(async ({ log, attestation }) => {
           const statement = decodeAbiParameters(
             params.fulfillment.statementAbi,
             attestation.data,
