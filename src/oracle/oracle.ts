@@ -352,9 +352,10 @@ export const makeOracleClient = (
       },
     ) => {
       const decisions = await arbitratePastForEscrow(params);
-      const unwatchHandles: Array<() => void> = [];
+      const escrowsMap = new Map<string, (typeof decisions)["escrows"][0]>();
+      decisions.escrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
 
-      const unwatchEscrow = viemClient.watchEvent({
+      const unwatchEscrows = viemClient.watchEvent({
         address: addresses.eas,
         event: attestedEvent,
         args: {
@@ -362,99 +363,26 @@ export const makeOracleClient = (
           attester: params.escrow.attester,
           schemaUID: params.escrow.schemaUID,
         },
-        onLogs: async (escrowLogs) => {
-          await Promise.all([
-            escrowLogs.map(async (escrowLog) => {
-              if (params.escrow.uid && escrowLog.args.uid !== params.escrow.uid)
-                return;
-
-              const escrowAttestation = await getAttestation(
-                viemClient,
-                escrowLog.args.uid!,
-                addresses,
-              );
-
-              if (
-                !validateAttestationIntrinsics(escrowAttestation, params.escrow)
-              )
-                return;
-
-              const statementData = decodeAbiParameters(
-                arbiterDemandAbi,
-                escrowAttestation.data,
-              )[0];
-
-              if (
-                statementData.arbiter.toLowerCase() !=
-                addresses.trustedOracleArbiter.toLowerCase()
-              )
-                return;
-
-              const trustedOracleDemand = decodeAbiParameters(
-                trustedOracleDemandAbi,
-                statementData.demand,
-              )[0];
-
-              const escrowDemand = decodeAbiParameters(
-                params.escrow.demandAbi,
-                trustedOracleDemand.data,
-              );
-
-              const unwatchHandle = viemClient.watchEvent({
-                address: addresses.eas,
-                event: attestedEvent,
-                args: params.fulfillment,
-                onLogs: async (fulfillmentLogs) => {
-                  await Promise.all([
-                    fulfillmentLogs.map(async (fulfillmentLog) => {
-                      if (
-                        params.fulfillment.uid &&
-                        fulfillmentLog.args.uid !== params.fulfillment.uid
-                      )
-                        return;
-
-                      const fulfillmentAttestation = await getAttestation(
-                        viemClient,
-                        fulfillmentLog.args.uid!,
-                        addresses,
-                      );
-
-                      if (
-                        !validateAttestationIntrinsics(fulfillmentAttestation, {
-                          refUID: escrowLog.args.uid,
-                        })
-                      )
-                        return;
-
-                      const fulfillmentStatement = decodeAbiParameters(
-                        params.fulfillment.statementAbi,
-                        fulfillmentAttestation.data,
-                      );
-
-                      const decision = await params.arbitrate(
-                        fulfillmentStatement,
-                        escrowDemand,
-                      );
-                      if (decision === null) return null;
-                      await arbitrateOnchain(
-                        fulfillmentAttestation.uid,
-                        decision,
-                      );
-                    }),
-                  ]);
-                },
-              });
-              unwatchHandles.push(unwatchHandle);
-            }),
-          ]);
-        },
+        onLogs: async (escrowLogs) => {},
       });
 
-      const unwatchAll = () => {
-        unwatchEscrow();
-        unwatchHandles.forEach(($) => $());
+      const unwatchFulfillments = viemClient.watchEvent({
+        address: addresses.eas,
+        event: attestedEvent,
+        args: {
+          recipient: params.fulfillment.recipient,
+          attester: params.fulfillment.attester,
+          schemaUID: params.fulfillment.schemaUID,
+        },
+        onLogs: async (fulfillmentLogs) => {},
+      });
+
+      const unwatch = () => {
+        unwatchEscrows();
+        unwatchFulfillments();
       };
-      return { decisions, unwatch: unwatchAll };
+
+      return { decisions, unwatch };
     },
   };
 };
