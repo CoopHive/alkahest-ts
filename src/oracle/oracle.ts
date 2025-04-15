@@ -51,12 +51,6 @@ type ArbitrateEscrowParams<
   ) => Promise<boolean | null>;
 };
 
-const merge = <T>(a: T | T[], b: T | T[]): T[] => {
-  const arrayA = Array.isArray(a) ? a : [a];
-  const arrayB = Array.isArray(b) ? b : [b];
-  return [...arrayA, ...arrayB];
-};
-
 const validateAttestationIntrinsics = (
   attestation: Attestation,
   params: {
