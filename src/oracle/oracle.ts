@@ -352,7 +352,10 @@ export const makeOracleClient = (
       },
     ) => {
       const decisions = await arbitratePastForEscrow(params);
-      const escrowsMap = new Map<string, (typeof decisions)["escrows"][0]>();
+      const escrowsMap = new Map<
+        `0x${string}`,
+        (typeof decisions)["escrows"][0]
+      >();
       decisions.escrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
 
       const unwatchEscrows = viemClient.watchEvent({
