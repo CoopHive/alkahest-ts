@@ -366,7 +366,42 @@ export const makeOracleClient = (
           attester: params.escrow.attester,
           schemaUID: params.escrow.schemaUID,
         },
-        onLogs: async (escrowLogs) => {},
+        onLogs: async (logs) => {
+          await Promise.all(
+            logs.map(async (log) => {
+              if (!log.args.uid) return;
+              if (params.escrow.uid && log.args.uid !== params.escrow.uid)
+                return;
+
+              const attestation = await getAttestation(
+                viemClient,
+                log.args.uid!,
+                addresses,
+              );
+
+              if (!validateAttestationIntrinsics(attestation, params.escrow))
+                return;
+
+              const statement = decodeAbiParameters(arbiterDemandAbi, log.data);
+              const trustedOracleDemand = decodeAbiParameters(
+                trustedOracleDemandAbi,
+                statement[0].demand,
+              )[0];
+              const demand = decodeAbiParameters(
+                params.escrow.demandAbi,
+                trustedOracleDemand.data,
+              );
+
+              const escrow = {
+                log,
+                attestation,
+                statement,
+                demand,
+              };
+              escrowsMap.set(attestation.uid, escrow);
+            }),
+          );
+        },
       });
 
       const unwatchFulfillments = viemClient.watchEvent({
