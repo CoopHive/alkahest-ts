@@ -5,7 +5,6 @@ import {
   type AbiParameter,
   type Address,
   type DecodeAbiParametersReturnType,
-  type Log,
 } from "viem";
 import type { Attestation, ChainAddresses } from "../types";
 import { getAttestation, type ViemClient } from "../utils";
@@ -220,25 +219,28 @@ export const makeOracleClient = (
       fulfillmentsP,
     ]);
 
-    const decisions = await Promise.all(
-      escrows.map(async (escrow) => {
-        return await Promise.all(
-          fulfillments.map(async ($) => {
-            const decision = await params.arbitrate($.statement, escrow.demand);
-            if (decision === null) return null;
-            const hash = await arbitrateOnchain($.attestation.uid, decision);
+    const escrowsMap = new Map<`0x${string}`, (typeof escrows)[0]>();
+    escrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
 
-            return {
-              hash,
-              log: $.log,
-              statement: $.statement,
-              demand: escrow.demand,
-              decision,
-            };
-          }),
-        ).then((decisions) => decisions.filter(($) => $ !== null));
+    const decisions = await Promise.all(
+      fulfillments.map(async ($) => {
+        if (!escrowsMap.has($.attestation.refUID)) return null;
+        const escrow = escrowsMap.get($.attestation.refUID)!;
+
+        const decision = await params.arbitrate($.statement, escrow.demand);
+        if (decision === null) return null;
+        const hash = await arbitrateOnchain($.attestation.uid, decision);
+
+        return {
+          hash,
+          log: $.log,
+          statement: $.statement,
+          demand: escrow.demand,
+          decision,
+        };
       }),
-    ).then((decisions) => decisions.filter(($) => $ !== null).flat());
+    );
+
     return { decisions, escrows, fulfillments };
   };
 
