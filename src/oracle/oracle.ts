@@ -442,7 +442,7 @@ export const makeOracleClient = (
                 statement,
                 escrow.demand,
               );
-              if (_decision === null) return null;
+              if (_decision === null) return;
               const hash = await arbitrateOnchain(attestation.uid, _decision);
 
               const decision = {
