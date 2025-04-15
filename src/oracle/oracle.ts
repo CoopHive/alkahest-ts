@@ -318,7 +318,7 @@ export const makeOracleClient = (
                   decision: _decision,
                 };
 
-                decision !== null &&
+                _decision !== null &&
                   params.onAfterArbitrate &&
                   params.onAfterArbitrate(
                     decision as {
