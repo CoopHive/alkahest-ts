@@ -239,7 +239,7 @@ export const makeOracleClient = (
 
         return {
           hash,
-          log: $.log,
+          attestation: $.attestation,
           statement: $.statement,
           demand: escrow.demand,
           decision,
