@@ -412,7 +412,61 @@ export const makeOracleClient = (
           attester: params.fulfillment.attester,
           schemaUID: params.fulfillment.schemaUID,
         },
-        onLogs: async (fulfillmentLogs) => {},
+        onLogs: async (logs) => {
+          await Promise.all(
+            logs.map(async (log) => {
+              if (!log.args.uid) return;
+              if (
+                params.fulfillment.uid &&
+                log.args.uid !== params.fulfillment.uid
+              )
+                return;
+
+              const attestation = await getAttestation(
+                viemClient,
+                log.args.uid!,
+                addresses,
+              );
+
+              if (!validateAttestationIntrinsics(attestation, {})) return;
+              if (!escrowsMap.has(attestation.refUID)) return;
+
+              const escrow = escrowsMap.get(attestation.refUID)!;
+
+              const statement = decodeAbiParameters(
+                params.fulfillment.statementAbi,
+                attestation.data,
+              );
+
+              const _decision = await params.arbitrate(
+                statement,
+                escrow.demand,
+              );
+              if (_decision === null) return null;
+              const hash = await arbitrateOnchain(attestation.uid, _decision);
+
+              const decision = {
+                hash,
+                attestation,
+                statement,
+                demand: escrow.demand,
+                decision: _decision,
+              };
+
+              _decision !== null &&
+                params.onAfterArbitrate &&
+                params.onAfterArbitrate(
+                  decision as {
+                    hash: `0x${string}`;
+                    attestation: Attestation;
+                    statement: DecodeAbiParametersReturnType<StatementData>;
+                    demand: DecodeAbiParametersReturnType<DemandData>;
+                    decision: boolean | null;
+                  },
+                );
+            }),
+          );
+        },
       });
 
       const unwatch = () => {
