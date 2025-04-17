@@ -179,8 +179,8 @@ export const makeOracleClient = (
   >(
     params: ArbitrateEscrowParams<StatementData, DemandData>,
   ) => {
-    const escrowsP = getStatements(params.escrow, arbiterDemandAbi).then(
-      (statements) =>
+    const escrowsP = getStatements(params.escrow, arbiterDemandAbi)
+      .then((statements) =>
         Promise.all(
           statements
             .filter(
@@ -193,6 +193,12 @@ export const makeOracleClient = (
                 trustedOracleDemandAbi,
                 statement[0].demand,
               )[0];
+
+              if (
+                trustedOracleDemand.oracle.toLowerCase() !==
+                viemClient.account.address.toLowerCase()
+              )
+                return null;
 
               const demand = decodeAbiParameters(
                 params.escrow.demandAbi,
@@ -207,7 +213,8 @@ export const makeOracleClient = (
               };
             }),
         ),
-    );
+      )
+      .then(($) => $.filter(($) => $ !== null));
 
     const fulfillmentsP = getStatements(
       params.fulfillment,
