@@ -30,7 +30,9 @@ test("trivialArbitratePast", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("string mockData"), ["foo"]),
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
   });
 
   const { attested: escrow } =
@@ -68,7 +70,9 @@ test("trivialListenAndArbitrate", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("string mockData"), ["foo"]),
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
   });
 
   const { attested: escrow } =
@@ -113,7 +117,9 @@ test("conditionalArbitratePast", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("string mockData"), ["foo"]),
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
   });
 
   const { attested: escrow } =
@@ -163,7 +169,9 @@ test("conditionalListenAndArbitrate", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("string mockData"), ["foo"]),
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
   });
 
   const { attested: escrow } =
