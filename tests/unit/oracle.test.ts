@@ -46,7 +46,10 @@ test("trivialArbitratePast", async () => {
     );
 
   const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.makeStatement("foo");
+    await testContext.bobClient.stringObligation.makeStatement(
+      "foo",
+      escrow.uid,
+    );
 
   const decisions = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
@@ -100,7 +103,10 @@ test("trivialListenAndArbitrate", async () => {
   });
 
   const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.makeStatement("foo");
+    await testContext.bobClient.stringObligation.makeStatement(
+      "foo",
+      escrow.uid,
+    );
 
   await Bun.sleep(100);
   const collectionHash = await testContext.bobClient.erc20.collectPayment(
@@ -133,10 +139,16 @@ test("conditionalArbitratePast", async () => {
     );
 
   const { attested: fulfillment1 } =
-    await testContext.bobClient.stringObligation.makeStatement("good");
+    await testContext.bobClient.stringObligation.makeStatement(
+      "good",
+      escrow.uid,
+    );
 
   const { attested: fulfillment2 } =
-    await testContext.bobClient.stringObligation.makeStatement("bad");
+    await testContext.bobClient.stringObligation.makeStatement(
+      "bad",
+      escrow.uid,
+    );
 
   const decisions = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
@@ -197,10 +209,16 @@ test("conditionalListenAndArbitrate", async () => {
   });
 
   const { attested: fulfillment1 } =
-    await testContext.bobClient.stringObligation.makeStatement("good");
+    await testContext.bobClient.stringObligation.makeStatement(
+      "good",
+      escrow.uid,
+    );
 
   const { attested: fulfillment2 } =
-    await testContext.bobClient.stringObligation.makeStatement("bad");
+    await testContext.bobClient.stringObligation.makeStatement(
+      "bad",
+      escrow.uid,
+    );
 
   await Bun.sleep(100);
   const failedCollection = testContext.bobClient.erc20.collectPayment(
