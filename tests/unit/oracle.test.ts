@@ -166,7 +166,6 @@ test("conditionalArbitratePast", async () => {
     escrow.uid,
     fulfillment2.uid,
   );
-
   expect(async () => await failedCollection).toThrow();
 
   const collectionHash = await testContext.bobClient.erc20.collectPayment(
@@ -270,7 +269,7 @@ test("trivialArbitratePastEscrow", async () => {
       attester: testContext.addresses.stringObligation,
       statementAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (_demand, _statement) => true,
+    arbitrate: async (_statement, _demand) => true,
   });
 
   decisions.decisions.forEach(($) => expect($?.decision).toBe(true));
@@ -312,7 +311,7 @@ test("trivialListenAndArbitrateEscrow", async () => {
         attester: testContext.addresses.stringObligation,
         statementAbi: parseAbiParameters("(string item)"),
       },
-      arbitrate: async (_demand, _statement) => true,
+      arbitrate: async (_statement, _demand) => true,
       onAfterArbitrate: async (decision) => {
         expect(decision?.attestation.uid).toEqual(fulfillment.uid);
         expect(decision?.statement[0].item).toEqual("foo");
