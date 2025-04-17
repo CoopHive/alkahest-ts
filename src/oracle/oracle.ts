@@ -388,6 +388,12 @@ export const makeOracleClient = (
                 trustedOracleDemandAbi,
                 statement[0].demand,
               )[0];
+              if (
+                trustedOracleDemand.oracle.toLowerCase() !==
+                viemClient.account.address.toLowerCase()
+              )
+                return;
+
               const demand = decodeAbiParameters(
                 params.escrow.demandAbi,
                 trustedOracleDemand.data,
