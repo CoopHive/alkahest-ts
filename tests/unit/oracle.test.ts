@@ -398,3 +398,70 @@ test("conditionalArbitratePastEscrow", async () => {
 
   expect(collectionHash).toBeTruthy();
 });
+
+test("conditionalListenAndArbitrateEscrow", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
+  });
+
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  const { unwatch } =
+    await testContext.bobClient.oracle.listenAndArbitrateForEscrow({
+      escrow: {
+        attester: testContext.addresses.erc20EscrowObligation,
+        demandAbi: parseAbiParameters("(string mockDemand)"),
+      },
+      fulfillment: {
+        attester: testContext.addresses.stringObligation,
+        statementAbi: parseAbiParameters("(string item)"),
+      },
+      arbitrate: async (_statement, _demand) =>
+        _statement[0].item === _demand[0].mockDemand,
+      onAfterArbitrate: async (decision) => {
+        expect(decision?.decision).toBe(
+          decision?.statement[0].item === decision?.demand[0].mockDemand,
+        );
+      },
+      pollingInterval: 50,
+    });
+
+  const { attested: fulfillment1 } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "foo",
+      escrow.uid,
+    );
+
+  const { attested: fulfillment2 } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "bar",
+      escrow.uid,
+    );
+
+  await Bun.sleep(100);
+  const failedCollection = testContext.bobClient.erc20.collectPayment(
+    escrow.uid,
+    fulfillment2.uid,
+  );
+  expect(async () => await failedCollection).toThrow();
+
+  const collectionHash = await testContext.bobClient.erc20.collectPayment(
+    escrow.uid,
+    fulfillment1.uid,
+  );
+  expect(collectionHash).toBeTruthy();
+
+  unwatch();
+});
