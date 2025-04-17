@@ -409,6 +409,7 @@ export const makeOracleClient = (
             }),
           );
         },
+        pollingInterval: params.pollingInterval,
       });
 
       const unwatchFulfillments = viemClient.watchEvent({
@@ -474,6 +475,7 @@ export const makeOracleClient = (
             }),
           );
         },
+        pollingInterval: params.pollingInterval,
       });
 
       const unwatch = () => {
