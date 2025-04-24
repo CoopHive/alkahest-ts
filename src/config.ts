@@ -24,6 +24,10 @@ export const contractAddresses: Record<string, ChainAddresses> = {
     trivialArbiter: "0x7D4bCD84901cEC903105564f63BE70432448B222",
     trustedOracleArbiter: "0x361E0950534F4a54A39F8C4f1f642C323f6e66B9",
     trustedPartyArbiter: "0x3895398C46da88b75eE3ca3092F7714BEbE795a5",
+    anyArbiter: "0x",
+    allArbiter: "0x",
+    intrinsicsArbiter: "0x",
+    intrinsicsArbiter2: "0x",
   },
   "Filecoin Calibration": {
     eas: "0x3c79a0225380fb6f3cb990ffc4e3d5af4546b524",
@@ -48,6 +52,10 @@ export const contractAddresses: Record<string, ChainAddresses> = {
     attestationEscrowObligation: "0x553e4de0916074201a9d32123efcc8f734ee5675",
     attestationEscrowObligation2: "0x11c3931f2715d8fca8ea5ca79fac4bbbcdbe9903",
     attestationBarterUtils: "0x0c19138441e1bee2964e65e0edf1702d59a2e786",
+    anyArbiter: "0x",
+    allArbiter: "0x",
+    intrinsicsArbiter: "0x",
+    intrinsicsArbiter2: "0x",
   },
 } as const;
 

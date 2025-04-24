@@ -30,6 +30,10 @@ export type ChainAddresses = {
   trivialArbiter: `0x${string}`;
   specificAttestationArbiter: `0x${string}`;
   trustedOracleArbiter: `0x${string}`;
+  anyArbiter: `0x${string}`;
+  allArbiter: `0x${string}`;
+  intrinsicsArbiter: `0x${string}`;
+  intrinsicsArbiter2: `0x${string}`;
 };
 
 export type PermitSignature = {

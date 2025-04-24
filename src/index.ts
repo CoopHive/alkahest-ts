@@ -155,6 +155,18 @@ export const makeClient = (
       contractAddresses?.trustedOracleArbiter ||
       baseAddresses?.trustedOracleArbiter ||
       zeroAddress,
+    intrinsicsArbiter:
+      contractAddresses?.intrinsicsArbiter ||
+      baseAddresses?.intrinsicsArbiter ||
+      zeroAddress,
+    intrinsicsArbiter2:
+      contractAddresses?.intrinsicsArbiter2 ||
+      baseAddresses?.intrinsicsArbiter2 ||
+      zeroAddress,
+    anyArbiter:
+      contractAddresses?.anyArbiter || baseAddresses?.anyArbiter || zeroAddress,
+    allArbiter:
+      contractAddresses?.allArbiter || baseAddresses?.allArbiter || zeroAddress,
   };
 
   return {
