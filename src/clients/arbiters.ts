@@ -14,6 +14,54 @@ export const makeArbitersClient = (
   addresses: ChainAddresses,
 ) => ({
   /**
+   * Encodes AnyArbiter.DemandData or AllArbiter.DemandData to bytes.
+   * @param demand - struct DemandData {address[] arbiters, bytes[] demands}
+   * @returns abi encoded bytes
+   */
+  encodeMultiArbiterDemand: (demand: {
+    arbiters: `0x${string}`[];
+    demands: `0x${string}`[];
+  }) => {
+    return encodeAbiParameters(
+      parseAbiParameters("(address[] arbiters, bytes[] demands)"),
+      [demand],
+    );
+  },
+
+  /**
+   * Decodes AnyArbiter.DemandData or AllArbiter.DemandData from bytes.
+   * @param demandData - DemandData as abi encoded bytes
+   * @returns the decoded DemandData object
+   */
+  decodeMultiArbiterDemand: (demandData: `0x${string}`) => {
+    return decodeAbiParameters(
+      parseAbiParameters("(address[] arbiters, bytes[] demands)"),
+      demandData,
+    )[0];
+  },
+  /**
+   * Encodes IntrinsicsArbiter2.DemandData to bytes.
+   * @param demand - struct DemandData {bytes32 schema}
+   * @returns abi encoded bytes
+   */
+  encodeIntrinsics2Demand: (demand: { schema: `0x${string}` }) => {
+    return encodeAbiParameters(parseAbiParameters("(bytes32 schema)"), [
+      demand,
+    ]);
+  },
+
+  /**
+   * Decodes IntrinsicsArbiter2.DemandData from bytes.
+   * @param demandData - DemandData as abi encoded bytes
+   * @returns the decoded DemandData object
+   */
+  decodeIntrinsics2Demand: (demandData: `0x${string}`) => {
+    return decodeAbiParameters(
+      parseAbiParameters("(bytes32 schema)"),
+      demandData,
+    )[0];
+  },
+  /**
    * Encodes TrustedPartyArbiter.DemandData to bytes.
    * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, address creator}
    * @returns abi encoded bytes
