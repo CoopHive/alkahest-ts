@@ -42,6 +42,10 @@ import TrivialArbiter from "@contracts/TrivialArbiter.json";
 import TrustedOracleArbiter from "@contracts/TrustedOracleArbiter.json";
 import TrustedPartyArbiter from "@contracts/TrustedPartyArbiter.json";
 import SpecificAttestationArbiter from "@contracts/SpecificAttestationArbiter.json";
+import AnyArbiter from "../../src/contracts/AnyArbiter.json";
+import AllArbiter from "../../src/contracts/AllArbiter.json";
+import IntrinsicsArbiter from "../../src/contracts/IntrinsicsArbiter2.json";
+import IntrinsicsArbiter2 from "../../src/contracts/IntrinsicsArbiter2.json";
 
 // Import implementation contracts from fixtures
 import EAS from "../fixtures/EAS.json";
@@ -72,6 +76,10 @@ export type TestContext = {
     trustedPartyArbiter: `0x${string}`;
     trustedOracleArbiter: `0x${string}`;
     specificAttestationArbiter: `0x${string}`;
+    intrinsicsArbiter: `0x${string}`;
+    intrinsicsArbiter2: `0x${string}`;
+    anyArbiter: `0x${string}`;
+    allArbiter: `0x${string}`;
 
     // ERC20
     erc20EscrowObligation: `0x${string}`;
@@ -196,6 +204,10 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     trustedPartyArbiter: "" as `0x${string}`,
     trustedOracleArbiter: "" as `0x${string}`,
     specificAttestationArbiter: "" as `0x${string}`,
+    intrinsicsArbiter: "" as `0x${string}`,
+    intrinsicsArbiter2: "" as `0x${string}`,
+    anyArbiter: "" as `0x${string}`,
+    allArbiter: "" as `0x${string}`,
 
     erc20EscrowObligation: "" as `0x${string}`,
     erc20PaymentObligation: "" as `0x${string}`,
@@ -254,6 +266,10 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   addresses.specificAttestationArbiter = await deployContract(
     SpecificAttestationArbiter,
   );
+  addresses.intrinsicsArbiter = await deployContract(IntrinsicsArbiter);
+  addresses.intrinsicsArbiter2 = await deployContract(IntrinsicsArbiter2);
+  addresses.anyArbiter = await deployContract(AnyArbiter);
+  addresses.allArbiter = await deployContract(AllArbiter);
 
   // Deploy obligation contracts (all following same pattern with EAS and schema registry)
 
