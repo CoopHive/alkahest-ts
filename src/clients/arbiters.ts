@@ -156,25 +156,25 @@ export const makeArbitersClient = (
   },
   /**
    * Wait for an arbitration to be made on a TrustedOracleArbiter
-   * @param oracle - address of the oracle
    * @param statement - bytes32 statement uid
+   * @param oracle - address of the oracle
    * @returns the event args
    */
   waitForTrustedOracleArbitration: async (
-    oracle: `0x${string}`,
     statement: `0x${string}`,
+    oracle: `0x${string}`,
   ): Promise<{
-    oracle?: `0x${string}` | undefined;
     statement?: `0x${string}` | undefined;
+    oracle?: `0x${string}` | undefined;
     decision?: boolean | undefined;
   }> => {
     const event = parseAbiItem(
-      "event ArbitrationMade(address indexed oracle, bytes32 indexed statement, bool decision)",
+      "event ArbitrationMade(bytes32 indexed statement, address indexed oracle, bool decision)",
     );
     const logs = await viemClient.getLogs({
       address: addresses.trustedOracleArbiter,
       event,
-      args: { oracle, statement },
+      args: { statement, oracle },
       fromBlock: "earliest",
       toBlock: "latest",
     });
@@ -185,7 +185,7 @@ export const makeArbitersClient = (
       const unwatch = viemClient.watchEvent({
         address: addresses.trustedOracleArbiter,
         event,
-        args: { oracle, statement },
+        args: { statement, oracle },
         pollingInterval: 1000,
         onLogs: (logs) => {
           resolve(logs[0].args);
