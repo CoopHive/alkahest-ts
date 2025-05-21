@@ -151,7 +151,9 @@ export const makeOracleClient = (
     });
 
   const arbitratePast = async <T extends readonly AbiParameter[]>(
-    params: ArbitrateParams<T>,
+    params: ArbitrateParams<T> & {
+      onlyIfEscrowDemandsCurrentOracle?: boolean;
+    },
   ) => {
     const statements = await getStatements(
       params.fulfillment,
@@ -161,6 +163,32 @@ export const makeOracleClient = (
     const decisions = (
       await Promise.all(
         statements.map(async ({ attestation, statement }) => {
+          if (
+            params.onlyIfEscrowDemandsCurrentOracle &&
+            attestation.refUID // Check if there's a referenced escrow
+          ) {
+            const escrowAttestation = await getAttestation(
+              viemClient,
+              attestation.refUID,
+              addresses,
+            );
+            if (!escrowAttestation) return null;
+
+            try {
+              const trustedOracleDemand = decodeAbiParameters(
+                trustedOracleDemandAbi,
+                escrowAttestation.data,
+              )[0];
+              if (
+                trustedOracleDemand.oracle.toLowerCase() !==
+                viemClient.account.address.toLowerCase()
+              )
+                return null; // Skip if the oracle doesn't match
+            } catch {
+              return null; // Skip if decoding fails
+            }
+          }
+
           const decision = await params.arbitrate(statement);
           if (decision === null) return null;
           const hash = await arbitrateOnchain(attestation.uid, decision);
@@ -255,6 +283,7 @@ export const makeOracleClient = (
     arbitratePast,
     listenAndArbitrate: async <StatementData extends readonly AbiParameter[]>(
       params: ArbitrateParams<StatementData> & {
+        onlyIfEscrowDemandsCurrentOracle?: boolean;
         onAfterArbitrate?: (decision: {
           hash: `0x${string}`;
           attestation: Attestation;
@@ -302,6 +331,32 @@ export const makeOracleClient = (
                   )
                 )
                   return;
+
+                if (
+                  params.onlyIfEscrowDemandsCurrentOracle &&
+                  attestation.refUID // Check if there's a referenced escrow
+                ) {
+                  const escrowAttestation = await getAttestation(
+                    viemClient,
+                    attestation.refUID,
+                    addresses,
+                  );
+                  if (!escrowAttestation) return;
+
+                  try {
+                    const trustedOracleDemand = decodeAbiParameters(
+                      trustedOracleDemandAbi,
+                      escrowAttestation.data,
+                    )[0];
+                    if (
+                      trustedOracleDemand.oracle.toLowerCase() !==
+                      viemClient.account.address.toLowerCase()
+                    )
+                      return; // Skip if the oracle doesn't match
+                  } catch {
+                    return; // Skip if decoding fails
+                  }
+                }
 
                 const statement = decodeAbiParameters(
                   params.fulfillment.statementAbi,
