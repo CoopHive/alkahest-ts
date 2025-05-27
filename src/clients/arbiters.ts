@@ -155,6 +155,41 @@ export const makeArbitersClient = (
     return hash;
   },
   /**
+   * Check if an arbitration has already been made for a specific statement by a specific oracle
+   * @param statement - bytes32 statement uid
+   * @param oracle - address of the oracle
+   * @returns the arbitration result if exists, undefined if not
+   */
+  checkExistingArbitration: async (
+    statement: `0x${string}`,
+    oracle: `0x${string}`,
+  ): Promise<{
+    statement: `0x${string}`;
+    oracle: `0x${string}`;
+    decision: boolean;
+  } | undefined> => {
+    const event = parseAbiItem(
+      "event ArbitrationMade(bytes32 indexed statement, address indexed oracle, bool decision)",
+    );
+    const logs = await viemClient.getLogs({
+      address: addresses.trustedOracleArbiter,
+      event,
+      args: { statement, oracle },
+      fromBlock: "earliest",
+      toBlock: "latest",
+    });
+
+    if (logs.length > 0) {
+      return logs[0].args as {
+        statement: `0x${string}`;
+        oracle: `0x${string}`;
+        decision: boolean;
+      };
+    }
+
+    return undefined;
+  },
+  /**
    * Wait for an arbitration to be made on a TrustedOracleArbiter
    * @param statement - bytes32 statement uid
    * @param oracle - address of the oracle

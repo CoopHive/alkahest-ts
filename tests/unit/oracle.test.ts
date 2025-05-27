@@ -465,3 +465,150 @@ test("conditionalListenAndArbitrateEscrow", async () => {
 
   unwatch();
 });
+
+test("arbitratePast with skipAlreadyArbitrated option", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
+  });
+
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  const { attested: fulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "foo",
+      escrow.uid,
+    );
+
+  // First arbitration should succeed
+  const { decisions: firstDecisions } =
+    await testContext.bobClient.oracle.arbitratePast({
+      fulfillment: {
+        statementAbi: parseAbiParameters("(string item)"),
+        attester: testContext.addresses.stringObligation,
+      },
+      arbitrate: async (statement) => {
+        return statement[0].item === "foo";
+      },
+      skipAlreadyArbitrated: false, // Explicitly set to false
+    });
+
+  expect(firstDecisions.length).toBe(1);
+  expect(firstDecisions[0]?.decision).toBe(true);
+
+  // Wait for the transaction to be confirmed
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: firstDecisions[0]!.hash,
+  });
+
+  // Second arbitration with skipAlreadyArbitrated: false should attempt to arbitrate again
+  const { decisions: secondDecisions } =
+    await testContext.bobClient.oracle.arbitratePast({
+      fulfillment: {
+        statementAbi: parseAbiParameters("(string item)"),
+        attester: testContext.addresses.stringObligation,
+      },
+      arbitrate: async (statement) => {
+        return statement[0].item === "foo";
+      },
+      skipAlreadyArbitrated: false,
+    });
+
+  expect(secondDecisions.length).toBe(1);
+
+  // Third arbitration with skipAlreadyArbitrated: true should skip re-arbitration
+  const { decisions: thirdDecisions } =
+    await testContext.bobClient.oracle.arbitratePast({
+      fulfillment: {
+        statementAbi: parseAbiParameters("(string item)"),
+        attester: testContext.addresses.stringObligation,
+      },
+      arbitrate: async (statement) => {
+        return statement[0].item === "foo";
+      },
+      skipAlreadyArbitrated: true,
+    });
+
+  expect(thirdDecisions.length).toBe(0); // Should skip already arbitrated fulfillments
+});
+
+test("arbitratePastForEscrow with skipAlreadyArbitrated option", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
+  });
+
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  const { attested: fulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "foo",
+      escrow.uid,
+    );
+
+  // First arbitration should succeed
+  const { decisions: firstDecisions } =
+    await testContext.bobClient.oracle.arbitratePastForEscrow({
+      escrow: {
+        attester: testContext.addresses.erc20EscrowObligation,
+        demandAbi: parseAbiParameters("(string mockDemand)"),
+      },
+      fulfillment: {
+        attester: testContext.addresses.stringObligation,
+        statementAbi: parseAbiParameters("(string item)"),
+      },
+      arbitrate: async (statement, demand) => {
+        return statement[0].item === demand[0].mockDemand;
+      },
+      skipAlreadyArbitrated: false,
+    });
+
+  expect(firstDecisions.length).toBe(1);
+  expect(firstDecisions[0]?.decision).toBe(true);
+
+  // Wait for the transaction to be confirmed
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: firstDecisions[0]!.hash,
+  });
+
+  // Second arbitration with skipAlreadyArbitrated: true should skip re-arbitration
+  const { decisions: secondDecisions } =
+    await testContext.bobClient.oracle.arbitratePastForEscrow({
+      escrow: {
+        attester: testContext.addresses.erc20EscrowObligation,
+        demandAbi: parseAbiParameters("(string mockDemand)"),
+      },
+      fulfillment: {
+        attester: testContext.addresses.stringObligation,
+        statementAbi: parseAbiParameters("(string item)"),
+      },
+      arbitrate: async (statement, demand) => {
+        return statement[0].item === demand[0].mockDemand;
+      },
+      skipAlreadyArbitrated: true,
+    });
+
+  expect(secondDecisions.length).toBe(0); // Should skip already arbitrated fulfillments
+});
