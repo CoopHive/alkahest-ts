@@ -88,6 +88,9 @@ export const makeOracleClient = (
   const attestedEvent = parseAbiItem(
     "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)",
   );
+  const arbitrationMadeEvent = parseAbiItem(
+    "event ArbitrationMade(bytes32 indexed statement, address indexed oracle, bool decision)",
+  );
   const arbiterDemandAbi = parseAbiParameters(
     "(address arbiter, bytes demand)",
   );
@@ -164,9 +167,10 @@ export const makeOracleClient = (
     const decisions = (
       await Promise.all(
         statements.map(async ({ attestation, statement }) => {
+          // Early return if escrow doesn't demand current oracle
           if (
             params.onlyIfEscrowDemandsCurrentOracle &&
-            attestation.refUID // Check if there's a referenced escrow
+            attestation.refUID
           ) {
             const escrowAttestation = await getAttestation(
               viemClient,
@@ -183,21 +187,19 @@ export const makeOracleClient = (
               if (
                 trustedOracleDemand.oracle.toLowerCase() !==
                 viemClient.account.address.toLowerCase()
-              )
-                return null; // Skip if the oracle doesn't match
+              ) {
+                return null; // Skip not matching oracle
+              }
             } catch {
               return null; // Skip if decoding fails
             }
           }
 
-          // Check if arbitration already exists if skipAlreadyArbitrated is enabled
+          // Early return if already arbitrated
           if (params.skipAlreadyArbitrated) {
-            const event = parseAbiItem(
-              "event ArbitrationMade(bytes32 indexed statement, address indexed oracle, bool decision)",
-            );
             const existingLogs = await viemClient.getLogs({
               address: addresses.trustedOracleArbiter,
-              event,
+              event: arbitrationMadeEvent,
               args: { 
                 statement: attestation.uid, 
                 oracle: viemClient.account.address 
@@ -288,12 +290,9 @@ export const makeOracleClient = (
 
         // Check if arbitration already exists if skipAlreadyArbitrated is enabled
         if (params.skipAlreadyArbitrated) {
-          const event = parseAbiItem(
-            "event ArbitrationMade(bytes32 indexed statement, address indexed oracle, bool decision)",
-          );
           const existingLogs = await viemClient.getLogs({
             address: addresses.trustedOracleArbiter,
-            event,
+            event: arbitrationMadeEvent,
             args: { 
               statement: $.attestation.uid, 
               oracle: viemClient.account.address 
@@ -406,12 +405,9 @@ export const makeOracleClient = (
 
                 // Check if arbitration already exists if skipAlreadyArbitrated is enabled
                 if (params.skipAlreadyArbitrated) {
-                  const event = parseAbiItem(
-                    "event ArbitrationMade(bytes32 indexed statement, address indexed oracle, bool decision)",
-                  );
                   const existingLogs = await viemClient.getLogs({
                     address: addresses.trustedOracleArbiter,
-                    event,
+                    event: arbitrationMadeEvent,
                     args: { 
                       statement: attestation.uid, 
                       oracle: viemClient.account.address 
@@ -566,12 +562,9 @@ export const makeOracleClient = (
 
               // Check if arbitration already exists if skipAlreadyArbitrated is enabled
               if (params.skipAlreadyArbitrated) {
-                const event = parseAbiItem(
-                  "event ArbitrationMade(bytes32 indexed statement, address indexed oracle, bool decision)",
-                );
                 const existingLogs = await viemClient.getLogs({
                   address: addresses.trustedOracleArbiter,
-                  event,
+                  event: arbitrationMadeEvent,
                   args: { 
                     statement: attestation.uid, 
                     oracle: viemClient.account.address 
