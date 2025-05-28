@@ -168,10 +168,11 @@ export const makeOracleClient = (
       await Promise.all(
         statements.map(async ({ attestation, statement }) => {
           // Early return if escrow doesn't demand current oracle
-          if (
-            params.onlyIfEscrowDemandsCurrentOracle &&
-            attestation.refUID
-          ) {
+          if (params.onlyIfEscrowDemandsCurrentOracle && !attestation.refUID) {
+            return null;
+          }
+
+          if (params.onlyIfEscrowDemandsCurrentOracle) {
             const escrowAttestation = await getAttestation(
               viemClient,
               attestation.refUID,
@@ -195,7 +196,6 @@ export const makeOracleClient = (
             }
           }
 
-          // Early return if already arbitrated
           if (params.skipAlreadyArbitrated) {
             const existingLogs = await viemClient.getLogs({
               address: addresses.trustedOracleArbiter,
@@ -215,8 +215,8 @@ export const makeOracleClient = (
 
           const decision = await params.arbitrate(statement);
           if (decision === null) return null;
+          
           const hash = await arbitrateOnchain(attestation.uid, decision);
-
           return { hash, attestation, statement, decision };
         }),
       )
@@ -286,9 +286,10 @@ export const makeOracleClient = (
     const decisions = await Promise.all(
       fulfillments.map(async ($) => {
         if (!escrowsMap.has($.attestation.refUID)) return null;
+        
         const escrow = escrowsMap.get($.attestation.refUID)!;
 
-        // Check if arbitration already exists if skipAlreadyArbitrated is enabled
+        // Early return if already arbitrated
         if (params.skipAlreadyArbitrated) {
           const existingLogs = await viemClient.getLogs({
             address: addresses.trustedOracleArbiter,
@@ -308,8 +309,8 @@ export const makeOracleClient = (
 
         const decision = await params.arbitrate($.statement, escrow.demand);
         if (decision === null) return null;
+        
         const hash = await arbitrateOnchain($.attestation.uid, decision);
-
         return {
           hash,
           attestation: $.attestation,
