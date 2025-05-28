@@ -196,11 +196,13 @@ export const makeArbitersClient = (
      * Wait for an arbitration to be made on a TrustedOracleArbiter
      * @param statement - bytes32 statement uid
      * @param oracle - address of the oracle
+     * @param pollingInterval - polling interval in milliseconds (default: 1000)
      * @returns the event args
      */
     waitForTrustedOracleArbitration: async (
       statement: `0x${string}`,
       oracle: `0x${string}`,
+      pollingInterval?: number,
     ): Promise<{
       statement?: `0x${string}` | undefined;
       oracle?: `0x${string}` | undefined;
@@ -221,7 +223,7 @@ export const makeArbitersClient = (
           address: addresses.trustedOracleArbiter,
           event: arbitrationMadeEvent,
           args: { statement, oracle },
-          pollingInterval: 1000,
+          pollingInterval: pollingInterval ?? 1000,
           onLogs: (logs) => {
             resolve(logs[0].args);
             unwatch();
