@@ -316,6 +316,7 @@ export const makeOracleClient = (
           attestation: $.attestation,
           statement: $.statement,
           demand: escrow.demand,
+          escrowAttestation: escrow.attestation,
           decision,
         };
       }),
@@ -467,6 +468,7 @@ export const makeOracleClient = (
           attestation: Attestation;
           statement: DecodeAbiParametersReturnType<StatementData>;
           demand: DecodeAbiParametersReturnType<DemandData>;
+          escrowAttestation: Attestation;
           decision: boolean | null;
         }) => Promise<void>;
         pollingInterval?: number;
@@ -596,6 +598,7 @@ export const makeOracleClient = (
                 attestation,
                 statement,
                 demand: escrow.demand,
+                escrowAttestation: escrow.attestation,
                 decision: _decision,
               };
 
@@ -607,6 +610,7 @@ export const makeOracleClient = (
                     attestation: Attestation;
                     statement: DecodeAbiParametersReturnType<StatementData>;
                     demand: DecodeAbiParametersReturnType<DemandData>;
+                    escrowAttestation: Attestation;
                     decision: boolean | null;
                   },
                 );
