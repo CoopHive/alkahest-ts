@@ -88,6 +88,9 @@ export const makeOracleClient = (
   const attestedEvent = parseAbiItem(
     "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)",
   );
+  const arbitrationMadeEvent = parseAbiItem(
+    "event ArbitrationMade(bytes32 indexed statement, address indexed oracle, bool decision)",
+  );
   const arbiterDemandAbi = parseAbiParameters(
     "(address arbiter, bytes demand)",
   );
@@ -151,7 +154,10 @@ export const makeOracleClient = (
     });
 
   const arbitratePast = async <T extends readonly AbiParameter[]>(
-    params: ArbitrateParams<T>,
+    params: ArbitrateParams<T> & {
+      onlyIfEscrowDemandsCurrentOracle?: boolean;
+      skipAlreadyArbitrated?: boolean;
+    },
   ) => {
     const statements = await getStatements(
       params.fulfillment,
@@ -161,10 +167,56 @@ export const makeOracleClient = (
     const decisions = (
       await Promise.all(
         statements.map(async ({ attestation, statement }) => {
+          // Early return if escrow doesn't demand current oracle
+          if (params.onlyIfEscrowDemandsCurrentOracle && !attestation.refUID) {
+            return null;
+          }
+
+          if (params.onlyIfEscrowDemandsCurrentOracle) {
+            const escrowAttestation = await getAttestation(
+              viemClient,
+              attestation.refUID,
+              addresses,
+            );
+            if (!escrowAttestation) return null;
+
+            try {
+              const trustedOracleDemand = decodeAbiParameters(
+                trustedOracleDemandAbi,
+                escrowAttestation.data,
+              )[0];
+              if (
+                trustedOracleDemand.oracle.toLowerCase() !==
+                viemClient.account.address.toLowerCase()
+              ) {
+                return null; // Skip not matching oracle
+              }
+            } catch {
+              return null; // Skip if decoding fails
+            }
+          }
+
+          if (params.skipAlreadyArbitrated) {
+            const existingLogs = await viemClient.getLogs({
+              address: addresses.trustedOracleArbiter,
+              event: arbitrationMadeEvent,
+              args: { 
+                statement: attestation.uid, 
+                oracle: viemClient.account.address 
+              },
+              fromBlock: "earliest",
+              toBlock: "latest",
+            });
+            
+            if (existingLogs.length > 0) {
+              return null; // Skip if already arbitrated
+            }
+          }
+
           const decision = await params.arbitrate(statement);
           if (decision === null) return null;
+          
           const hash = await arbitrateOnchain(attestation.uid, decision);
-
           return { hash, attestation, statement, decision };
         }),
       )
@@ -177,7 +229,9 @@ export const makeOracleClient = (
     StatementData extends readonly AbiParameter[],
     DemandData extends readonly AbiParameter[],
   >(
-    params: ArbitrateEscrowParams<StatementData, DemandData>,
+    params: ArbitrateEscrowParams<StatementData, DemandData> & {
+      skipAlreadyArbitrated?: boolean;
+    },
   ) => {
     const escrowsP = getStatements(params.escrow, arbiterDemandAbi)
       .then((statements) =>
@@ -232,17 +286,37 @@ export const makeOracleClient = (
     const decisions = await Promise.all(
       fulfillments.map(async ($) => {
         if (!escrowsMap.has($.attestation.refUID)) return null;
+        
         const escrow = escrowsMap.get($.attestation.refUID)!;
+
+        // Early return if already arbitrated
+        if (params.skipAlreadyArbitrated) {
+          const existingLogs = await viemClient.getLogs({
+            address: addresses.trustedOracleArbiter,
+            event: arbitrationMadeEvent,
+            args: { 
+              statement: $.attestation.uid, 
+              oracle: viemClient.account.address 
+            },
+            fromBlock: "earliest",
+            toBlock: "latest",
+          });
+          
+          if (existingLogs.length > 0) {
+            return null; // Skip if already arbitrated
+          }
+        }
 
         const decision = await params.arbitrate($.statement, escrow.demand);
         if (decision === null) return null;
+        
         const hash = await arbitrateOnchain($.attestation.uid, decision);
-
         return {
           hash,
           attestation: $.attestation,
           statement: $.statement,
           demand: escrow.demand,
+          escrowAttestation: escrow.attestation,
           decision,
         };
       }),
@@ -255,6 +329,8 @@ export const makeOracleClient = (
     arbitratePast,
     listenAndArbitrate: async <StatementData extends readonly AbiParameter[]>(
       params: ArbitrateParams<StatementData> & {
+        onlyIfEscrowDemandsCurrentOracle?: boolean;
+        skipAlreadyArbitrated?: boolean;
         onAfterArbitrate?: (decision: {
           hash: `0x${string}`;
           attestation: Attestation;
@@ -303,6 +379,50 @@ export const makeOracleClient = (
                 )
                   return;
 
+                if (
+                  params.onlyIfEscrowDemandsCurrentOracle &&
+                  attestation.refUID // Check if there's a referenced escrow
+                ) {
+                  const escrowAttestation = await getAttestation(
+                    viemClient,
+                    attestation.refUID,
+                    addresses,
+                  );
+                  if (!escrowAttestation) return;
+
+                  try {
+                    const trustedOracleDemand = decodeAbiParameters(
+                      trustedOracleDemandAbi,
+                      escrowAttestation.data,
+                    )[0];
+                    if (
+                      trustedOracleDemand.oracle.toLowerCase() !==
+                      viemClient.account.address.toLowerCase()
+                    )
+                      return; // Skip if the oracle doesn't match
+                  } catch {
+                    return; // Skip if decoding fails
+                  }
+                }
+
+                // Check if arbitration already exists if skipAlreadyArbitrated is enabled
+                if (params.skipAlreadyArbitrated) {
+                  const existingLogs = await viemClient.getLogs({
+                    address: addresses.trustedOracleArbiter,
+                    event: arbitrationMadeEvent,
+                    args: { 
+                      statement: attestation.uid, 
+                      oracle: viemClient.account.address 
+                    },
+                    fromBlock: "earliest",
+                    toBlock: "latest",
+                  });
+                  
+                  if (existingLogs.length > 0) {
+                    return; // Skip if already arbitrated
+                  }
+                }
+
                 const statement = decodeAbiParameters(
                   params.fulfillment.statementAbi,
                   attestation.data,
@@ -342,11 +462,13 @@ export const makeOracleClient = (
       DemandData extends readonly AbiParameter[],
     >(
       params: ArbitrateEscrowParams<StatementData, DemandData> & {
+        skipAlreadyArbitrated?: boolean;
         onAfterArbitrate?: (decision: {
           hash: `0x${string}`;
           attestation: Attestation;
           statement: DecodeAbiParametersReturnType<StatementData>;
           demand: DecodeAbiParametersReturnType<DemandData>;
+          escrowAttestation: Attestation;
           decision: boolean | null;
         }) => Promise<void>;
         pollingInterval?: number;
@@ -441,6 +563,24 @@ export const makeOracleClient = (
 
               const escrow = escrowsMap.get(attestation.refUID)!;
 
+              // Check if arbitration already exists if skipAlreadyArbitrated is enabled
+              if (params.skipAlreadyArbitrated) {
+                const existingLogs = await viemClient.getLogs({
+                  address: addresses.trustedOracleArbiter,
+                  event: arbitrationMadeEvent,
+                  args: { 
+                    statement: attestation.uid, 
+                    oracle: viemClient.account.address 
+                  },
+                  fromBlock: "earliest",
+                  toBlock: "latest",
+                });
+                
+                if (existingLogs.length > 0) {
+                  return; // Skip if already arbitrated
+                }
+              }
+
               const statement = decodeAbiParameters(
                 params.fulfillment.statementAbi,
                 attestation.data,
@@ -458,6 +598,7 @@ export const makeOracleClient = (
                 attestation,
                 statement,
                 demand: escrow.demand,
+                escrowAttestation: escrow.attestation,
                 decision: _decision,
               };
 
@@ -469,6 +610,7 @@ export const makeOracleClient = (
                     attestation: Attestation;
                     statement: DecodeAbiParametersReturnType<StatementData>;
                     demand: DecodeAbiParametersReturnType<DemandData>;
+                    escrowAttestation: Attestation;
                     decision: boolean | null;
                   },
                 );
