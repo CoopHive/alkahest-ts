@@ -382,7 +382,7 @@ test("conditionalArbitratePastEscrow", async () => {
   });
 
   decisions.decisions.forEach(($) =>
-    expect($!.demand[0].mockDemand === $!.statement[0].item).toBe($!.decision),
+    expect($!.demand[0].mockDemand === $!.statement[0].item).toBe($!.decision !== null ? $!.decision : false),
   );
 
   const failedCollection = testContext.bobClient.erc20.collectPayment(
@@ -595,7 +595,7 @@ test("arbitratePastForEscrow with skipAlreadyArbitrated option", async () => {
 
   // Wait for the transaction to be confirmed
   await testContext.testClient.waitForTransactionReceipt({
-    hash: firstDecisions[0]!.hash,
+    hash: firstDecisions[0]?.hash!,
   });
 
   // Second arbitration with skipAlreadyArbitrated: true should skip re-arbitration

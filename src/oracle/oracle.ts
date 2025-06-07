@@ -300,11 +300,15 @@ export const makeOracleClient = (
     StatementData extends readonly AbiParameter[],
     DemandData extends readonly AbiParameter[],
   >(
-    params: ArbitrateEscrowParams<StatementData, DemandData> & {
-      skipAlreadyArbitrated?: boolean;
-    },
+    params: ArbitrateEscrowParams<StatementData, DemandData> & EnhancedArbitrateFilters,
   ) => {
-    const escrowsP = getStatements(params.escrow, arbiterDemandAbi)
+    // Get statements with block range filtering
+    const blockRange = {
+      fromBlock: params.fromBlock || "earliest",
+      toBlock: params.toBlock || "latest",
+    };
+
+    const escrowsP = getStatements(params.escrow, arbiterDemandAbi, blockRange)
       .then((statements) =>
         Promise.all(
           statements
@@ -314,6 +318,16 @@ export const makeOracleClient = (
                 addresses.trustedOracleArbiter.toLowerCase(),
             )
             .map(async ({ log, attestation, statement }) => {
+              // Apply time-based filters to escrow attestations
+              if (!passesTimeFilters(attestation, params)) {
+                return null;
+              }
+
+              // Apply attestation property filters to escrow attestations
+              if (!passesAttestationFilters(attestation, params)) {
+                return null;
+              }
+
               const trustedOracleDemand = decodeAbiParameters(
                 trustedOracleDemandAbi,
                 statement[0].demand,
@@ -344,6 +358,7 @@ export const makeOracleClient = (
     const fulfillmentsP = getStatements(
       params.fulfillment,
       params.fulfillment.statementAbi,
+      blockRange,
     );
 
     const [escrows, fulfillments] = await Promise.all([
@@ -351,11 +366,34 @@ export const makeOracleClient = (
       fulfillmentsP,
     ]);
 
+    // Apply batch size limiting and prioritization to fulfillments
+    let filteredFulfillments = fulfillments;
+
+    if (params.prioritizeRecent) {
+      filteredFulfillments = filteredFulfillments.sort((a, b) =>
+        Number(b.attestation.time - a.attestation.time),
+      );
+    }
+
+    if (params.maxStatements) {
+      filteredFulfillments = filteredFulfillments.slice(0, params.maxStatements);
+    }
+
     const escrowsMap = new Map<`0x${string}`, (typeof escrows)[0]>();
     escrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
 
     const decisions = await Promise.all(
-      fulfillments.map(async ($) => {
+      filteredFulfillments.map(async ($) => {
+        // Apply time-based filters to fulfillment attestations
+        if (!passesTimeFilters($.attestation, params)) {
+          return null;
+        }
+
+        // Apply attestation property filters to fulfillment attestations
+        if (!passesAttestationFilters($.attestation, params)) {
+          return null;
+        }
+
         if (!escrowsMap.has($.attestation.refUID)) return null;
 
         const escrow = escrowsMap.get($.attestation.refUID)!;
@@ -378,8 +416,42 @@ export const makeOracleClient = (
           }
         }
 
+        // Dry run mode - only simulate
+        if (params.dryRun) {
+          const decision = await params.arbitrate($.statement, escrow.demand);
+          return {
+            simulated: true,
+            attestation: $.attestation,
+            statement: $.statement,
+            demand: escrow.demand,
+            escrowAttestation: escrow.attestation,
+            decision,
+            estimatedGas: null, // Could add gas estimation here
+          };
+        }
+
         const decision = await params.arbitrate($.statement, escrow.demand);
         if (decision === null) return null;
+
+        // Gas limit check (if specified)
+        if (params.maxGasPerTx) {
+          try {
+            const gasEstimate = await viemClient.estimateContractGas({
+              address: addresses.trustedOracleArbiter,
+              abi: trustedOracleArbiterAbi.abi,
+              functionName: "arbitrate",
+              args: [$.attestation.uid, decision],
+              account: viemClient.account,
+            });
+
+            if (gasEstimate > params.maxGasPerTx) {
+              return null; // Skip if gas exceeds limit
+            }
+          } catch {
+            // If gas estimation fails, skip or continue based on skipValidation
+            if (!params.skipValidation) return null;
+          }
+        }
 
         const hash = await arbitrateOnchain($.attestation.uid, decision);
         return {
@@ -393,7 +465,7 @@ export const makeOracleClient = (
       }),
     );
 
-    return { decisions, escrows, fulfillments };
+    return { decisions: decisions.filter(($) => $ !== null), escrows, fulfillments };
   };
 
   return {
