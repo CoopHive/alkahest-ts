@@ -508,9 +508,14 @@ test("arbitratePast with skipAlreadyArbitrated option", async () => {
   expect(firstDecisions[0]?.decision).toBe(true);
 
   // Wait for the transaction to be confirmed
-  await testContext.testClient.waitForTransactionReceipt({
-    hash: firstDecisions[0]!.hash,
-  });
+  const firstDecision = firstDecisions[0];
+  if (firstDecision && 'hash' in firstDecision && firstDecision.hash) {
+    await testContext.testClient.waitForTransactionReceipt({
+      hash: firstDecision.hash,
+    });
+  } else {
+    throw new Error("Expected first decision to have a hash");
+  }
 
   // Second arbitration with skipAlreadyArbitrated: false should attempt to arbitrate again
   const { decisions: secondDecisions } =

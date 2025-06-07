@@ -6,7 +6,13 @@ import {
   type Address,
   type DecodeAbiParametersReturnType,
 } from "viem";
-import type { Attestation, ChainAddresses } from "../types";
+import type { 
+  Attestation, 
+  ChainAddresses, 
+  EnhancedArbitrateFilters,
+  TimeFilters,
+  AttestationFilters,
+} from "../types";
 import { getAttestation, type ViemClient } from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
@@ -68,12 +74,12 @@ const validateAttestationIntrinsics = (
     return false;
 
   if (
-    attestation.expirationTime !== 0n &&
+    attestation.expirationTime !== BigInt(0) &&
     attestation.expirationTime < Date.now() / 1000
   )
     return false;
   if (
-    attestation.revocationTime !== 0n &&
+    attestation.revocationTime !== BigInt(0) &&
     attestation.revocationTime < Date.now() / 1000
   )
     return false;
@@ -107,6 +113,10 @@ export const makeOracleClient = (
       refUID?: `0x${string}` | `0x${string}`[];
     },
     statementAbi: StatementData,
+    blockRange?: {
+      fromBlock?: bigint | "earliest";
+      toBlock?: bigint | "latest";
+    },
   ) => {
     const logs = (
       await viemClient.getLogs({
@@ -117,8 +127,8 @@ export const makeOracleClient = (
           attester: filterArgs.attester,
           schemaUID: filterArgs.schemaUID,
         },
-        fromBlock: "earliest",
-        toBlock: "latest",
+        fromBlock: blockRange?.fromBlock || "earliest",
+        toBlock: blockRange?.toBlock || "latest",
       })
     ).filter(($) => !filterArgs.uid || $.args.uid === filterArgs.uid);
 
@@ -151,22 +161,51 @@ export const makeOracleClient = (
       abi: trustedOracleArbiterAbi.abi,
       functionName: "arbitrate",
       args: [statementUid, decision],
+      account: viemClient.account,
+      chain: viemClient.chain,
     });
 
   const arbitratePast = async <T extends readonly AbiParameter[]>(
-    params: ArbitrateParams<T> & {
-      onlyIfEscrowDemandsCurrentOracle?: boolean;
-      skipAlreadyArbitrated?: boolean;
-    },
+    params: ArbitrateParams<T> & EnhancedArbitrateFilters,
   ) => {
+    // Get statements with block range filtering
+    const blockRange = {
+      fromBlock: params.fromBlock || "earliest",
+      toBlock: params.toBlock || "latest",
+    };
+
     const statements = await getStatements(
       params.fulfillment,
       params.fulfillment.statementAbi,
+      blockRange,
     );
+
+    // Apply batch size limiting and prioritization
+    let filteredStatements = statements;
+
+    if (params.prioritizeRecent) {
+      filteredStatements = filteredStatements.sort((a, b) =>
+        Number(b.attestation.time - a.attestation.time),
+      );
+    }
+
+    if (params.maxStatements) {
+      filteredStatements = filteredStatements.slice(0, params.maxStatements);
+    }
 
     const decisions = (
       await Promise.all(
-        statements.map(async ({ attestation, statement }) => {
+        filteredStatements.map(async ({ attestation, statement }) => {
+          // Apply time-based filters
+          if (!passesTimeFilters(attestation, params)) {
+            return null;
+          }
+
+          // Apply attestation property filters
+          if (!passesAttestationFilters(attestation, params)) {
+            return null;
+          }
+
           // Early return if escrow doesn't demand current oracle
           if (params.onlyIfEscrowDemandsCurrentOracle && !attestation.refUID) {
             return null;
@@ -200,29 +239,61 @@ export const makeOracleClient = (
             const existingLogs = await viemClient.getLogs({
               address: addresses.trustedOracleArbiter,
               event: arbitrationMadeEvent,
-              args: { 
-                statement: attestation.uid, 
-                oracle: viemClient.account.address 
+              args: {
+                statement: attestation.uid,
+                oracle: viemClient.account.address,
               },
               fromBlock: "earliest",
               toBlock: "latest",
             });
-            
+
             if (existingLogs.length > 0) {
               return null; // Skip if already arbitrated
             }
           }
 
+          // Dry run mode - only simulate
+          if (params.dryRun) {
+            const decision = await params.arbitrate(statement);
+            return {
+              simulated: true,
+              attestation,
+              statement,
+              decision,
+              estimatedGas: null, // Could add gas estimation here
+            };
+          }
+
           const decision = await params.arbitrate(statement);
           if (decision === null) return null;
-          
+
+          // Gas limit check (if specified)
+          if (params.maxGasPerTx) {
+            try {
+              const gasEstimate = await viemClient.estimateContractGas({
+                address: addresses.trustedOracleArbiter,
+                abi: trustedOracleArbiterAbi.abi,
+                functionName: "arbitrate",
+                args: [attestation.uid, decision],
+                account: viemClient.account,
+              });
+
+              if (gasEstimate > params.maxGasPerTx) {
+                return null; // Skip if gas exceeds limit
+              }
+            } catch {
+              // If gas estimation fails, skip or continue based on skipValidation
+              if (!params.skipValidation) return null;
+            }
+          }
+
           const hash = await arbitrateOnchain(attestation.uid, decision);
           return { hash, attestation, statement, decision };
         }),
       )
     ).filter(($) => $ !== null);
 
-    return { decisions, fulfillments: statements };
+    return { decisions, fulfillments: filteredStatements };
   };
 
   const arbitratePastForEscrow = async <
@@ -286,7 +357,7 @@ export const makeOracleClient = (
     const decisions = await Promise.all(
       fulfillments.map(async ($) => {
         if (!escrowsMap.has($.attestation.refUID)) return null;
-        
+
         const escrow = escrowsMap.get($.attestation.refUID)!;
 
         // Early return if already arbitrated
@@ -294,14 +365,14 @@ export const makeOracleClient = (
           const existingLogs = await viemClient.getLogs({
             address: addresses.trustedOracleArbiter,
             event: arbitrationMadeEvent,
-            args: { 
-              statement: $.attestation.uid, 
-              oracle: viemClient.account.address 
+            args: {
+              statement: $.attestation.uid,
+              oracle: viemClient.account.address,
             },
             fromBlock: "earliest",
             toBlock: "latest",
           });
-          
+
           if (existingLogs.length > 0) {
             return null; // Skip if already arbitrated
           }
@@ -309,7 +380,7 @@ export const makeOracleClient = (
 
         const decision = await params.arbitrate($.statement, escrow.demand);
         if (decision === null) return null;
-        
+
         const hash = await arbitrateOnchain($.attestation.uid, decision);
         return {
           hash,
@@ -628,4 +699,54 @@ export const makeOracleClient = (
       return { decisions, unwatch };
     },
   };
+};
+
+// Helper function to check if attestation passes time filters
+const passesTimeFilters = (attestation: any, filters: TimeFilters): boolean => {
+  const currentTime = BigInt(Math.floor(Date.now() / 1000));
+
+  if (filters.minTime && attestation.time < filters.minTime) return false;
+  if (filters.maxTime && attestation.time > filters.maxTime) return false;
+
+  if (
+    filters.excludeExpired &&
+    attestation.expirationTime > BigInt(0) &&
+    currentTime > attestation.expirationTime
+  ) {
+    return false;
+  }
+
+  if (filters.minAge && (currentTime - attestation.time) < filters.minAge)
+    return false;
+  if (filters.maxAge && (currentTime - attestation.time) > filters.maxAge)
+    return false;
+
+  return true;
+};
+
+// Helper function to check if attestation passes property filters
+const passesAttestationFilters = (attestation: any, filters: AttestationFilters): boolean => {
+  if (filters.specificAttester && attestation.attester.toLowerCase() !== filters.specificAttester.toLowerCase()) {
+    return false;
+  }
+
+  if (filters.excludeAttesters?.some(attester => 
+    attestation.attester.toLowerCase() === attester.toLowerCase()
+  )) {
+    return false;
+  }
+
+  if (filters.specificRecipient && attestation.recipient.toLowerCase() !== filters.specificRecipient.toLowerCase()) {
+    return false;
+  }
+
+  if (filters.excludeRevoked && attestation.revocationTime > BigInt(0)) return false;
+
+  if (filters.requireRefUID && !attestation.refUID) return false;
+
+  if (filters.specificSchema && attestation.schema.toLowerCase() !== filters.specificSchema.toLowerCase()) {
+    return false;
+  }
+
+  return true;
 };
