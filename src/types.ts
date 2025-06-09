@@ -1,4 +1,4 @@
-import type { Hex } from "viem";
+import type { Hex, BlockNumber, BlockTag } from "viem";
 
 export type ChainAddresses = {
   eas: `0x${string}`;
@@ -152,10 +152,10 @@ export interface AttestationFilters {
 }
 
 export interface BlockFilters {
-  /** Start from specific block number or "earliest" */
-  fromBlock?: bigint | "earliest";
-  /** End at specific block number or "latest" */
-  toBlock?: bigint | "latest";
+  /** Start from specific block number or block tag */
+  fromBlock?: BlockNumber | BlockTag;
+  /** End at specific block number or block tag */
+  toBlock?: BlockNumber | BlockTag;
   /** Limit the block range to prevent timeouts */
   maxBlockRange?: bigint;
 }

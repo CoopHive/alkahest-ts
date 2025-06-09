@@ -5,6 +5,8 @@ import {
   type AbiParameter,
   type Address,
   type DecodeAbiParametersReturnType,
+  type BlockNumber,
+  type BlockTag,
 } from "viem";
 import type { 
   Attestation, 
@@ -114,8 +116,8 @@ export const makeOracleClient = (
     },
     statementAbi: StatementData,
     blockRange?: {
-      fromBlock?: bigint | "earliest";
-      toBlock?: bigint | "latest";
+      fromBlock?: BlockNumber | BlockTag;
+      toBlock?: BlockNumber | BlockTag;
     },
   ) => {
     const logs = (
