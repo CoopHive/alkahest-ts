@@ -257,12 +257,30 @@ export const makeOracleClient = (
           // Dry run mode - only simulate
           if (params.dryRun) {
             const decision = await params.arbitrate(statement);
+            let estimatedGas: bigint | null = null;
+            
+            // Estimate gas for the transaction if decision is not null
+            if (decision !== null) {
+              try {
+                estimatedGas = await viemClient.estimateContractGas({
+                  address: addresses.trustedOracleArbiter,
+                  abi: trustedOracleArbiterAbi.abi,
+                  functionName: "arbitrate",
+                  args: [attestation.uid, decision],
+                  account: viemClient.account,
+                });
+              } catch {
+                // If gas estimation fails, keep as null
+                estimatedGas = null;
+              }
+            }
+            
             return {
               simulated: true,
               attestation,
               statement,
               decision,
-              estimatedGas: null, // Could add gas estimation here
+              estimatedGas,
             };
           }
 
@@ -421,6 +439,24 @@ export const makeOracleClient = (
         // Dry run mode - only simulate
         if (params.dryRun) {
           const decision = await params.arbitrate($.statement, escrow.demand);
+          let estimatedGas: bigint | null = null;
+          
+          // Estimate gas for the transaction if decision is not null
+          if (decision !== null) {
+            try {
+              estimatedGas = await viemClient.estimateContractGas({
+                address: addresses.trustedOracleArbiter,
+                abi: trustedOracleArbiterAbi.abi,
+                functionName: "arbitrate",
+                args: [$.attestation.uid, decision],
+                account: viemClient.account,
+              });
+            } catch {
+              // If gas estimation fails, keep as null
+              estimatedGas = null;
+            }
+          }
+          
           return {
             simulated: true,
             attestation: $.attestation,
@@ -428,7 +464,7 @@ export const makeOracleClient = (
             demand: escrow.demand,
             escrowAttestation: escrow.attestation,
             decision,
-            estimatedGas: null, // Could add gas estimation here
+            estimatedGas,
           };
         }
 
