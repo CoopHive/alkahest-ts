@@ -382,7 +382,7 @@ test("conditionalArbitratePastEscrow", async () => {
   });
 
   decisions.decisions.forEach(($) =>
-    expect($!.demand[0].mockDemand === $!.statement[0].item).toBe($!.decision),
+    expect($!.demand[0].mockDemand === $!.statement[0].item).toBe($!.decision !== null ? $!.decision : false),
   );
 
   const failedCollection = testContext.bobClient.erc20.collectPayment(
@@ -508,9 +508,14 @@ test("arbitratePast with skipAlreadyArbitrated option", async () => {
   expect(firstDecisions[0]?.decision).toBe(true);
 
   // Wait for the transaction to be confirmed
-  await testContext.testClient.waitForTransactionReceipt({
-    hash: firstDecisions[0]!.hash,
-  });
+  const firstDecision = firstDecisions[0];
+  if (firstDecision && 'hash' in firstDecision && firstDecision.hash) {
+    await testContext.testClient.waitForTransactionReceipt({
+      hash: firstDecision.hash,
+    });
+  } else {
+    throw new Error("Expected first decision to have a hash");
+  }
 
   // Second arbitration with skipAlreadyArbitrated: false should attempt to arbitrate again
   const { decisions: secondDecisions } =
@@ -590,7 +595,7 @@ test("arbitratePastForEscrow with skipAlreadyArbitrated option", async () => {
 
   // Wait for the transaction to be confirmed
   await testContext.testClient.waitForTransactionReceipt({
-    hash: firstDecisions[0]!.hash,
+    hash: firstDecisions[0]?.hash!,
   });
 
   // Second arbitration with skipAlreadyArbitrated: true should skip re-arbitration

@@ -1,4 +1,4 @@
-import type { Hex } from "viem";
+import type { Hex, BlockNumber, BlockTag } from "viem";
 
 export type ChainAddresses = {
   eas: `0x${string}`;
@@ -121,3 +121,71 @@ export type Attestation = {
   revocable: boolean;
   data: `0x${string}`;
 };
+
+// Enhanced filter types for arbitratePast function
+export interface TimeFilters {
+  /** Only process attestations after this timestamp (Unix timestamp in seconds) */
+  minTime?: bigint;
+  /** Only process attestations before this timestamp (Unix timestamp in seconds) */
+  maxTime?: bigint;
+  /** Skip attestations past their expiration time */
+  excludeExpired?: boolean;
+  /** Only process attestations older than this duration (seconds) */
+  minAge?: bigint;
+  /** Only process attestations newer than this duration (seconds) */
+  maxAge?: bigint;
+}
+
+export interface AttestationFilters {
+  /** Only process attestations from specific attester */
+  specificAttester?: string;
+  /** Skip attestations from these attesters */
+  excludeAttesters?: string[];
+  /** Only process attestations for specific recipient */
+  specificRecipient?: string;
+  /** Skip revoked attestations */
+  excludeRevoked?: boolean;
+  /** Only process attestations with reference UID */
+  requireRefUID?: boolean;
+  /** Only process attestations with specific schema */
+  specificSchema?: string;
+}
+
+export interface BlockFilters {
+  /** Start from specific block number or block tag */
+  fromBlock?: BlockNumber | BlockTag;
+  /** End at specific block number or block tag */
+  toBlock?: BlockNumber | BlockTag;
+  /** Limit the block range to prevent timeouts */
+  maxBlockRange?: bigint;
+}
+
+export interface BatchFilters {
+  /** Limit number of statements to process */
+  maxStatements?: number;
+  /** Process recent attestations first */
+  prioritizeRecent?: boolean;
+  /** Process in batches of this size */
+  batchSize?: number;
+}
+
+export interface PerformanceFilters {
+  /** Skip if estimated gas exceeds limit */
+  maxGasPerTx?: bigint;
+  /** Only simulate, don't execute transactions */
+  dryRun?: boolean;
+  /** Skip validation for faster processing */
+  skipValidation?: boolean;
+}
+
+export interface EnhancedArbitrateFilters extends
+  TimeFilters,
+  AttestationFilters,
+  BlockFilters,
+  BatchFilters,
+  PerformanceFilters {
+  /** Only arbitrate if escrow demands current oracle */
+  onlyIfEscrowDemandsCurrentOracle?: boolean;
+  /** Skip statements that have already been arbitrated */
+  skipAlreadyArbitrated?: boolean;
+}
