@@ -36,16 +36,17 @@ export const makeStringObligationClient = (
   };
 
   const makeStatement = async (item: string, refUid?: `0x${string}`) => {
-    const hash = await viemClient.writeContract({
-      address: addresses.stringObligation,
-      abi: stringObligationAbi.abi,
-      functionName: "makeStatement",
-      args: [
-        { item },
-        refUid ??
-          "0x0000000000000000000000000000000000000000000000000000000000000000", // bytes32 0
-      ],
-    });
+    const {request} = await viemClient.simulateContract({
+        address: addresses.stringObligation,
+        abi: stringObligationAbi.abi,
+        functionName: "makeStatement",
+        args: [
+          { item },
+          refUid ??
+            "0x0000000000000000000000000000000000000000000000000000000000000000", // bytes32 0
+        ],
+      });
+    const hash = await viemClient.writeContract(request);
 
     const attested = await getAttestedEventFromTxHash(viemClient, hash);
     return { hash, attested };

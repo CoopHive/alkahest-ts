@@ -35,7 +35,12 @@ export const getAttestedEventFromTxHash = async (
   client: ViemClient,
   hash: `0x${string}`,
 ) => {
-  const tx = await client.waitForTransactionReceipt({ hash });
+  let tx;
+  try {
+    tx = await client.waitForTransactionReceipt({ hash });
+  } catch (error) {
+    throw new Error(`Failed to get transaction receipt for ${hash}: ${error}`);
+  }
   const events = parseEventLogs({
     abi: iEasAbi.abi,
     eventName: "Attested",

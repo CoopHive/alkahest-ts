@@ -289,12 +289,20 @@ export const makeErc20Client = (
       buyAttestation: `0x${string}`,
       fulfillment: `0x${string}`,
     ) => {
-      const hash = await viemClient.writeContract({
-        address: addresses.erc20EscrowObligation,
-        abi: erc20EscrowAbi.abi,
-        functionName: "collectPayment",
-        args: [buyAttestation, fulfillment],
-      });
+      let hash;
+      try {
+       const {request} = await viemClient.simulateContract({
+          address: addresses.erc20EscrowObligation,
+          abi: erc20EscrowAbi.abi,
+          functionName: "collectPayment",
+          args: [buyAttestation, fulfillment],
+        });
+        hash = await viemClient.writeContract(request);
+      } catch (error) {
+        throw new Error(
+          `Failed to collect payment for ${buyAttestation} with fulfillment ${fulfillment}: ${error}`,
+        );
+      }
       return hash;
     },
 
