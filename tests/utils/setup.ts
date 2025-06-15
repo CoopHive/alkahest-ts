@@ -262,7 +262,9 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   // Deploy arbiters
   addresses.trivialArbiter = await deployContract(TrivialArbiter);
   addresses.trustedPartyArbiter = await deployContract(TrustedPartyArbiter);
-  addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter);
+    addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter, [
+    addresses.eas,
+  ]);
   addresses.specificAttestationArbiter = await deployContract(
     SpecificAttestationArbiter,
   );

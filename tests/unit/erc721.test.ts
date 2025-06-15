@@ -204,20 +204,17 @@ describe("ERC721 Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       // First create a buy attestation with Bob escrowing Erc20
-      console.log("bob approves");
       await bobClient.erc20.approve(
         { address: bobErc20Token, value: erc20Amount },
         "escrow",
       );
 
-      console.log("bob buys");
       const { attested: buyAttestation } =
         await bobClient.erc20.buyErc721WithErc20(
           { address: bobErc20Token, value: erc20Amount },
           { address: aliceErc721Token, id: aliceTokenId },
           expiration,
         );
-      console.log(`attestation: ${buyAttestation.uid}`);
 
       // Check balances before the exchange
       const aliceInitialBalanceErc20 = await testClient.getErc20Balance(
@@ -225,17 +222,14 @@ describe("ERC721 Tests", () => {
         alice,
       );
 
-      console.log("alice approves");
       // Alice approves and fulfills the escrow with her Erc721
       await aliceClient.erc721.approve(
         { address: aliceErc721Token, id: aliceTokenId },
         "payment",
       );
 
-      console.log("alice pays");
       const { attested: payAttestation } =
         await aliceClient.erc721.payErc721ForErc20(buyAttestation.uid);
-      console.log(`pay attestation: ${payAttestation.uid}`);
 
       // Assert the payment attestation was created
       expect(payAttestation.uid).not.toBe(

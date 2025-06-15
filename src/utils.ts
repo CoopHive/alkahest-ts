@@ -35,12 +35,23 @@ export const getAttestedEventFromTxHash = async (
   client: ViemClient,
   hash: `0x${string}`,
 ) => {
-  const tx = await client.waitForTransactionReceipt({ hash });
-  return parseEventLogs({
+  let tx;
+  try {
+    tx = await client.waitForTransactionReceipt({ hash });
+  } catch (error) {
+    throw new Error(`Failed to get transaction receipt for ${hash}: ${error}`);
+  }
+  const events = parseEventLogs({
     abi: iEasAbi.abi,
     eventName: "Attested",
     logs: tx.logs,
-  })[0].args;
+  });
+  
+  if (events.length === 0) {
+    throw new Error(`No Attested event found in transaction ${hash}`);
+  }
+  
+  return events[0].args;
 };
 
 export const flattenTokenBundle = (bundle: TokenBundle): TokenBundleFlat => ({
