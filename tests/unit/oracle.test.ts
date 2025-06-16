@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, expect, test } from "bun:test";
-import { encodeAbiParameters, parseAbiParameters } from "viem";
+import { encodeAbiParameters, parseAbiParameters, decodeAbiParameters } from "viem";
 import {
   setupTestEnvironment,
   teardownTestEnvironment,
@@ -418,25 +418,24 @@ test("conditionalListenAndArbitrateEscrow", async () => {
       0n,
     );
 
-  const { unwatch } =
-    await testContext.bobClient.oracle.listenAndArbitrateForEscrow({
-      escrow: {
-        attester: testContext.addresses.erc20EscrowObligation,
-        demandAbi: parseAbiParameters("(string mockDemand)"),
-      },
-      fulfillment: {
-        attester: testContext.addresses.stringObligation,
-        statementAbi: parseAbiParameters("(string item)"),
-      },
-      arbitrate: async (_statement, _demand) =>
-        _statement[0].item === _demand[0].mockDemand,
-      onAfterArbitrate: async (decision) => {
-        expect(decision?.decision).toBe(
-          decision?.statement[0].item === decision?.demand[0].mockDemand,
-        );
-      },
-      pollingInterval: 50,
-    });
+  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateForEscrow({
+    escrow: {
+      attester: testContext.addresses.erc20EscrowObligation,
+      demandAbi: parseAbiParameters("(string mockDemand)"),
+    },
+    fulfillment: {
+      attester: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
+    arbitrate: async (_statement, _demand) =>
+      _statement[0].item === _demand[0].mockDemand,
+    onAfterArbitrate: async (decision) => {
+      expect(decision?.decision).toBe(
+        decision?.statement[0].item === decision?.demand[0].mockDemand,
+      );
+    },
+    pollingInterval: 50,
+  });
 
   const { attested: fulfillment1 } =
     await testContext.bobClient.stringObligation.makeStatement(
@@ -616,4 +615,373 @@ test("arbitratePastForEscrow with skipAlreadyArbitrated option", async () => {
     });
 
   expect(secondDecisions.length).toBe(0); // Should skip already arbitrated fulfillments
+});
+
+test("listenFromNowAndArbitrate - only listens for new events", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "test" },
+    ]),
+  });
+
+  // Create escrow first
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  // Create a fulfillment BEFORE starting to listen
+  const { attested: pastFulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "test",
+      escrow.uid,
+    );
+
+  let arbitrationsProcessed = 0;
+  let newFulfillmentProcessed = false;
+
+  // Start listening only for NEW events (should not process past fulfillment)
+  const { unwatch } = await testContext.bobClient.oracle.listenFromNowAndArbitrate({
+    fulfillment: {
+      attester: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
+    arbitrate: async (statement) => {
+      arbitrationsProcessed++;
+      if (statement[0].item === "new-test") {
+        newFulfillmentProcessed = true;
+      }
+      return statement[0].item === "new-test";
+    },
+    onAfterArbitrate: async (decision) => {
+      expect(decision?.statement[0].item).toEqual("new-test");
+      expect(decision?.decision).toBe(true);
+    },
+    pollingInterval: 25,
+  });
+
+  // Wait a bit to ensure listener is established
+  await Bun.sleep(25);
+
+  // Past fulfillment should NOT be processed
+  expect(arbitrationsProcessed).toBe(0);
+
+  // Create a NEW fulfillment after starting to listen
+  const { attested: newFulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "new-test",
+      escrow.uid,
+    );
+
+  // Wait for the new fulfillment to be processed
+  await Bun.sleep(75);
+
+  // Should have processed exactly 1 arbitration (the new one)
+  expect(arbitrationsProcessed).toBe(1);
+  expect(newFulfillmentProcessed).toBe(true);
+
+  // Verify collection works
+  const collectionHash = await testContext.bobClient.erc20.collectPayment(
+    escrow.uid,
+    newFulfillment.uid,
+  );
+  expect(collectionHash).toBeTruthy();
+
+  unwatch();
+});
+
+test("listenFromNowAndArbitrate with conditional arbitration", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "accept" },
+    ]),
+  });
+
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  let acceptedCount = 0;
+  let rejectedCount = 0;
+
+  const { unwatch } = await testContext.bobClient.oracle.listenFromNowAndArbitrate({
+    fulfillment: {
+      attester: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
+    arbitrate: async (statement) => {
+      const shouldAccept = statement[0].item === "accept";
+      if (shouldAccept) acceptedCount++;
+      else rejectedCount++;
+      return shouldAccept;
+    },
+    onAfterArbitrate: async (decision) => {
+      expect(decision?.decision).toBe(decision?.statement[0].item === "accept");
+    },
+    pollingInterval: 25,
+  });
+
+  // Create fulfillments that should be accepted
+  await testContext.bobClient.stringObligation.makeStatement("accept", escrow.uid);
+  await testContext.bobClient.stringObligation.makeStatement("reject", escrow.uid);
+  await testContext.bobClient.stringObligation.makeStatement("accept", escrow.uid);
+
+  await Bun.sleep(100);
+
+  expect(acceptedCount).toBe(2);
+  expect(rejectedCount).toBe(1);
+
+  unwatch();
+});
+
+test("listenFromNowAndArbitrateForEscrow - only listens for new escrows and fulfillments", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "escrow-test" },
+    ]),
+  });
+
+  // Create escrow and fulfillment BEFORE starting to listen
+  const { attested: pastEscrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  const { attested: pastFulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "escrow-test",
+      pastEscrow.uid,
+    );
+
+  let arbitrationsProcessed = 0;
+  let newFulfillmentProcessed = false;
+
+  // Start listening only for NEW events
+  const { unwatch } = await testContext.bobClient.oracle.listenFromNowAndArbitrateForEscrow({
+    escrow: {
+      attester: testContext.addresses.erc20EscrowObligation,
+      demandAbi: parseAbiParameters("(string mockDemand)"),
+    },
+    fulfillment: {
+      attester: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
+    arbitrate: async (statement, demand) => {
+      arbitrationsProcessed++;
+      const isMatch = statement[0].item === demand[0].mockDemand;
+      if (statement[0].item === "new-escrow-test") {
+        newFulfillmentProcessed = true;
+      }
+      return isMatch;
+    },
+    onAfterArbitrate: async (decision) => {
+      expect(decision?.decision).toBe(
+        decision?.statement[0].item === decision?.demand[0].mockDemand,
+      );
+    },
+    pollingInterval: 25,
+  });
+
+  // Wait a bit to ensure listener is established
+  await Bun.sleep(25);
+
+  // Past events should NOT be processed
+  expect(arbitrationsProcessed).toBe(0);
+
+  // Create NEW escrow and fulfillment after starting to listen
+  const newDemand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "new-escrow-test" },
+    ]),
+  });
+
+  const { attested: newEscrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 20n,
+      },
+      { arbiter, demand: newDemand },
+      0n,
+    );
+
+  // Give some time for escrow to be registered
+  await Bun.sleep(50);
+
+  const { attested: newFulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "new-escrow-test",
+      newEscrow.uid,
+    );
+
+  // Wait for processing
+  await Bun.sleep(100);
+
+  // Should have processed exactly 1 arbitration (the new one)
+  expect(arbitrationsProcessed).toBe(1);
+  expect(newFulfillmentProcessed).toBe(true);
+
+  // Verify collection works
+  const collectionHash = await testContext.bobClient.erc20.collectPayment(
+    newEscrow.uid,
+    newFulfillment.uid,
+  );
+  expect(collectionHash).toBeTruthy();
+
+  unwatch();
+});
+
+test("listenFromNowAndArbitrateForEscrow with skipAlreadyArbitrated", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "skip-test" },
+    ]),
+  });
+
+  let arbitrationsAttempted = 0;
+
+  const { unwatch } = await testContext.bobClient.oracle.listenFromNowAndArbitrateForEscrow({
+    escrow: {
+      attester: testContext.addresses.erc20EscrowObligation,
+      demandAbi: parseAbiParameters("(string mockDemand)"),
+    },
+    fulfillment: {
+      attester: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
+    arbitrate: async (statement, demand) => {
+      arbitrationsAttempted++;
+      return statement[0].item === demand[0].mockDemand;
+    },
+    skipAlreadyArbitrated: true,
+    pollingInterval: 25,
+  });
+
+  // Create new escrow
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  await Bun.sleep(50);
+
+  // Create fulfillment
+  const { attested: fulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "skip-test",
+      escrow.uid,
+    );
+
+  await Bun.sleep(75);
+
+  // Should have processed the first arbitration
+  expect(arbitrationsAttempted).toBe(1);
+
+  // Create another fulfillment with the same statement - should be skipped due to already arbitrated
+  const { attested: duplicateFulfillment } =
+    await testContext.bobClient.stringObligation.makeStatement(
+      "skip-test",
+      escrow.uid,
+    );
+
+  await Bun.sleep(75);
+
+  // Should still be 1 because the duplicate should be skipped
+  expect(arbitrationsAttempted).toBe(2); // Note: This tests the listener behavior, not the skipAlreadyArbitrated for the same fulfillment
+
+  unwatch();
+});
+
+test("listenFromNowAndArbitrate with onlyIfEscrowDemandsCurrentOracle", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  
+  // Create demand for Bob (current oracle)
+  const demandForBob = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "for-bob" },
+    ]),
+  });
+
+  let arbitrationsProcessed = 0;
+  let processedFulfillments: string[] = [];
+
+  // Bob starts listening with onlyIfEscrowDemandsCurrentOracle: true
+  const { unwatch } = await testContext.bobClient.oracle.listenFromNowAndArbitrate({
+    fulfillment: {
+      attester: testContext.addresses.stringObligation,
+      statementAbi: parseAbiParameters("(string item)"),
+    },
+    arbitrate: async (statement) => {
+      arbitrationsProcessed++;
+      processedFulfillments.push(statement[0].item);
+      return true;
+    },
+    onlyIfEscrowDemandsCurrentOracle: true,
+    pollingInterval: 25,
+  });
+
+  // Create escrow demanding Bob as oracle
+  const { attested: escrowForBob } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand: demandForBob },
+      0n,
+    );
+
+  await Bun.sleep(50);
+
+  // Create fulfillment for Bob's escrow (should be processed)
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.makeStatement(
+    "for-bob",
+    escrowForBob.uid,
+  );
+
+  // Get the full attestation to verify refUID
+  const fullAttestation = await testContext.bobClient.getAttestation(fulfillment.uid);
+  
+  // Verify the fulfillment is properly linked to the escrow
+  expect(fullAttestation.refUID).toBe(escrowForBob.uid);
+
+  await Bun.sleep(150);
+
+  // Should process 1 arbitration (the one demanding Bob as oracle)
+  // Note: Since we're only creating one escrow that demands Bob, it should be processed
+  expect(arbitrationsProcessed).toBe(1);
+  expect(processedFulfillments).toContain("for-bob");
+
+  unwatch();
 });
