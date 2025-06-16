@@ -20,7 +20,7 @@ import {
 } from "./config";
 import { makeOracleClient } from "./oracle/oracle";
 import type { ChainAddresses } from "./types";
-import { getAttestation } from "./utils";
+import { getAttestation, getOptimalPollingInterval } from "./utils";
 
 import { abi as easAbi } from "./contracts/IEAS";
 
@@ -262,6 +262,9 @@ export const makeClient = (
 
       if (logs.length) return logs[0].args;
 
+      // Use optimal polling interval based on transport type
+      const optimalInterval = getOptimalPollingInterval(viemClient, pollingInterval);
+
       return new Promise((resolve) => {
         const unwatch = viemClient.watchEvent({
           address: contractAddress,
@@ -271,7 +274,7 @@ export const makeClient = (
             resolve(logs[0].args);
             unwatch();
           },
-          pollingInterval,
+          pollingInterval: optimalInterval,
         });
       });
     },

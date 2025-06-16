@@ -15,7 +15,7 @@ import type {
   TimeFilters,
   AttestationFilters,
 } from "../types";
-import { getAttestation, type ViemClient } from "../utils";
+import { getAttestation, getOptimalPollingInterval, type ViemClient } from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
 
@@ -523,6 +523,9 @@ export const makeOracleClient = (
     ) => {
       const decisions = await arbitratePast(params);
 
+      // Use optimal polling interval based on transport type
+      const optimalInterval = getOptimalPollingInterval(viemClient, params.pollingInterval);
+
       const unwatch = viemClient.watchEvent({
         address: addresses.eas,
         event: attestedEvent,
@@ -632,7 +635,7 @@ export const makeOracleClient = (
                   );
               }),
           ),
-        pollingInterval: params.pollingInterval,
+        pollingInterval: optimalInterval,
       });
 
       return { decisions, unwatch };
@@ -661,6 +664,9 @@ export const makeOracleClient = (
         (typeof decisions)["escrows"][0]
       >();
       decisions.escrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
+
+      // Use optimal polling interval based on transport type
+      const optimalInterval = getOptimalPollingInterval(viemClient, params.pollingInterval);
 
       const unwatchEscrows = viemClient.watchEvent({
         address: addresses.eas,
@@ -712,7 +718,7 @@ export const makeOracleClient = (
             }),
           );
         },
-        pollingInterval: params.pollingInterval,
+        pollingInterval: optimalInterval,
       });
 
       const unwatchFulfillments = viemClient.watchEvent({
@@ -798,7 +804,7 @@ export const makeOracleClient = (
             }),
           );
         },
-        pollingInterval: params.pollingInterval,
+        pollingInterval: optimalInterval,
       });
 
       const unwatch = () => {

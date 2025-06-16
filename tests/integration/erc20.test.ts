@@ -6,6 +6,7 @@ import {
   parseAbiParameters,
   createWalletClient,
   http,
+  webSocket,
   nonceManager,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
@@ -13,14 +14,22 @@ import { baseSepolia } from "viem/chains";
 
 import { abi as jobResultObligationAbi } from "../../src/contracts/JobResultObligation";
 
+// Network clients - these use external network (Base Sepolia)
 let clientBuyer: ReturnType<typeof makeClient>;
 let clientSeller: ReturnType<typeof makeClient>;
+let clientBuyerWs: ReturnType<typeof makeClient>; // WebSocket client for events
+let clientSellerWs: ReturnType<typeof makeClient>; // WebSocket client for events
 
 const usdc = "0x036CbD53842c5426634e7929541eC2318f3dCF7e";
 const eurc = "0x808456652fdb597867f38412077A9182bf77359F";
 
-beforeAll(() => {
-  clientBuyer = makeClient(
+/**
+ * Creates clients for Base Sepolia network testing
+ * This function encapsulates the WebSocket setup pattern for external networks
+ */
+function createNetworkClients() {
+  // HTTP clients for transactions (more reliable for write operations)
+  const buyerClient = makeClient(
     createWalletClient({
       account: privateKeyToAccount(process.env.PRIVKEY_ALICE as `0x${string}`, {
         nonceManager, // automatic nonce management
@@ -30,7 +39,7 @@ beforeAll(() => {
     }),
   );
 
-  clientSeller = makeClient(
+  const sellerClient = makeClient(
     createWalletClient({
       account: privateKeyToAccount(process.env.PRIVKEY_BOB as `0x${string}`, {
         nonceManager, // automatic nonce management
@@ -39,9 +48,66 @@ beforeAll(() => {
       transport: http(process.env.RPC_URL as string), // Base Sepolia RPC URL
     }),
   );
+
+  // WebSocket clients for event watching (if WebSocket URL is available)
+  let buyerClientWs: ReturnType<typeof makeClient>;
+  let sellerClientWs: ReturnType<typeof makeClient>;
+
+  if (process.env.WS_RPC_URL) {
+    buyerClientWs = makeClient(
+      createWalletClient({
+        account: privateKeyToAccount(process.env.PRIVKEY_ALICE as `0x${string}`, {
+          nonceManager,
+        }),
+        chain: baseSepolia,
+        transport: webSocket(process.env.WS_RPC_URL as string), // WebSocket transport for real-time events
+      }),
+    );
+
+    sellerClientWs = makeClient(
+      createWalletClient({
+        account: privateKeyToAccount(process.env.PRIVKEY_BOB as `0x${string}`, {
+          nonceManager,
+        }),
+        chain: baseSepolia,
+        transport: webSocket(process.env.WS_RPC_URL as string), // WebSocket transport for real-time events
+      }),
+    );
+  } else {
+    // Fallback to HTTP if WebSocket URL not available
+    buyerClientWs = buyerClient;
+    sellerClientWs = sellerClient;
+  }
+
+  return {
+    buyerClient,
+    sellerClient,
+    buyerClientWs,
+    sellerClientWs,
+  };
+}
+
+beforeAll(() => {
+  // Skip tests if required environment variables are not set
+  if (!process.env.PRIVKEY_ALICE || !process.env.PRIVKEY_BOB || !process.env.RPC_URL) {
+    console.log("Skipping external network tests - missing environment variables");
+    return;
+  }
+  
+  const clients = createNetworkClients();
+  clientBuyer = clients.buyerClient;
+  clientSeller = clients.sellerClient;
+  clientBuyerWs = clients.buyerClientWs;
+  clientSellerWs = clients.sellerClientWs;
 });
 
 test("tradeErc20ForErc20", async () => {
+  // Skip test if environment variables are not set
+  if (!process.env.PRIVKEY_ALICE || !process.env.PRIVKEY_BOB || !process.env.RPC_URL) {
+    console.log("Skipping test - missing environment variables for external network");
+    return;
+  }
+  
   // approve escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve(
     { address: usdc, value: 10n },
@@ -72,6 +138,12 @@ test("tradeErc20ForErc20", async () => {
 });
 
 test("tradeErc20ForCustom", async () => {
+  // Skip test if environment variables are not set
+  if (!process.env.PRIVKEY_ALICE || !process.env.PRIVKEY_BOB || !process.env.RPC_URL) {
+    console.log("Skipping test - missing environment variables for external network");
+    return;
+  }
+  
   // the example will use JobResultObligation to demand a string to be capitalized
   // but JobResultObligation is generic enough to represent much more (a db query, a Dockerfile...)
   // see https://github.com/CoopHive/alkahest-mocks/blob/main/src/Statements/JobResultObligation.sol
@@ -203,7 +275,8 @@ test("tradeErc20ForCustom", async () => {
   // meanwhile, the buyer can wait for fulfillment of her escrow.
   // if called after fulfillment, like in this case, it will
   // return the fulfilling statement immediately
-  const fulfillment = await clientBuyer.waitForFulfillment(
+  // Use WebSocket client for faster event watching if available. This should auto fallback to HTTP if WS is not configured.
+  const fulfillment = await clientBuyerWs.waitForFulfillment(
     contractAddresses["Base Sepolia"].erc20EscrowObligation,
     escrow.attested.uid,
   );
