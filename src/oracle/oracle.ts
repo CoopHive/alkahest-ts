@@ -971,6 +971,7 @@ export const makeOracleClient = (
       },
     ) => {
       // First, get all past escrows to initialize the map
+      // We need past escrows so new fulfillments can match against them
       const pastEscrows = await getStatements(params.escrow, arbiterDemandAbi, {
         fromBlock: "earliest",
         toBlock: "latest",
@@ -1010,24 +1011,6 @@ export const makeOracleClient = (
           ),
         )
         .then(($) => $.filter(($) => $ !== null));
-
-      // Get current block to determine cutoff for "past" vs "new" fulfillments
-      const currentBlock = await viemClient.getBlockNumber();
-      
-      // Create a set of past fulfillment UIDs to avoid processing them
-      // We track ALL past fulfillments (up to current block), regardless of which escrow they reference
-      const pastFulfillmentUIDs = new Set<`0x${string}`>();
-      
-      // Get past fulfillments to avoid processing them
-      const pastFulfillments = await getStatements(params.fulfillment, params.fulfillment.statementAbi, {
-        fromBlock: "earliest", 
-        toBlock: currentBlock,
-      });
-      
-      // Track ALL past fulfillments to ensure we only process NEW ones
-      pastFulfillments.forEach(({ attestation }) => {
-        pastFulfillmentUIDs.add(attestation.uid);
-      });
 
       // Create a map that includes past escrows and will be updated with new ones
       const escrowsMap = new Map<`0x${string}`, (typeof pastEscrows)[0]>();
@@ -1117,11 +1100,6 @@ export const makeOracleClient = (
 
               if (!validateAttestationIntrinsics(attestation, {})) return;
               if (!escrowsMap.has(attestation.refUID)) return;
-
-              // Skip past fulfillments that existed before we started listening
-              // This ensures we only process NEW fulfillments (created after listening started)
-              // but we can process them for BOTH past and new escrows
-              if (pastFulfillmentUIDs.has(attestation.uid)) return;
 
               const escrow = escrowsMap.get(attestation.refUID)!;
 
