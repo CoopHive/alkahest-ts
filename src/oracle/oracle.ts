@@ -640,7 +640,7 @@ export const makeOracleClient = (
 
       return { decisions, unwatch };
     },
-    listenFromNowAndArbitrate: async <StatementData extends readonly AbiParameter[]>(
+    listenAndArbitrateNewFulfillment: async <StatementData extends readonly AbiParameter[]>(
       params: ArbitrateParams<StatementData> & {
         onlyIfEscrowDemandsCurrentOracle?: boolean;
         skipAlreadyArbitrated?: boolean;
@@ -953,7 +953,7 @@ export const makeOracleClient = (
 
       return { decisions, unwatch };
     },
-    listenFromNowAndArbitrateForEscrow: async <
+    listenAndArbitrateNewFulfillmentForEscrow: async <
       StatementData extends readonly AbiParameter[],
       DemandData extends readonly AbiParameter[],
     >(
@@ -970,11 +970,74 @@ export const makeOracleClient = (
         pollingInterval?: number;
       },
     ) => {
-      const escrowsMap = new Map<`0x${string}`, any>();
+      // First, get all past escrows to initialize the map
+      const pastEscrows = await getStatements(params.escrow, arbiterDemandAbi, {
+        fromBlock: "earliest",
+        toBlock: "latest",
+      })
+        .then((statements) =>
+          Promise.all(
+            statements
+              .filter(
+                ($) =>
+                  $.statement[0].arbiter.toLowerCase() ===
+                  addresses.trustedOracleArbiter.toLowerCase(),
+              )
+              .map(async ({ log, attestation, statement }) => {
+                const trustedOracleDemand = decodeAbiParameters(
+                  trustedOracleDemandAbi,
+                  statement[0].demand,
+                )[0];
+
+                if (
+                  trustedOracleDemand.oracle.toLowerCase() !==
+                  viemClient.account.address.toLowerCase()
+                )
+                  return null;
+
+                const demand = decodeAbiParameters(
+                  params.escrow.demandAbi,
+                  trustedOracleDemand.data,
+                );
+
+                return {
+                  log,
+                  attestation,
+                  statement,
+                  demand,
+                };
+              }),
+          ),
+        )
+        .then(($) => $.filter(($) => $ !== null));
+
+      // Create a set of past escrow UIDs to track what existed before listening started
+      const pastEscrowUIDs = new Set(pastEscrows.map($ => $.attestation.uid));
+      
+      // Create a set of past fulfillment UIDs to avoid processing them
+      const pastFulfillmentUIDs = new Set<`0x${string}`>();
+      
+      // Get past fulfillments to avoid processing them
+      const pastFulfillments = await getStatements(params.fulfillment, params.fulfillment.statementAbi, {
+        fromBlock: "earliest", 
+        toBlock: "latest",
+      });
+      
+      pastFulfillments.forEach(({ attestation }) => {
+        // Only track fulfillments that reference past escrows
+        if (pastEscrowUIDs.has(attestation.refUID)) {
+          pastFulfillmentUIDs.add(attestation.uid);
+        }
+      });
+
+      // Create a map that includes past escrows and will be updated with new ones
+      const escrowsMap = new Map<`0x${string}`, (typeof pastEscrows)[0]>();
+      pastEscrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
 
       // Use optimal polling interval based on transport type
       const optimalInterval = getOptimalPollingInterval(viemClient, params.pollingInterval);
 
+      // Listen for new escrows to add to the map
       const unwatchEscrows = viemClient.watchEvent({
         address: addresses.eas,
         event: attestedEvent,
@@ -1028,6 +1091,7 @@ export const makeOracleClient = (
         pollingInterval: optimalInterval,
       });
 
+      // Listen for new fulfillments that match any escrow (past or new)
       const unwatchFulfillments = viemClient.watchEvent({
         address: addresses.eas,
         event: attestedEvent,
@@ -1054,6 +1118,9 @@ export const makeOracleClient = (
 
               if (!validateAttestationIntrinsics(attestation, {})) return;
               if (!escrowsMap.has(attestation.refUID)) return;
+
+              // Skip past fulfillments that existed before we started listening
+              if (pastFulfillmentUIDs.has(attestation.uid)) return;
 
               const escrow = escrowsMap.get(attestation.refUID)!;
 
@@ -1119,7 +1186,10 @@ export const makeOracleClient = (
         unwatchFulfillments();
       };
 
-      return { unwatch };
+      return { 
+        pastEscrows,
+        unwatch
+      };
     },
   };
 };
