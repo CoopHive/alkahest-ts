@@ -617,7 +617,7 @@ test("arbitratePastForEscrow with skipAlreadyArbitrated option", async () => {
   expect(secondDecisions.length).toBe(0); // Should skip already arbitrated fulfillments
 });
 
-test("listenAndArbitrateNewFulfillment - only listens for new events", async () => {
+test("listenAndArbitrateNewFulfillments - only listens for new events", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
@@ -648,7 +648,7 @@ test("listenAndArbitrateNewFulfillment - only listens for new events", async () 
   let newFulfillmentProcessed = false;
 
   // Start listening only for NEW events (should not process past fulfillment)
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillment({
+  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillments({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
       statementAbi: parseAbiParameters("(string item)"),
@@ -697,7 +697,7 @@ test("listenAndArbitrateNewFulfillment - only listens for new events", async () 
   unwatch();
 });
 
-test("listenAndArbitrateNewFulfillment with conditional arbitration", async () => {
+test("listenAndArbitrateNewFulfillments with conditional arbitration", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
@@ -719,7 +719,7 @@ test("listenAndArbitrateNewFulfillment with conditional arbitration", async () =
   let acceptedCount = 0;
   let rejectedCount = 0;
 
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillment({
+  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillments({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
       statementAbi: parseAbiParameters("(string item)"),
@@ -749,7 +749,7 @@ test("listenAndArbitrateNewFulfillment with conditional arbitration", async () =
   unwatch();
 });
 
-test("listenAndArbitrateNewFulfillmentForEscrow with skipAlreadyArbitrated", async () => {
+test("listenAndArbitrateNewFulfillmentsForEscrow with skipAlreadyArbitrated", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
@@ -760,7 +760,7 @@ test("listenAndArbitrateNewFulfillmentForEscrow with skipAlreadyArbitrated", asy
 
   let arbitrationsAttempted = 0;
 
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillmentForEscrow({
+  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillmentsForEscrow({
     escrow: {
       attester: testContext.addresses.erc20EscrowObligation,
       demandAbi: parseAbiParameters("(string mockDemand)"),
@@ -817,7 +817,7 @@ test("listenAndArbitrateNewFulfillmentForEscrow with skipAlreadyArbitrated", asy
   unwatch();
 });
 
-test("listenAndArbitrateNewFulfillment with onlyIfEscrowDemandsCurrentOracle", async () => {
+test("listenAndArbitrateNewFulfillments with onlyIfEscrowDemandsCurrentOracle", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   
   // Create demand for Bob (current oracle)
@@ -832,7 +832,7 @@ test("listenAndArbitrateNewFulfillment with onlyIfEscrowDemandsCurrentOracle", a
   let processedFulfillments: string[] = [];
 
   // Bob starts listening with onlyIfEscrowDemandsCurrentOracle: true
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillment({
+  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillments({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
       statementAbi: parseAbiParameters("(string item)"),
@@ -881,7 +881,7 @@ test("listenAndArbitrateNewFulfillment with onlyIfEscrowDemandsCurrentOracle", a
   unwatch();
 });
 
-test("listenAndArbitrateNewFulfillmentForEscrow - listens to past and new escrows, only new fulfillments", async () => {
+test("listenAndArbitrateNewFulfillmentsForEscrow - listens to past and new escrows, only new fulfillments", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   
   // Create a past escrow BEFORE starting to listen
@@ -913,7 +913,7 @@ test("listenAndArbitrateNewFulfillmentForEscrow - listens to past and new escrow
   let processedFulfillments: string[] = [];
 
   // Start listening - should pick up past escrows but only NEW fulfillments
-  const { pastEscrows, unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillmentForEscrow({
+  const { pastEscrows, unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillmentsForEscrow({
     escrow: {
       attester: testContext.addresses.erc20EscrowObligation,
       demandAbi: parseAbiParameters("(string mockDemand)"),

@@ -640,7 +640,7 @@ export const makeOracleClient = (
 
       return { decisions, unwatch };
     },
-    listenAndArbitrateNewFulfillment: async <StatementData extends readonly AbiParameter[]>(
+    listenAndArbitrateNewFulfillments: async <StatementData extends readonly AbiParameter[]>(
       params: ArbitrateParams<StatementData> & {
         onlyIfEscrowDemandsCurrentOracle?: boolean;
         skipAlreadyArbitrated?: boolean;
@@ -953,7 +953,7 @@ export const makeOracleClient = (
 
       return { decisions, unwatch };
     },
-    listenAndArbitrateNewFulfillmentForEscrow: async <
+    listenAndArbitrateNewFulfillmentsForEscrow: async <
       StatementData extends readonly AbiParameter[],
       DemandData extends readonly AbiParameter[],
     >(
@@ -1011,23 +1011,22 @@ export const makeOracleClient = (
         )
         .then(($) => $.filter(($) => $ !== null));
 
-      // Create a set of past escrow UIDs to track what existed before listening started
-      const pastEscrowUIDs = new Set(pastEscrows.map($ => $.attestation.uid));
+      // Get current block to determine cutoff for "past" vs "new" fulfillments
+      const currentBlock = await viemClient.getBlockNumber();
       
       // Create a set of past fulfillment UIDs to avoid processing them
+      // We track ALL past fulfillments (up to current block), regardless of which escrow they reference
       const pastFulfillmentUIDs = new Set<`0x${string}`>();
       
       // Get past fulfillments to avoid processing them
       const pastFulfillments = await getStatements(params.fulfillment, params.fulfillment.statementAbi, {
         fromBlock: "earliest", 
-        toBlock: "latest",
+        toBlock: currentBlock,
       });
       
+      // Track ALL past fulfillments to ensure we only process NEW ones
       pastFulfillments.forEach(({ attestation }) => {
-        // Only track fulfillments that reference past escrows
-        if (pastEscrowUIDs.has(attestation.refUID)) {
-          pastFulfillmentUIDs.add(attestation.uid);
-        }
+        pastFulfillmentUIDs.add(attestation.uid);
       });
 
       // Create a map that includes past escrows and will be updated with new ones
@@ -1120,6 +1119,8 @@ export const makeOracleClient = (
               if (!escrowsMap.has(attestation.refUID)) return;
 
               // Skip past fulfillments that existed before we started listening
+              // This ensures we only process NEW fulfillments (created after listening started)
+              // but we can process them for BOTH past and new escrows
               if (pastFulfillmentUIDs.has(attestation.uid)) return;
 
               const escrow = escrowsMap.get(attestation.refUID)!;
