@@ -65,6 +65,8 @@ export type TestContext = {
   bob: `0x${string}`;
   aliceClient: ReturnType<typeof makeClient>;
   bobClient: ReturnType<typeof makeClient>;
+  aliceClientWs: ReturnType<typeof makeClient>;
+  bobClientWs: ReturnType<typeof makeClient>;
 
   // Contract addresses
   addresses: {
@@ -444,6 +446,24 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   const aliceClient = makeClient(aliceWalletClient, addresses);
   const bobClient = makeClient(bobWalletClient, addresses);
 
+  // Create WebSocket clients for real-time event watching
+  const aliceWalletClientWs = createWalletClient({
+    account: aliceAccount,
+    chain,
+    transport: webSocket(`ws://localhost:${anvil.port}`),
+    pollingInterval: 1000,
+  }).extend(publicActions);
+
+  const bobWalletClientWs = createWalletClient({
+    account: bobAccount,
+    chain,
+    transport: webSocket(`ws://localhost:${anvil.port}`),
+    pollingInterval: 1000,
+  }).extend(publicActions);
+
+  const aliceClientWs = makeClient(aliceWalletClientWs, addresses);
+  const bobClientWs = makeClient(bobWalletClientWs, addresses);
+
   // Capture initial state for test resets
   const anvilInitState = await testClient.dumpState();
 
@@ -456,6 +476,8 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     bob,
     aliceClient,
     bobClient,
+    aliceClientWs,
+    bobClientWs,
 
     addresses,
     mockAddresses,

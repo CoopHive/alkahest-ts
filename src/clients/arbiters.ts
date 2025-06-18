@@ -6,6 +6,7 @@ import {
 } from "viem";
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
+import { getOptimalPollingInterval } from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
 
@@ -218,12 +219,15 @@ export const makeArbitersClient = (
 
       if (logs.length) return logs[0].args;
 
+      // Use optimal polling interval based on transport type
+      const optimalInterval = getOptimalPollingInterval(viemClient, pollingInterval ?? 1000);
+
       return new Promise((resolve) => {
         const unwatch = viemClient.watchEvent({
           address: addresses.trustedOracleArbiter,
           event: arbitrationMadeEvent,
           args: { statement, oracle },
-          pollingInterval: pollingInterval ?? 1000,
+          pollingInterval: optimalInterval,
           onLogs: (logs) => {
             resolve(logs[0].args);
             unwatch();
