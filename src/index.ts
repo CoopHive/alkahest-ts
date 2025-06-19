@@ -173,66 +173,86 @@ export const makeClient = (
     // Attestation Properties Arbiters - Composing
     attesterArbiterComposing:
       contractAddresses?.attesterArbiterComposing ||
-      baseAddresses?.attesterArbiterComposing,
+      baseAddresses?.attesterArbiterComposing ||
+      zeroAddress,
     expirationTimeArbiterComposing:
       contractAddresses?.expirationTimeArbiterComposing ||
-      baseAddresses?.expirationTimeArbiterComposing,
+      baseAddresses?.expirationTimeArbiterComposing ||
+      zeroAddress,
     recipientArbiterComposing:
       contractAddresses?.recipientArbiterComposing ||
-      baseAddresses?.recipientArbiterComposing,
+      baseAddresses?.recipientArbiterComposing ||
+      zeroAddress,
     refUidArbiterComposing:
       contractAddresses?.refUidArbiterComposing ||
-      baseAddresses?.refUidArbiterComposing,
+      baseAddresses?.refUidArbiterComposing ||
+      zeroAddress,
     revocableArbiterComposing:
       contractAddresses?.revocableArbiterComposing ||
-      baseAddresses?.revocableArbiterComposing,
+      baseAddresses?.revocableArbiterComposing ||
+      zeroAddress,
     revocationTimeArbiterComposing:
       contractAddresses?.revocationTimeArbiterComposing ||
-      baseAddresses?.revocationTimeArbiterComposing,
+      baseAddresses?.revocationTimeArbiterComposing ||
+      zeroAddress,
     schemaArbiterComposing:
       contractAddresses?.schemaArbiterComposing ||
-      baseAddresses?.schemaArbiterComposing,
+      baseAddresses?.schemaArbiterComposing ||
+      zeroAddress,
     timestampArbiterComposing:
       contractAddresses?.timestampArbiterComposing ||
-      baseAddresses?.timestampArbiterComposing,
+      baseAddresses?.timestampArbiterComposing ||
+      zeroAddress,
     uidArbiterComposing:
       contractAddresses?.uidArbiterComposing ||
-      baseAddresses?.uidArbiterComposing,
+      baseAddresses?.uidArbiterComposing ||
+      zeroAddress,
     valueArbiterComposing:
       contractAddresses?.valueArbiterComposing ||
-      baseAddresses?.valueArbiterComposing,
+      baseAddresses?.valueArbiterComposing ||
+      zeroAddress,
 
     // Attestation Properties Arbiters - Non-Composing
     attesterArbiterNonComposing:
       contractAddresses?.attesterArbiterNonComposing ||
-      baseAddresses?.attesterArbiterNonComposing,
+      baseAddresses?.attesterArbiterNonComposing ||
+      zeroAddress,
     expirationTimeArbiterNonComposing:
       contractAddresses?.expirationTimeArbiterNonComposing ||
-      baseAddresses?.expirationTimeArbiterNonComposing,
+      baseAddresses?.expirationTimeArbiterNonComposing ||
+      zeroAddress,
     recipientArbiterNonComposing:
       contractAddresses?.recipientArbiterNonComposing ||
-      baseAddresses?.recipientArbiterNonComposing,
+      baseAddresses?.recipientArbiterNonComposing ||
+      zeroAddress,
     refUidArbiterNonComposing:
       contractAddresses?.refUidArbiterNonComposing ||
-      baseAddresses?.refUidArbiterNonComposing,
+      baseAddresses?.refUidArbiterNonComposing ||
+      zeroAddress,
     revocableArbiterNonComposing:
       contractAddresses?.revocableArbiterNonComposing ||
-      baseAddresses?.revocableArbiterNonComposing,
+      baseAddresses?.revocableArbiterNonComposing ||
+      zeroAddress,
     revocationTimeArbiterNonComposing:
       contractAddresses?.revocationTimeArbiterNonComposing ||
-      baseAddresses?.revocationTimeArbiterNonComposing,
+      baseAddresses?.revocationTimeArbiterNonComposing ||
+      zeroAddress,
     schemaArbiterNonComposing:
       contractAddresses?.schemaArbiterNonComposing ||
-      baseAddresses?.schemaArbiterNonComposing,
+      baseAddresses?.schemaArbiterNonComposing ||
+      zeroAddress,
     timestampArbiterNonComposing:
       contractAddresses?.timestampArbiterNonComposing ||
-      baseAddresses?.timestampArbiterNonComposing,
+      baseAddresses?.timestampArbiterNonComposing ||
+      zeroAddress,
     uidArbiterNonComposing:
       contractAddresses?.uidArbiterNonComposing ||
-      baseAddresses?.uidArbiterNonComposing,
+      baseAddresses?.uidArbiterNonComposing ||
+      zeroAddress,
     valueArbiterNonComposing:
       contractAddresses?.valueArbiterNonComposing ||
-      baseAddresses?.valueArbiterNonComposing,
+      baseAddresses?.valueArbiterNonComposing ||
+      zeroAddress,
   };
 
   return {
