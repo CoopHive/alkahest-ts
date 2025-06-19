@@ -34,6 +34,30 @@ export type ChainAddresses = {
   allArbiter: `0x${string}`;
   intrinsicsArbiter: `0x${string}`;
   intrinsicsArbiter2: `0x${string}`;
+
+  // Attestation Properties Arbiters - Composing
+  attesterArbiterComposing?: `0x${string}`;
+  expirationTimeArbiterComposing?: `0x${string}`;
+  recipientArbiterComposing?: `0x${string}`;
+  refUidArbiterComposing?: `0x${string}`;
+  revocableArbiterComposing?: `0x${string}`;
+  revocationTimeArbiterComposing?: `0x${string}`;
+  schemaArbiterComposing?: `0x${string}`;
+  timestampArbiterComposing?: `0x${string}`;
+  uidArbiterComposing?: `0x${string}`;
+  valueArbiterComposing?: `0x${string}`;
+
+  // Attestation Properties Arbiters - Non-Composing
+  attesterArbiterNonComposing?: `0x${string}`;
+  expirationTimeArbiterNonComposing?: `0x${string}`;
+  recipientArbiterNonComposing?: `0x${string}`;
+  refUidArbiterNonComposing?: `0x${string}`;
+  revocableArbiterNonComposing?: `0x${string}`;
+  revocationTimeArbiterNonComposing?: `0x${string}`;
+  schemaArbiterNonComposing?: `0x${string}`;
+  timestampArbiterNonComposing?: `0x${string}`;
+  uidArbiterNonComposing?: `0x${string}`;
+  valueArbiterNonComposing?: `0x${string}`;
 };
 
 export type PermitSignature = {

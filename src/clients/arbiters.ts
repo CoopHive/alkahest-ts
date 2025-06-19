@@ -21,6 +21,7 @@ export const makeArbitersClient = (
 
   return {
     /**
+     * @deprecated Use makeLogicalArbitersClient().encodeAnyArbiterDemand or encodeAllArbiterDemand instead
      * Encodes AnyArbiter.DemandData or AllArbiter.DemandData to bytes.
      * @param demand - struct DemandData {address[] arbiters, bytes[] demands}
      * @returns abi encoded bytes
@@ -36,6 +37,7 @@ export const makeArbitersClient = (
     },
 
     /**
+     * @deprecated Use makeLogicalArbitersClient().decodeAnyArbiterDemand or decodeAllArbiterDemand instead
      * Decodes AnyArbiter.DemandData or AllArbiter.DemandData from bytes.
      * @param demandData - DemandData as abi encoded bytes
      * @returns the decoded DemandData object

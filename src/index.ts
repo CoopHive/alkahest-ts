@@ -8,10 +8,12 @@ import {
   type WalletClient,
 } from "viem";
 import { makeArbitersClient } from "./clients/arbiters";
+import { makeAttestationPropertiesArbitersClient } from "./clients/attestationPropertiesArbiters";
 import { makeAttestationClient } from "./clients/attestation";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
+import { makeLogicalArbitersClient } from "./clients/logicalArbiters";
 import { makeStringObligationClient } from "./clients/stringObligation";
 import { makeTokenBundleClient } from "./clients/tokenBundle";
 import {
@@ -167,11 +169,81 @@ export const makeClient = (
       contractAddresses?.anyArbiter || baseAddresses?.anyArbiter || zeroAddress,
     allArbiter:
       contractAddresses?.allArbiter || baseAddresses?.allArbiter || zeroAddress,
+
+    // Attestation Properties Arbiters - Composing
+    attesterArbiterComposing:
+      contractAddresses?.attesterArbiterComposing ||
+      baseAddresses?.attesterArbiterComposing,
+    expirationTimeArbiterComposing:
+      contractAddresses?.expirationTimeArbiterComposing ||
+      baseAddresses?.expirationTimeArbiterComposing,
+    recipientArbiterComposing:
+      contractAddresses?.recipientArbiterComposing ||
+      baseAddresses?.recipientArbiterComposing,
+    refUidArbiterComposing:
+      contractAddresses?.refUidArbiterComposing ||
+      baseAddresses?.refUidArbiterComposing,
+    revocableArbiterComposing:
+      contractAddresses?.revocableArbiterComposing ||
+      baseAddresses?.revocableArbiterComposing,
+    revocationTimeArbiterComposing:
+      contractAddresses?.revocationTimeArbiterComposing ||
+      baseAddresses?.revocationTimeArbiterComposing,
+    schemaArbiterComposing:
+      contractAddresses?.schemaArbiterComposing ||
+      baseAddresses?.schemaArbiterComposing,
+    timestampArbiterComposing:
+      contractAddresses?.timestampArbiterComposing ||
+      baseAddresses?.timestampArbiterComposing,
+    uidArbiterComposing:
+      contractAddresses?.uidArbiterComposing ||
+      baseAddresses?.uidArbiterComposing,
+    valueArbiterComposing:
+      contractAddresses?.valueArbiterComposing ||
+      baseAddresses?.valueArbiterComposing,
+
+    // Attestation Properties Arbiters - Non-Composing
+    attesterArbiterNonComposing:
+      contractAddresses?.attesterArbiterNonComposing ||
+      baseAddresses?.attesterArbiterNonComposing,
+    expirationTimeArbiterNonComposing:
+      contractAddresses?.expirationTimeArbiterNonComposing ||
+      baseAddresses?.expirationTimeArbiterNonComposing,
+    recipientArbiterNonComposing:
+      contractAddresses?.recipientArbiterNonComposing ||
+      baseAddresses?.recipientArbiterNonComposing,
+    refUidArbiterNonComposing:
+      contractAddresses?.refUidArbiterNonComposing ||
+      baseAddresses?.refUidArbiterNonComposing,
+    revocableArbiterNonComposing:
+      contractAddresses?.revocableArbiterNonComposing ||
+      baseAddresses?.revocableArbiterNonComposing,
+    revocationTimeArbiterNonComposing:
+      contractAddresses?.revocationTimeArbiterNonComposing ||
+      baseAddresses?.revocationTimeArbiterNonComposing,
+    schemaArbiterNonComposing:
+      contractAddresses?.schemaArbiterNonComposing ||
+      baseAddresses?.schemaArbiterNonComposing,
+    timestampArbiterNonComposing:
+      contractAddresses?.timestampArbiterNonComposing ||
+      baseAddresses?.timestampArbiterNonComposing,
+    uidArbiterNonComposing:
+      contractAddresses?.uidArbiterNonComposing ||
+      baseAddresses?.uidArbiterNonComposing,
+    valueArbiterNonComposing:
+      contractAddresses?.valueArbiterNonComposing ||
+      baseAddresses?.valueArbiterNonComposing,
   };
 
   return {
     /** Methods for interacting with Arbiters */
     arbiters: makeArbitersClient(viemClient, addresses),
+
+    /** Methods for interacting with Attestation Properties Arbiters */
+    attestationPropertiesArbiters: makeAttestationPropertiesArbitersClient(viemClient, addresses),
+
+    /** Methods for interacting with Logical Arbiters (Any/All) */
+    logicalArbiters: makeLogicalArbitersClient(viemClient, addresses),
 
     /** Methods for interacting with ERC20 tokens */
     erc20: makeErc20Client(viemClient, addresses),
@@ -283,3 +355,6 @@ export const makeClient = (
 
 export * from "./config";
 export * from "./types";
+export * from "./clients/arbiters";
+export * from "./clients/attestationPropertiesArbiters";
+export * from "./clients/logicalArbiters";
