@@ -6,555 +6,615 @@ import {
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
 
+/**
+ * Attestation Properties Arbiters Client
+ * 
+ * Handles arbiters that validate specific properties of attestations. Each arbiter type
+ * comes in two variants:
+ * - Composing: Can be combined with a base arbiter for additional validation
+ * - Non-Composing: Standalone validation against the property
+ * 
+ * Supported attestation properties:
+ * - Attester: Validates the attester address
+ * - Time: Validates timestamp (After/Before/Equal variants)
+ * - ExpirationTime: Validates expiration timestamp (After/Before/Equal variants)
+ * - Recipient: Validates the recipient address  
+ * - RefUID: Validates the reference UID
+ * - Revocable: Validates the revocable flag
+ * - RevocationTime: Validates revocation timestamp (After/Before/Equal variants)
+ * - Schema: Validates the schema hash
+ * - UID: Validates the attestation UID
+ * - Value: Validates attached value (After/Before/Equal variants)
+ */
 export const makeAttestationPropertiesArbitersClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
   return {
+    // Attester Arbiters
     /**
      * Encodes AttesterArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, address expectedAttester}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, address attester}
      */
     encodeAttesterArbiterComposingDemand: (demand: {
       baseArbiter: `0x${string}`;
       baseDemand: `0x${string}`;
-      expectedAttester: `0x${string}`;
+      attester: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, address expectedAttester)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, address attester)"),
         [demand],
       );
     },
 
     /**
      * Decodes AttesterArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeAttesterArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, address expectedAttester)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, address attester)"),
         demandData,
       )[0];
     },
 
     /**
      * Encodes AttesterArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address expectedAttester}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {address attester}
      */
     encodeAttesterArbiterNonComposingDemand: (demand: {
-      expectedAttester: `0x${string}`;
+      attester: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(address expectedAttester)"),
+        parseAbiParameters("(address attester)"),
         [demand],
       );
     },
 
     /**
      * Decodes AttesterArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeAttesterArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address expectedAttester)"),
+        parseAbiParameters("(address attester)"),
         demandData,
       )[0];
     },
 
+    // Time After Arbiters
     /**
-     * Encodes ExpirationTimeArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint64 minExpirationTime, uint64 maxExpirationTime}
-     * @returns abi encoded bytes
+     * Encodes TimeAfterArbiterComposing.DemandData to bytes.
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint64 time}
      */
-    encodeExpirationTimeArbiterComposingDemand: (demand: {
+    encodeTimeAfterArbiterComposingDemand: (demand: {
       baseArbiter: `0x${string}`;
       baseDemand: `0x${string}`;
-      minExpirationTime: bigint;
-      maxExpirationTime: bigint;
+      time: bigint;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 minExpirationTime, uint64 maxExpirationTime)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
         [demand],
       );
     },
 
     /**
-     * Decodes ExpirationTimeArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
+     * Decodes TimeAfterArbiterComposing.DemandData from bytes.
      */
-    decodeExpirationTimeArbiterComposingDemand: (demandData: `0x${string}`) => {
+    decodeTimeAfterArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 minExpirationTime, uint64 maxExpirationTime)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
         demandData,
       )[0];
     },
 
     /**
-     * Encodes ExpirationTimeArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {uint64 minExpirationTime, uint64 maxExpirationTime}
-     * @returns abi encoded bytes
+     * Encodes TimeAfterArbiterNonComposing.DemandData to bytes.
+     * @param demand - struct DemandData {uint64 time}
      */
-    encodeExpirationTimeArbiterNonComposingDemand: (demand: {
-      minExpirationTime: bigint;
-      maxExpirationTime: bigint;
+    encodeTimeAfterArbiterNonComposingDemand: (demand: {
+      time: bigint;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(uint64 minExpirationTime, uint64 maxExpirationTime)"),
+        parseAbiParameters("(uint64 time)"),
         [demand],
       );
     },
 
     /**
-     * Decodes ExpirationTimeArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
+     * Decodes TimeAfterArbiterNonComposing.DemandData from bytes.
      */
-    decodeExpirationTimeArbiterNonComposingDemand: (demandData: `0x${string}`) => {
+    decodeTimeAfterArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(uint64 minExpirationTime, uint64 maxExpirationTime)"),
+        parseAbiParameters("(uint64 time)"),
         demandData,
       )[0];
     },
 
+    // Time Before Arbiters
+    /**
+     * Encodes TimeBeforeArbiterComposing.DemandData to bytes.
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint64 time}
+     */
+    encodeTimeBeforeArbiterComposingDemand: (demand: {
+      baseArbiter: `0x${string}`;
+      baseDemand: `0x${string}`;
+      time: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes TimeBeforeArbiterComposing.DemandData from bytes.
+     */
+    decodeTimeBeforeArbiterComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        demandData,
+      )[0];
+    },
+
+    /**
+     * Encodes TimeBeforeArbiterNonComposing.DemandData to bytes.
+     * @param demand - struct DemandData {uint64 time}
+     */
+    encodeTimeBeforeArbiterNonComposingDemand: (demand: {
+      time: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(uint64 time)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes TimeBeforeArbiterNonComposing.DemandData from bytes.
+     */
+    decodeTimeBeforeArbiterNonComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(uint64 time)"),
+        demandData,
+      )[0];
+    },
+
+    // Time Equal Arbiters
+    /**
+     * Encodes TimeEqualArbiterComposing.DemandData to bytes.
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint64 time}
+     */
+    encodeTimeEqualArbiterComposingDemand: (demand: {
+      baseArbiter: `0x${string}`;
+      baseDemand: `0x${string}`;
+      time: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes TimeEqualArbiterComposing.DemandData from bytes.
+     */
+    decodeTimeEqualArbiterComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        demandData,
+      )[0];
+    },
+
+    /**
+     * Encodes TimeEqualArbiterNonComposing.DemandData to bytes.
+     * @param demand - struct DemandData {uint64 time}
+     */
+    encodeTimeEqualArbiterNonComposingDemand: (demand: {
+      time: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(uint64 time)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes TimeEqualArbiterNonComposing.DemandData from bytes.
+     */
+    decodeTimeEqualArbiterNonComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(uint64 time)"),
+        demandData,
+      )[0];
+    },
+
+    // Expiration Time After Arbiters
+    /**
+     * Encodes ExpirationTimeAfterArbiterComposing.DemandData to bytes.
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint64 expirationTime}
+     */
+    encodeExpirationTimeAfterArbiterComposingDemand: (demand: {
+      baseArbiter: `0x${string}`;
+      baseDemand: `0x${string}`;
+      expirationTime: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes ExpirationTimeAfterArbiterComposing.DemandData from bytes.
+     */
+    decodeExpirationTimeAfterArbiterComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        demandData,
+      )[0];
+    },
+
+    /**
+     * Encodes ExpirationTimeAfterArbiterNonComposing.DemandData to bytes.
+     * @param demand - struct DemandData {uint64 expirationTime}
+     */
+    encodeExpirationTimeAfterArbiterNonComposingDemand: (demand: {
+      expirationTime: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(uint64 expirationTime)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes ExpirationTimeAfterArbiterNonComposing.DemandData from bytes.
+     */
+    decodeExpirationTimeAfterArbiterNonComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(uint64 expirationTime)"),
+        demandData,
+      )[0];
+    },
+
+    // Expiration Time Before Arbiters
+    /**
+     * Encodes ExpirationTimeBeforeArbiterComposing.DemandData to bytes.
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint64 expirationTime}
+     */
+    encodeExpirationTimeBeforeArbiterComposingDemand: (demand: {
+      baseArbiter: `0x${string}`;
+      baseDemand: `0x${string}`;
+      expirationTime: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes ExpirationTimeBeforeArbiterComposing.DemandData from bytes.
+     */
+    decodeExpirationTimeBeforeArbiterComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        demandData,
+      )[0];
+    },
+
+    /**
+     * Encodes ExpirationTimeBeforeArbiterNonComposing.DemandData to bytes.
+     * @param demand - struct DemandData {uint64 expirationTime}
+     */
+    encodeExpirationTimeBeforeArbiterNonComposingDemand: (demand: {
+      expirationTime: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(uint64 expirationTime)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes ExpirationTimeBeforeArbiterNonComposing.DemandData from bytes.
+     */
+    decodeExpirationTimeBeforeArbiterNonComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(uint64 expirationTime)"),
+        demandData,
+      )[0];
+    },
+
+    // Expiration Time Equal Arbiters
+    /**
+     * Encodes ExpirationTimeEqualArbiterComposing.DemandData to bytes.
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint64 expirationTime}
+     */
+    encodeExpirationTimeEqualArbiterComposingDemand: (demand: {
+      baseArbiter: `0x${string}`;
+      baseDemand: `0x${string}`;
+      expirationTime: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes ExpirationTimeEqualArbiterComposing.DemandData from bytes.
+     */
+    decodeExpirationTimeEqualArbiterComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        demandData,
+      )[0];
+    },
+
+    /**
+     * Encodes ExpirationTimeEqualArbiterNonComposing.DemandData to bytes.
+     * @param demand - struct DemandData {uint64 expirationTime}
+     */
+    encodeExpirationTimeEqualArbiterNonComposingDemand: (demand: {
+      expirationTime: bigint;
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(uint64 expirationTime)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes ExpirationTimeEqualArbiterNonComposing.DemandData from bytes.
+     */
+    decodeExpirationTimeEqualArbiterNonComposingDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(uint64 expirationTime)"),
+        demandData,
+      )[0];
+    },
+
+    // Recipient Arbiters
     /**
      * Encodes RecipientArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, address expectedRecipient}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, address recipient}
      */
     encodeRecipientArbiterComposingDemand: (demand: {
       baseArbiter: `0x${string}`;
       baseDemand: `0x${string}`;
-      expectedRecipient: `0x${string}`;
+      recipient: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, address expectedRecipient)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, address recipient)"),
         [demand],
       );
     },
 
     /**
      * Decodes RecipientArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeRecipientArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, address expectedRecipient)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, address recipient)"),
         demandData,
       )[0];
     },
 
     /**
      * Encodes RecipientArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address expectedRecipient}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {address recipient}
      */
     encodeRecipientArbiterNonComposingDemand: (demand: {
-      expectedRecipient: `0x${string}`;
+      recipient: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(address expectedRecipient)"),
+        parseAbiParameters("(address recipient)"),
         [demand],
       );
     },
 
     /**
      * Decodes RecipientArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeRecipientArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address expectedRecipient)"),
+        parseAbiParameters("(address recipient)"),
         demandData,
       )[0];
     },
 
+    // RefUID Arbiters
     /**
      * Encodes RefUidArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, bytes32 expectedRefUID}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, bytes32 refUID}
      */
     encodeRefUidArbiterComposingDemand: (demand: {
       baseArbiter: `0x${string}`;
       baseDemand: `0x${string}`;
-      expectedRefUID: `0x${string}`;
+      refUID: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 expectedRefUID)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 refUID)"),
         [demand],
       );
     },
 
     /**
      * Decodes RefUidArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeRefUidArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 expectedRefUID)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 refUID)"),
         demandData,
       )[0];
     },
 
     /**
      * Encodes RefUidArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {bytes32 expectedRefUID}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {bytes32 refUID}
      */
     encodeRefUidArbiterNonComposingDemand: (demand: {
-      expectedRefUID: `0x${string}`;
+      refUID: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(bytes32 expectedRefUID)"),
+        parseAbiParameters("(bytes32 refUID)"),
         [demand],
       );
     },
 
     /**
      * Decodes RefUidArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeRefUidArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(bytes32 expectedRefUID)"),
+        parseAbiParameters("(bytes32 refUID)"),
         demandData,
       )[0];
     },
 
+    // Revocable Arbiters
     /**
      * Encodes RevocableArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, bool expectedRevocable}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, bool revocable}
      */
     encodeRevocableArbiterComposingDemand: (demand: {
       baseArbiter: `0x${string}`;
       baseDemand: `0x${string}`;
-      expectedRevocable: boolean;
+      revocable: boolean;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, bool expectedRevocable)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, bool revocable)"),
         [demand],
       );
     },
 
     /**
      * Decodes RevocableArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeRevocableArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, bool expectedRevocable)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, bool revocable)"),
         demandData,
       )[0];
     },
 
     /**
      * Encodes RevocableArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {bool expectedRevocable}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {bool revocable}
      */
     encodeRevocableArbiterNonComposingDemand: (demand: {
-      expectedRevocable: boolean;
+      revocable: boolean;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(bool expectedRevocable)"),
+        parseAbiParameters("(bool revocable)"),
         [demand],
       );
     },
 
     /**
      * Decodes RevocableArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeRevocableArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(bool expectedRevocable)"),
+        parseAbiParameters("(bool revocable)"),
         demandData,
       )[0];
     },
 
-    /**
-     * Encodes RevocationTimeArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint64 minRevocationTime, uint64 maxRevocationTime}
-     * @returns abi encoded bytes
-     */
-    encodeRevocationTimeArbiterComposingDemand: (demand: {
-      baseArbiter: `0x${string}`;
-      baseDemand: `0x${string}`;
-      minRevocationTime: bigint;
-      maxRevocationTime: bigint;
-    }) => {
-      return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 minRevocationTime, uint64 maxRevocationTime)"),
-        [demand],
-      );
-    },
-
-    /**
-     * Decodes RevocationTimeArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
-     */
-    decodeRevocationTimeArbiterComposingDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 minRevocationTime, uint64 maxRevocationTime)"),
-        demandData,
-      )[0];
-    },
-
-    /**
-     * Encodes RevocationTimeArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {uint64 minRevocationTime, uint64 maxRevocationTime}
-     * @returns abi encoded bytes
-     */
-    encodeRevocationTimeArbiterNonComposingDemand: (demand: {
-      minRevocationTime: bigint;
-      maxRevocationTime: bigint;
-    }) => {
-      return encodeAbiParameters(
-        parseAbiParameters("(uint64 minRevocationTime, uint64 maxRevocationTime)"),
-        [demand],
-      );
-    },
-
-    /**
-     * Decodes RevocationTimeArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
-     */
-    decodeRevocationTimeArbiterNonComposingDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters("(uint64 minRevocationTime, uint64 maxRevocationTime)"),
-        demandData,
-      )[0];
-    },
-
+    // Schema Arbiters
     /**
      * Encodes SchemaArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, bytes32 expectedSchema}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, bytes32 schema}
      */
     encodeSchemaArbiterComposingDemand: (demand: {
       baseArbiter: `0x${string}`;
       baseDemand: `0x${string}`;
-      expectedSchema: `0x${string}`;
+      schema: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 expectedSchema)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 schema)"),
         [demand],
       );
     },
 
     /**
      * Decodes SchemaArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeSchemaArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 expectedSchema)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 schema)"),
         demandData,
       )[0];
     },
 
     /**
      * Encodes SchemaArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {bytes32 expectedSchema}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {bytes32 schema}
      */
     encodeSchemaArbiterNonComposingDemand: (demand: {
-      expectedSchema: `0x${string}`;
+      schema: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(bytes32 expectedSchema)"),
+        parseAbiParameters("(bytes32 schema)"),
         [demand],
       );
     },
 
     /**
      * Decodes SchemaArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeSchemaArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(bytes32 expectedSchema)"),
+        parseAbiParameters("(bytes32 schema)"),
         demandData,
       )[0];
     },
 
-    /**
-     * Encodes TimestampArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint64 minTimestamp, uint64 maxTimestamp}
-     * @returns abi encoded bytes
-     */
-    encodeTimestampArbiterComposingDemand: (demand: {
-      baseArbiter: `0x${string}`;
-      baseDemand: `0x${string}`;
-      minTimestamp: bigint;
-      maxTimestamp: bigint;
-    }) => {
-      return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 minTimestamp, uint64 maxTimestamp)"),
-        [demand],
-      );
-    },
-
-    /**
-     * Decodes TimestampArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
-     */
-    decodeTimestampArbiterComposingDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 minTimestamp, uint64 maxTimestamp)"),
-        demandData,
-      )[0];
-    },
-
-    /**
-     * Encodes TimestampArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {uint64 minTimestamp, uint64 maxTimestamp}
-     * @returns abi encoded bytes
-     */
-    encodeTimestampArbiterNonComposingDemand: (demand: {
-      minTimestamp: bigint;
-      maxTimestamp: bigint;
-    }) => {
-      return encodeAbiParameters(
-        parseAbiParameters("(uint64 minTimestamp, uint64 maxTimestamp)"),
-        [demand],
-      );
-    },
-
-    /**
-     * Decodes TimestampArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
-     */
-    decodeTimestampArbiterNonComposingDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters("(uint64 minTimestamp, uint64 maxTimestamp)"),
-        demandData,
-      )[0];
-    },
-
+    // UID Arbiters
     /**
      * Encodes UidArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, bytes32 expectedUID}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, bytes32 uid}
      */
     encodeUidArbiterComposingDemand: (demand: {
       baseArbiter: `0x${string}`;
       baseDemand: `0x${string}`;
-      expectedUID: `0x${string}`;
+      uid: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 expectedUID)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 uid)"),
         [demand],
       );
     },
 
     /**
      * Decodes UidArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeUidArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 expectedUID)"),
+        parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 uid)"),
         demandData,
       )[0];
     },
 
     /**
      * Encodes UidArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {bytes32 expectedUID}
-     * @returns abi encoded bytes
+     * @param demand - struct DemandData {bytes32 uid}
      */
     encodeUidArbiterNonComposingDemand: (demand: {
-      expectedUID: `0x${string}`;
+      uid: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        parseAbiParameters("(bytes32 expectedUID)"),
+        parseAbiParameters("(bytes32 uid)"),
         [demand],
       );
     },
 
     /**
      * Decodes UidArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
      */
     decodeUidArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(bytes32 expectedUID)"),
-        demandData,
-      )[0];
-    },
-
-    /**
-     * Encodes ValueArbiterComposing.DemandData to bytes.
-     * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, uint256 minValue, uint256 maxValue}
-     * @returns abi encoded bytes
-     */
-    encodeValueArbiterComposingDemand: (demand: {
-      baseArbiter: `0x${string}`;
-      baseDemand: `0x${string}`;
-      minValue: bigint;
-      maxValue: bigint;
-    }) => {
-      return encodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint256 minValue, uint256 maxValue)"),
-        [demand],
-      );
-    },
-
-    /**
-     * Decodes ValueArbiterComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
-     */
-    decodeValueArbiterComposingDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters("(address baseArbiter, bytes baseDemand, uint256 minValue, uint256 maxValue)"),
-        demandData,
-      )[0];
-    },
-
-    /**
-     * Encodes ValueArbiterNonComposing.DemandData to bytes.
-     * @param demand - struct DemandData {uint256 minValue, uint256 maxValue}
-     * @returns abi encoded bytes
-     */
-    encodeValueArbiterNonComposingDemand: (demand: {
-      minValue: bigint;
-      maxValue: bigint;
-    }) => {
-      return encodeAbiParameters(
-        parseAbiParameters("(uint256 minValue, uint256 maxValue)"),
-        [demand],
-      );
-    },
-
-    /**
-     * Decodes ValueArbiterNonComposing.DemandData from bytes.
-     * @param demandData - DemandData as abi encoded bytes
-     * @returns the decoded DemandData object
-     */
-    decodeValueArbiterNonComposingDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters("(uint256 minValue, uint256 maxValue)"),
+        parseAbiParameters("(bytes32 uid)"),
         demandData,
       )[0];
     },

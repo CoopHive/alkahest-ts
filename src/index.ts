@@ -9,11 +9,12 @@ import {
 } from "viem";
 import { makeArbitersClient } from "./clients/arbiters";
 import { makeAttestationPropertiesArbitersClient } from "./clients/attestationPropertiesArbiters";
+import { makeGeneralArbitersClient } from "./clients/generalArbiters";
+import { makeLogicalArbitersClient } from "./clients/logicalArbiters";
 import { makeAttestationClient } from "./clients/attestation";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
-import { makeLogicalArbitersClient } from "./clients/logicalArbiters";
 import { makeStringObligationClient } from "./clients/stringObligation";
 import { makeTokenBundleClient } from "./clients/tokenBundle";
 import {
@@ -256,13 +257,16 @@ export const makeClient = (
   };
 
   return {
-    /** Methods for interacting with Arbiters */
+    /** @deprecated Use specific arbiter clients instead (generalArbiters, attestationPropertiesArbiters, logicalArbiters) */
     arbiters: makeArbitersClient(viemClient, addresses),
 
-    /** Methods for interacting with Attestation Properties Arbiters */
+    /** Methods for interacting with General Arbiters (TrustedParty, SpecificAttestation, TrustedOracle, Intrinsics2) */
+    generalArbiters: makeGeneralArbitersClient(viemClient, addresses),
+
+    /** Methods for interacting with Attestation Properties Arbiters (time, expiration, recipient, schema, etc.) */
     attestationPropertiesArbiters: makeAttestationPropertiesArbitersClient(viemClient, addresses),
 
-    /** Methods for interacting with Logical Arbiters (Any/All) */
+    /** Methods for interacting with Logical Arbiters (Any/All composition) */
     logicalArbiters: makeLogicalArbitersClient(viemClient, addresses),
 
     /** Methods for interacting with ERC20 tokens */
@@ -375,6 +379,11 @@ export const makeClient = (
 
 export * from "./config";
 export * from "./types";
-export * from "./clients/arbiters";
+
+// Main arbiter clients - use these for new development
+export * from "./clients/generalArbiters";
 export * from "./clients/attestationPropertiesArbiters";
 export * from "./clients/logicalArbiters";
+
+// Deprecated - use specific clients above instead
+export * from "./clients/arbiters";

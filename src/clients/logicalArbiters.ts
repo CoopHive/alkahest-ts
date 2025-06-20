@@ -6,6 +6,16 @@ import {
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
 
+/**
+ * Logical Arbiters Client
+ * 
+ * Handles logical composition arbiters for combining multiple arbiters:
+ * - AnyArbiter: Returns true if ANY of the provided arbiters returns true (logical OR)
+ * - AllArbiter: Returns true if ALL of the provided arbiters return true (logical AND)
+ * 
+ * These arbiters take arrays of arbiter addresses and their corresponding demand data,
+ * allowing for complex logical compositions of arbitration rules.
+ */
 export const makeLogicalArbitersClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
