@@ -338,38 +338,146 @@ describe("Attestation Properties Arbiters Tests", () => {
     });
   });
 
-  describe("UidArbiter", () => {
+  describe("TimeBeforeArbiter", () => {
     describe("Composing variant", () => {
-      test("should encode and decode UidArbiterComposing demand data correctly", () => {
-        const client = testContext.aliceClient;
-        
+      test("should encode and decode TimeBeforeArbiterComposing demand data correctly", () => {
         const originalDemand = {
           baseArbiter: alice,
-          baseDemand: "0x6666" as `0x${string}`,
-          uid: "0x1111111111111111111111111111111111111111111111111111111111111111" as `0x${string}`,
+          baseDemand: "0x1234" as `0x${string}`,
+          time: 1234567890n,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeUidArbiterComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeUidArbiterComposingDemand(encoded);
-        
+        const client = testContext.aliceClient;
+        const encoded = client.attestationPropertiesArbiters.encodeTimeBeforeArbiterComposingDemand(originalDemand);
+        expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
+
+        const decoded = client.attestationPropertiesArbiters.decodeTimeBeforeArbiterComposingDemand(encoded);
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
-        expect(decoded.uid).toBe(originalDemand.uid);
+        expect(decoded.time).toBe(originalDemand.time);
       });
     });
 
     describe("NonComposing variant", () => {
-      test("should encode and decode UidArbiterNonComposing demand data correctly", () => {
-        const client = testContext.aliceClient;
-        
+      test("should encode and decode TimeBeforeArbiterNonComposing demand data correctly", () => {
         const originalDemand = {
-          uid: "0x2222222222222222222222222222222222222222222222222222222222222222" as `0x${string}`,
+          time: 9876543210n,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeUidArbiterNonComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeUidArbiterNonComposingDemand(encoded);
-        
-        expect(decoded.uid).toBe(originalDemand.uid);
+        const client = testContext.aliceClient;
+        const encoded = client.attestationPropertiesArbiters.encodeTimeBeforeArbiterNonComposingDemand(originalDemand);
+        expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
+
+        const decoded = client.attestationPropertiesArbiters.decodeTimeBeforeArbiterNonComposingDemand(encoded);
+        expect(decoded.time).toBe(originalDemand.time);
+      });
+    });
+  });
+
+  describe("TimeEqualArbiter", () => {
+    describe("Composing variant", () => {
+      test("should encode and decode TimeEqualArbiterComposing demand data correctly", () => {
+        const originalDemand = {
+          baseArbiter: bob,
+          baseDemand: "0xabcd" as `0x${string}`,
+          time: 5555555555n,
+        };
+
+        const client = testContext.aliceClient;
+        const encoded = client.attestationPropertiesArbiters.encodeTimeEqualArbiterComposingDemand(originalDemand);
+        expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
+
+        const decoded = client.attestationPropertiesArbiters.decodeTimeEqualArbiterComposingDemand(encoded);
+        expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
+        expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
+        expect(decoded.time).toBe(originalDemand.time);
+      });
+    });
+
+    describe("NonComposing variant", () => {
+      test("should encode and decode TimeEqualArbiterNonComposing demand data correctly", () => {
+        const originalDemand = {
+          time: 7777777777n,
+        };
+
+        const client = testContext.aliceClient;
+        const encoded = client.attestationPropertiesArbiters.encodeTimeEqualArbiterNonComposingDemand(originalDemand);
+        expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
+
+        const decoded = client.attestationPropertiesArbiters.decodeTimeEqualArbiterNonComposingDemand(encoded);
+        expect(decoded.time).toBe(originalDemand.time);
+      });
+    });
+  });
+
+  describe("ExpirationTimeBeforeArbiter", () => {
+    describe("Composing variant", () => {
+      test("should encode and decode ExpirationTimeBeforeArbiterComposing demand data correctly", () => {
+        const originalDemand = {
+          baseArbiter: alice,
+          baseDemand: "0xdeadbeef" as `0x${string}`,
+          expirationTime: 2000000000n,
+        };
+
+        const client = testContext.aliceClient;
+        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeBeforeArbiterComposingDemand(originalDemand);
+        expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
+
+        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeBeforeArbiterComposingDemand(encoded);
+        expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
+        expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
+        expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
+      });
+    });
+
+    describe("NonComposing variant", () => {
+      test("should encode and decode ExpirationTimeBeforeArbiterNonComposing demand data correctly", () => {
+        const originalDemand = {
+          expirationTime: 3000000000n,
+        };
+
+        const client = testContext.aliceClient;
+        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeBeforeArbiterNonComposingDemand(originalDemand);
+        expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
+
+        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeBeforeArbiterNonComposingDemand(encoded);
+        expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
+      });
+    });
+  });
+
+  describe("ExpirationTimeEqualArbiter", () => {
+    describe("Composing variant", () => {
+      test("should encode and decode ExpirationTimeEqualArbiterComposing demand data correctly", () => {
+        const originalDemand = {
+          baseArbiter: bob,
+          baseDemand: "0xcafebabe" as `0x${string}`,
+          expirationTime: 4000000000n,
+        };
+
+        const client = testContext.aliceClient;
+        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeEqualArbiterComposingDemand(originalDemand);
+        expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
+
+        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeEqualArbiterComposingDemand(encoded);
+        expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
+        expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
+        expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
+      });
+    });
+
+    describe("NonComposing variant", () => {
+      test("should encode and decode ExpirationTimeEqualArbiterNonComposing demand data correctly", () => {
+        const originalDemand = {
+          expirationTime: 6000000000n,
+        };
+
+        const client = testContext.aliceClient;
+        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeEqualArbiterNonComposingDemand(originalDemand);
+        expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
+
+        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeEqualArbiterNonComposingDemand(encoded);
+        expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
       });
     });
   });

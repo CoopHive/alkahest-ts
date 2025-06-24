@@ -21,10 +21,8 @@ import type { ChainAddresses } from "../types";
  * - Recipient: Validates the recipient address  
  * - RefUID: Validates the reference UID
  * - Revocable: Validates the revocable flag
- * - RevocationTime: Validates revocation timestamp (After/Before/Equal variants)
  * - Schema: Validates the schema hash
  * - UID: Validates the attestation UID
- * - Value: Validates attached value (After/Before/Equal variants)
  */
 export const makeAttestationPropertiesArbitersClient = (
   viemClient: ViemClient,
