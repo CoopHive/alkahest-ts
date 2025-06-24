@@ -1,7 +1,7 @@
 /**
  * General Arbiters Unit Tests
  *
- * Tests for the generalArbiters client functionality, including:
+ * Tests for the arbiters client functionality, including:
  * - IntrinsicsArbiter2: Schema-based validation
  * - TrustedPartyArbiter: Creator-based validation with composable base arbiter
  * - SpecificAttestationArbiter: Validates against a specific attestation UID
@@ -89,15 +89,15 @@ describe("General Arbiters Tests", () => {
     test("should encode and decode IntrinsicsArbiter2 demand data correctly", () => {
       const originalDemand = { schema: targetSchema };
 
-      const encoded = aliceClient.generalArbiters.encodeIntrinsics2Demand(originalDemand);
-      const decoded = aliceClient.generalArbiters.decodeIntrinsics2Demand(encoded);
+      const encoded = aliceClient.arbiters.encodeIntrinsics2Demand(originalDemand);
+      const decoded = aliceClient.arbiters.decodeIntrinsics2Demand(encoded);
 
       expect(decoded.schema).toBe(originalDemand.schema);
     });
 
     test("should validate attestation with matching schema", async () => {
       const attestation = createTestAttestation({ schema: targetSchema });
-      const demand = aliceClient.generalArbiters.encodeIntrinsics2Demand({ schema: targetSchema });
+      const demand = aliceClient.arbiters.encodeIntrinsics2Demand({ schema: targetSchema });
       const counteroffer = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       const result = await testClient.readContract({
@@ -113,7 +113,7 @@ describe("General Arbiters Tests", () => {
     test("should reject attestation with non-matching schema", async () => {
       const wrongSchema = "0x9999999999999999999999999999999999999999999999999999999999999999" as const;
       const attestation = createTestAttestation({ schema: wrongSchema });
-      const demand = aliceClient.generalArbiters.encodeIntrinsics2Demand({ schema: targetSchema });
+      const demand = aliceClient.arbiters.encodeIntrinsics2Demand({ schema: targetSchema });
       const counteroffer = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       try {
@@ -139,7 +139,7 @@ describe("General Arbiters Tests", () => {
       );
       
       // SDK encoding
-      const sdkEncoded = aliceClient.generalArbiters.encodeIntrinsics2Demand(demand);
+      const sdkEncoded = aliceClient.arbiters.encodeIntrinsics2Demand(demand);
       
       expect(sdkEncoded).toBe(manualEncoded);
     });
@@ -153,8 +153,8 @@ describe("General Arbiters Tests", () => {
         creator: bob,
       };
 
-      const encoded = aliceClient.generalArbiters.encodeTrustedPartyDemand(originalDemand);
-      const decoded = aliceClient.generalArbiters.decodeTrustedPartyDemand(encoded);
+      const encoded = aliceClient.arbiters.encodeTrustedPartyDemand(originalDemand);
+      const decoded = aliceClient.arbiters.decodeTrustedPartyDemand(encoded);
 
       expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
       expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
@@ -165,7 +165,7 @@ describe("General Arbiters Tests", () => {
       const trustedCreator = bob;
       // The TrustedPartyArbiter checks if the recipient matches the creator
       const attestation = createTestAttestation({ recipient: trustedCreator });
-      const demand = aliceClient.generalArbiters.encodeTrustedPartyDemand({
+      const demand = aliceClient.arbiters.encodeTrustedPartyDemand({
         baseArbiter: testContext.addresses.trivialArbiter, // Use trivial arbiter as base
         baseDemand: "0x" as `0x${string}`,
         creator: trustedCreator,
@@ -186,7 +186,7 @@ describe("General Arbiters Tests", () => {
       const trustedCreator = bob;
       const nonTrustedRecipient = charlie;
       const attestation = createTestAttestation({ recipient: nonTrustedRecipient });
-      const demand = aliceClient.generalArbiters.encodeTrustedPartyDemand({
+      const demand = aliceClient.arbiters.encodeTrustedPartyDemand({
         baseArbiter: testContext.addresses.trivialArbiter,
         baseDemand: "0x" as `0x${string}`,
         creator: trustedCreator,
@@ -220,7 +220,7 @@ describe("General Arbiters Tests", () => {
       );
       
       // SDK encoding
-      const sdkEncoded = aliceClient.generalArbiters.encodeTrustedPartyDemand(demand);
+      const sdkEncoded = aliceClient.arbiters.encodeTrustedPartyDemand(demand);
       
       expect(sdkEncoded).toBe(manualEncoded);
     });
@@ -232,15 +232,15 @@ describe("General Arbiters Tests", () => {
     test("should encode and decode SpecificAttestationArbiter demand data correctly", () => {
       const originalDemand = { uid: targetUid };
 
-      const encoded = aliceClient.generalArbiters.encodeSpecificAttestationDemand(originalDemand);
-      const decoded = aliceClient.generalArbiters.decodeSpecificAttestationDemand(encoded);
+      const encoded = aliceClient.arbiters.encodeSpecificAttestationDemand(originalDemand);
+      const decoded = aliceClient.arbiters.decodeSpecificAttestationDemand(encoded);
 
       expect(decoded.uid).toBe(originalDemand.uid);
     });
 
     test("should validate attestation with matching UID", async () => {
       const attestation = createTestAttestation({ uid: targetUid });
-      const demand = aliceClient.generalArbiters.encodeSpecificAttestationDemand({ uid: targetUid });
+      const demand = aliceClient.arbiters.encodeSpecificAttestationDemand({ uid: targetUid });
       const counteroffer = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       const result = await testClient.readContract({
@@ -256,7 +256,7 @@ describe("General Arbiters Tests", () => {
     test("should reject attestation with non-matching UID", async () => {
       const wrongUid = "0x2222222222222222222222222222222222222222222222222222222222222222" as const;
       const attestation = createTestAttestation({ uid: wrongUid });
-      const demand = aliceClient.generalArbiters.encodeSpecificAttestationDemand({ uid: targetUid });
+      const demand = aliceClient.arbiters.encodeSpecificAttestationDemand({ uid: targetUid });
       const counteroffer = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       try {
@@ -282,7 +282,7 @@ describe("General Arbiters Tests", () => {
       );
       
       // SDK encoding
-      const sdkEncoded = aliceClient.generalArbiters.encodeSpecificAttestationDemand(demand);
+      const sdkEncoded = aliceClient.arbiters.encodeSpecificAttestationDemand(demand);
       
       expect(sdkEncoded).toBe(manualEncoded);
     });
@@ -295,8 +295,8 @@ describe("General Arbiters Tests", () => {
         data: "0xdeadbeef" as `0x${string}`,
       };
 
-      const encoded = aliceClient.generalArbiters.encodeTrustedOracleDemand(originalDemand);
-      const decoded = aliceClient.generalArbiters.decodeTrustedOracleDemand(encoded);
+      const encoded = aliceClient.arbiters.encodeTrustedOracleDemand(originalDemand);
+      const decoded = aliceClient.arbiters.decodeTrustedOracleDemand(encoded);
 
       expect(decoded.oracle).toBe(originalDemand.oracle);
       expect(decoded.data).toBe(originalDemand.data);
@@ -306,7 +306,7 @@ describe("General Arbiters Tests", () => {
       const oracle = bob;
       const arbitrationData = "0xdeadbeef" as `0x${string}`;
       const attestation = createTestAttestation();
-      const demand = aliceClient.generalArbiters.encodeTrustedOracleDemand({
+      const demand = aliceClient.arbiters.encodeTrustedOracleDemand({
         oracle,
         data: arbitrationData,
       });
@@ -343,7 +343,7 @@ describe("General Arbiters Tests", () => {
       );
       
       // SDK encoding
-      const sdkEncoded = aliceClient.generalArbiters.encodeTrustedOracleDemand(demand);
+      const sdkEncoded = aliceClient.arbiters.encodeTrustedOracleDemand(demand);
       
       expect(sdkEncoded).toBe(manualEncoded);
     });
@@ -352,20 +352,20 @@ describe("General Arbiters Tests", () => {
   describe("Error handling", () => {
     test("should throw error for invalid hex data", () => {
       expect(() => {
-        aliceClient.generalArbiters.decodeIntrinsics2Demand("0x123" as `0x${string}`);
+        aliceClient.arbiters.decodeIntrinsics2Demand("0x123" as `0x${string}`);
       }).toThrow();
     });
 
     test("should handle empty demand data gracefully", () => {
       // Some arbiters may accept empty data
-      const emptyDemand = aliceClient.generalArbiters.encodeTrustedOracleDemand({
+      const emptyDemand = aliceClient.arbiters.encodeTrustedOracleDemand({
         oracle: alice,
         data: "0x" as `0x${string}`,
       });
       
       expect(emptyDemand).toMatch(/^0x[0-9a-f]+$/i);
       
-      const decoded = aliceClient.generalArbiters.decodeTrustedOracleDemand(emptyDemand);
+      const decoded = aliceClient.arbiters.decodeTrustedOracleDemand(emptyDemand);
       expect(decoded.oracle).toBe(alice);
       expect(decoded.data).toBe("0x");
     });
@@ -375,9 +375,9 @@ describe("General Arbiters Tests", () => {
     test("should handle complex TrustedPartyArbiter with nested arbiters", async () => {
       // Create a nested scenario where TrustedPartyArbiter wraps IntrinsicsArbiter2
       const targetSchema = "0x1234567890123456789012345678901234567890123456789012345678901234" as const;
-      const intrinsicsData = aliceClient.generalArbiters.encodeIntrinsics2Demand({ schema: targetSchema });
+      const intrinsicsData = aliceClient.arbiters.encodeIntrinsics2Demand({ schema: targetSchema });
       
-      const trustedPartyDemand = aliceClient.generalArbiters.encodeTrustedPartyDemand({
+      const trustedPartyDemand = aliceClient.arbiters.encodeTrustedPartyDemand({
         baseArbiter: testContext.addresses.intrinsicsArbiter2,
         baseDemand: intrinsicsData,
         creator: bob,
@@ -407,10 +407,10 @@ describe("General Arbiters Tests", () => {
       };
 
       // Encode -> decode -> encode -> decode
-      const encoded1 = aliceClient.generalArbiters.encodeTrustedPartyDemand(originalDemand);
-      const decoded1 = aliceClient.generalArbiters.decodeTrustedPartyDemand(encoded1);
-      const encoded2 = aliceClient.generalArbiters.encodeTrustedPartyDemand(decoded1);
-      const decoded2 = aliceClient.generalArbiters.decodeTrustedPartyDemand(encoded2);
+      const encoded1 = aliceClient.arbiters.encodeTrustedPartyDemand(originalDemand);
+      const decoded1 = aliceClient.arbiters.decodeTrustedPartyDemand(encoded1);
+      const encoded2 = aliceClient.arbiters.encodeTrustedPartyDemand(decoded1);
+      const decoded2 = aliceClient.arbiters.decodeTrustedPartyDemand(encoded2);
 
       expect(encoded1).toBe(encoded2);
       expect(decoded1).toEqual(decoded2);

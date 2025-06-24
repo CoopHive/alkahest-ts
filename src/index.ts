@@ -8,9 +8,6 @@ import {
   type WalletClient,
 } from "viem";
 import { makeArbitersClient } from "./clients/arbiters";
-import { makeAttestationPropertiesArbitersClient } from "./clients/attestationPropertiesArbiters";
-import { makeGeneralArbitersClient } from "./clients/generalArbiters";
-import { makeLogicalArbitersClient } from "./clients/logicalArbiters";
 import { makeAttestationClient } from "./clients/attestation";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeErc20Client } from "./clients/erc20";
@@ -257,17 +254,8 @@ export const makeClient = (
   };
 
   return {
-    /** @deprecated Use specific arbiter clients instead (generalArbiters, attestationPropertiesArbiters, logicalArbiters) */
+    /** Unified client for all arbiter functionality */
     arbiters: makeArbitersClient(viemClient, addresses),
-
-    /** Methods for interacting with General Arbiters (TrustedParty, SpecificAttestation, TrustedOracle, Intrinsics2) */
-    generalArbiters: makeGeneralArbitersClient(viemClient, addresses),
-
-    /** Methods for interacting with Attestation Properties Arbiters (time, expiration, recipient, schema, etc.) */
-    attestationPropertiesArbiters: makeAttestationPropertiesArbitersClient(viemClient, addresses),
-
-    /** Methods for interacting with Logical Arbiters (Any/All composition) */
-    logicalArbiters: makeLogicalArbitersClient(viemClient, addresses),
 
     /** Methods for interacting with ERC20 tokens */
     erc20: makeErc20Client(viemClient, addresses),

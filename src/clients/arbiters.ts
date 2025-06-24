@@ -2,12 +2,15 @@ import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
 import { makeGeneralArbitersClient } from "./generalArbiters";
 import { makeLogicalArbitersClient } from "./logicalArbiters";
+import { makeAttestationPropertiesArbitersClient } from "./attestationPropertiesArbiters";
 
 /**
- * @deprecated This client is now split into multiple specialized clients:
- * - Use makeGeneralArbitersClient() for basic arbiters (TrustedParty, SpecificAttestation, TrustedOracle, etc.)
- * - Use makeLogicalArbitersClient() for logical arbiters (Any, All)
- * - Use makeAttestationPropertiesArbitersClient() for attestation property arbiters
+ * Unified Arbiters Client
+ * 
+ * Provides a single interface for all arbiter functionality by combining:
+ * - General arbiters (TrustedParty, SpecificAttestation, TrustedOracle, etc.)
+ * - Logical arbiters (Any, All)
+ * - Attestation properties arbiters (Attester, Time, Schema, etc.)
  */
 export const makeArbitersClient = (
   viemClient: ViemClient,
@@ -15,20 +18,27 @@ export const makeArbitersClient = (
 ) => {
   const generalArbiters = makeGeneralArbitersClient(viemClient, addresses);
   const logicalArbiters = makeLogicalArbitersClient(viemClient, addresses);
+  const attestationPropertiesArbiters = makeAttestationPropertiesArbitersClient(viemClient, addresses);
 
   return {
-    // Deprecated methods - use makeLogicalArbitersClient() instead
+    // General arbiters
+    ...generalArbiters,
+    
+    // Logical arbiters
+    ...logicalArbiters,
+    
+    // Attestation properties arbiters
+    ...attestationPropertiesArbiters,
+    
+    // Backward compatibility aliases
     /**
-     * @deprecated Use makeLogicalArbitersClient().encodeAnyArbiterDemand or encodeAllArbiterDemand instead
+     * @deprecated Use encodeAnyArbiterDemand instead
      */
     encodeMultiArbiterDemand: logicalArbiters.encodeAnyArbiterDemand,
 
     /**
-     * @deprecated Use makeLogicalArbitersClient().decodeAnyArbiterDemand or decodeAllArbiterDemand instead
+     * @deprecated Use decodeAnyArbiterDemand instead
      */
     decodeMultiArbiterDemand: logicalArbiters.decodeAnyArbiterDemand,
-
-    // Re-export from generalArbiters for backward compatibility
-    ...generalArbiters,
   };
 };

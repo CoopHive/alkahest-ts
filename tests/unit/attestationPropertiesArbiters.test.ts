@@ -1,7 +1,7 @@
 /**
  * Attestation Properties Arbiters Unit Tests
  *
- * This file contains tests for the attestation properties arbiters client functionality, including:
+ * This file contains tests for the arbiters client functionality, including:
  * - AttesterArbiter (Composing & NonComposing)
  * - ExpirationTimeAfterArbiter (Composing & NonComposing)
  * - RecipientArbiter (Composing & NonComposing)
@@ -62,11 +62,11 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         // Test encoding
-        const encoded = client.attestationPropertiesArbiters.encodeAttesterArbiterComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeAttesterArbiterComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-f]+$/i);
 
         // Test decoding
-        const decoded = client.attestationPropertiesArbiters.decodeAttesterArbiterComposingDemand(encoded);
+        const decoded = client.arbiters.decodeAttesterArbiterComposingDemand(encoded);
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.attester).toBe(originalDemand.attester);
@@ -81,8 +81,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           attester: bob,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeAttesterArbiterComposingDemand(demand);
-        const decoded = client.attestationPropertiesArbiters.decodeAttesterArbiterComposingDemand(encoded);
+        const encoded = client.arbiters.encodeAttesterArbiterComposingDemand(demand);
+        const decoded = client.arbiters.decodeAttesterArbiterComposingDemand(encoded);
         
         expect(decoded.baseDemand).toBe("0x");
       });
@@ -97,11 +97,11 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         // Test encoding
-        const encoded = client.attestationPropertiesArbiters.encodeAttesterArbiterNonComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeAttesterArbiterNonComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-f]+$/i);
 
         // Test decoding
-        const decoded = client.attestationPropertiesArbiters.decodeAttesterArbiterNonComposingDemand(encoded);
+        const decoded = client.arbiters.decodeAttesterArbiterNonComposingDemand(encoded);
         expect(decoded.attester).toBe(originalDemand.attester);
       });
     });
@@ -118,8 +118,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           expirationTime: 1735689600n, // BigInt timestamp
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeAfterArbiterComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeAfterArbiterComposingDemand(encoded);
+        const encoded = client.arbiters.encodeExpirationTimeAfterArbiterComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeExpirationTimeAfterArbiterComposingDemand(encoded);
         
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
@@ -135,8 +135,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           expirationTime: 1735689600n,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeAfterArbiterNonComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeAfterArbiterNonComposingDemand(encoded);
+        const encoded = client.arbiters.encodeExpirationTimeAfterArbiterNonComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeExpirationTimeAfterArbiterNonComposingDemand(encoded);
         
         expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
       });
@@ -154,8 +154,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           recipient: bob,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeRecipientArbiterComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeRecipientArbiterComposingDemand(encoded);
+        const encoded = client.arbiters.encodeRecipientArbiterComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeRecipientArbiterComposingDemand(encoded);
         
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
@@ -171,8 +171,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           recipient: bob,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeRecipientArbiterNonComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeRecipientArbiterNonComposingDemand(encoded);
+        const encoded = client.arbiters.encodeRecipientArbiterNonComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeRecipientArbiterNonComposingDemand(encoded);
         
         expect(decoded.recipient).toBe(originalDemand.recipient);
       });
@@ -190,8 +190,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           refUID: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" as `0x${string}`,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeRefUidArbiterComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeRefUidArbiterComposingDemand(encoded);
+        const encoded = client.arbiters.encodeRefUidArbiterComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeRefUidArbiterComposingDemand(encoded);
         
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
@@ -207,8 +207,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           refUID: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd" as `0x${string}`,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeRefUidArbiterNonComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeRefUidArbiterNonComposingDemand(encoded);
+        const encoded = client.arbiters.encodeRefUidArbiterNonComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeRefUidArbiterNonComposingDemand(encoded);
         
         expect(decoded.refUID).toBe(originalDemand.refUID);
       });
@@ -226,8 +226,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           revocable: true,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeRevocableArbiterComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeRevocableArbiterComposingDemand(encoded);
+        const encoded = client.arbiters.encodeRevocableArbiterComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeRevocableArbiterComposingDemand(encoded);
         
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
@@ -243,8 +243,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           revocable: false,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeRevocableArbiterComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeRevocableArbiterComposingDemand(encoded);
+        const encoded = client.arbiters.encodeRevocableArbiterComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeRevocableArbiterComposingDemand(encoded);
         
         expect(decoded.revocable).toBe(false);
       });
@@ -258,8 +258,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           revocable: true,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeRevocableArbiterNonComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeRevocableArbiterNonComposingDemand(encoded);
+        const encoded = client.arbiters.encodeRevocableArbiterNonComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeRevocableArbiterNonComposingDemand(encoded);
         
         expect(decoded.revocable).toBe(originalDemand.revocable);
       });
@@ -277,8 +277,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           schema: "0x1234567890abcdef1234567890abcdef1234567890abcdef1234567890abcdef" as `0x${string}`,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeSchemaArbiterComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeSchemaArbiterComposingDemand(encoded);
+        const encoded = client.arbiters.encodeSchemaArbiterComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeSchemaArbiterComposingDemand(encoded);
         
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
@@ -294,8 +294,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           schema: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" as `0x${string}`,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeSchemaArbiterNonComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeSchemaArbiterNonComposingDemand(encoded);
+        const encoded = client.arbiters.encodeSchemaArbiterNonComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeSchemaArbiterNonComposingDemand(encoded);
         
         expect(decoded.schema).toBe(originalDemand.schema);
       });
@@ -313,8 +313,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           time: 1735689600n,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeTimeAfterArbiterComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeTimeAfterArbiterComposingDemand(encoded);
+        const encoded = client.arbiters.encodeTimeAfterArbiterComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeTimeAfterArbiterComposingDemand(encoded);
         
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
@@ -330,8 +330,8 @@ describe("Attestation Properties Arbiters Tests", () => {
           time: 1735689600n,
         };
 
-        const encoded = client.attestationPropertiesArbiters.encodeTimeAfterArbiterNonComposingDemand(originalDemand);
-        const decoded = client.attestationPropertiesArbiters.decodeTimeAfterArbiterNonComposingDemand(encoded);
+        const encoded = client.arbiters.encodeTimeAfterArbiterNonComposingDemand(originalDemand);
+        const decoded = client.arbiters.decodeTimeAfterArbiterNonComposingDemand(encoded);
         
         expect(decoded.time).toBe(originalDemand.time);
       });
@@ -348,10 +348,10 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         const client = testContext.aliceClient;
-        const encoded = client.attestationPropertiesArbiters.encodeTimeBeforeArbiterComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeTimeBeforeArbiterComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
 
-        const decoded = client.attestationPropertiesArbiters.decodeTimeBeforeArbiterComposingDemand(encoded);
+        const decoded = client.arbiters.decodeTimeBeforeArbiterComposingDemand(encoded);
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.time).toBe(originalDemand.time);
@@ -365,10 +365,10 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         const client = testContext.aliceClient;
-        const encoded = client.attestationPropertiesArbiters.encodeTimeBeforeArbiterNonComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeTimeBeforeArbiterNonComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
 
-        const decoded = client.attestationPropertiesArbiters.decodeTimeBeforeArbiterNonComposingDemand(encoded);
+        const decoded = client.arbiters.decodeTimeBeforeArbiterNonComposingDemand(encoded);
         expect(decoded.time).toBe(originalDemand.time);
       });
     });
@@ -384,10 +384,10 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         const client = testContext.aliceClient;
-        const encoded = client.attestationPropertiesArbiters.encodeTimeEqualArbiterComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeTimeEqualArbiterComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
 
-        const decoded = client.attestationPropertiesArbiters.decodeTimeEqualArbiterComposingDemand(encoded);
+        const decoded = client.arbiters.decodeTimeEqualArbiterComposingDemand(encoded);
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.time).toBe(originalDemand.time);
@@ -401,10 +401,10 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         const client = testContext.aliceClient;
-        const encoded = client.attestationPropertiesArbiters.encodeTimeEqualArbiterNonComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeTimeEqualArbiterNonComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
 
-        const decoded = client.attestationPropertiesArbiters.decodeTimeEqualArbiterNonComposingDemand(encoded);
+        const decoded = client.arbiters.decodeTimeEqualArbiterNonComposingDemand(encoded);
         expect(decoded.time).toBe(originalDemand.time);
       });
     });
@@ -420,10 +420,10 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         const client = testContext.aliceClient;
-        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeBeforeArbiterComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeExpirationTimeBeforeArbiterComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
 
-        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeBeforeArbiterComposingDemand(encoded);
+        const decoded = client.arbiters.decodeExpirationTimeBeforeArbiterComposingDemand(encoded);
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
@@ -437,10 +437,10 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         const client = testContext.aliceClient;
-        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeBeforeArbiterNonComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeExpirationTimeBeforeArbiterNonComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
 
-        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeBeforeArbiterNonComposingDemand(encoded);
+        const decoded = client.arbiters.decodeExpirationTimeBeforeArbiterNonComposingDemand(encoded);
         expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
       });
     });
@@ -456,10 +456,10 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         const client = testContext.aliceClient;
-        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeEqualArbiterComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeExpirationTimeEqualArbiterComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
 
-        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeEqualArbiterComposingDemand(encoded);
+        const decoded = client.arbiters.decodeExpirationTimeEqualArbiterComposingDemand(encoded);
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
@@ -473,10 +473,10 @@ describe("Attestation Properties Arbiters Tests", () => {
         };
 
         const client = testContext.aliceClient;
-        const encoded = client.attestationPropertiesArbiters.encodeExpirationTimeEqualArbiterNonComposingDemand(originalDemand);
+        const encoded = client.arbiters.encodeExpirationTimeEqualArbiterNonComposingDemand(originalDemand);
         expect(encoded).toMatch(/^0x[0-9a-fA-F]+$/);
 
-        const decoded = client.attestationPropertiesArbiters.decodeExpirationTimeEqualArbiterNonComposingDemand(encoded);
+        const decoded = client.arbiters.decodeExpirationTimeEqualArbiterNonComposingDemand(encoded);
         expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
       });
     });
@@ -487,7 +487,7 @@ describe("Attestation Properties Arbiters Tests", () => {
       const client = testContext.aliceClient;
       
       expect(() => {
-        client.attestationPropertiesArbiters.decodeAttesterArbiterComposingDemand("invalid-hex" as `0x${string}`);
+        client.arbiters.decodeAttesterArbiterComposingDemand("invalid-hex" as `0x${string}`);
       }).toThrow();
     });
 
@@ -495,7 +495,7 @@ describe("Attestation Properties Arbiters Tests", () => {
       const client = testContext.aliceClient;
       
       expect(() => {
-        client.attestationPropertiesArbiters.decodeAttesterArbiterComposingDemand("0x123" as `0x${string}`);
+        client.arbiters.decodeAttesterArbiterComposingDemand("0x123" as `0x${string}`);
       }).toThrow();
     });
   });
@@ -515,7 +515,7 @@ describe("Attestation Properties Arbiters Tests", () => {
       );
       
       // SDK encoding
-      const sdkEncoded = client.attestationPropertiesArbiters.encodeAttesterArbiterNonComposingDemand(demand);
+      const sdkEncoded = client.arbiters.encodeAttesterArbiterNonComposingDemand(demand);
       
       expect(sdkEncoded).toBe(manualEncoded);
     });
