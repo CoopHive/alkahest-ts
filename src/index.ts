@@ -167,10 +167,94 @@ export const makeClient = (
       contractAddresses?.anyArbiter || baseAddresses?.anyArbiter || zeroAddress,
     allArbiter:
       contractAddresses?.allArbiter || baseAddresses?.allArbiter || zeroAddress,
+
+    // Attestation Properties Arbiters - Composing
+    attesterArbiterComposing:
+      contractAddresses?.attesterArbiterComposing ||
+      baseAddresses?.attesterArbiterComposing ||
+      zeroAddress,
+    expirationTimeArbiterComposing:
+      contractAddresses?.expirationTimeArbiterComposing ||
+      baseAddresses?.expirationTimeArbiterComposing ||
+      zeroAddress,
+    recipientArbiterComposing:
+      contractAddresses?.recipientArbiterComposing ||
+      baseAddresses?.recipientArbiterComposing ||
+      zeroAddress,
+    refUidArbiterComposing:
+      contractAddresses?.refUidArbiterComposing ||
+      baseAddresses?.refUidArbiterComposing ||
+      zeroAddress,
+    revocableArbiterComposing:
+      contractAddresses?.revocableArbiterComposing ||
+      baseAddresses?.revocableArbiterComposing ||
+      zeroAddress,
+    revocationTimeArbiterComposing:
+      contractAddresses?.revocationTimeArbiterComposing ||
+      baseAddresses?.revocationTimeArbiterComposing ||
+      zeroAddress,
+    schemaArbiterComposing:
+      contractAddresses?.schemaArbiterComposing ||
+      baseAddresses?.schemaArbiterComposing ||
+      zeroAddress,
+    timestampArbiterComposing:
+      contractAddresses?.timestampArbiterComposing ||
+      baseAddresses?.timestampArbiterComposing ||
+      zeroAddress,
+    uidArbiterComposing:
+      contractAddresses?.uidArbiterComposing ||
+      baseAddresses?.uidArbiterComposing ||
+      zeroAddress,
+    valueArbiterComposing:
+      contractAddresses?.valueArbiterComposing ||
+      baseAddresses?.valueArbiterComposing ||
+      zeroAddress,
+
+    // Attestation Properties Arbiters - Non-Composing
+    attesterArbiterNonComposing:
+      contractAddresses?.attesterArbiterNonComposing ||
+      baseAddresses?.attesterArbiterNonComposing ||
+      zeroAddress,
+    expirationTimeArbiterNonComposing:
+      contractAddresses?.expirationTimeArbiterNonComposing ||
+      baseAddresses?.expirationTimeArbiterNonComposing ||
+      zeroAddress,
+    recipientArbiterNonComposing:
+      contractAddresses?.recipientArbiterNonComposing ||
+      baseAddresses?.recipientArbiterNonComposing ||
+      zeroAddress,
+    refUidArbiterNonComposing:
+      contractAddresses?.refUidArbiterNonComposing ||
+      baseAddresses?.refUidArbiterNonComposing ||
+      zeroAddress,
+    revocableArbiterNonComposing:
+      contractAddresses?.revocableArbiterNonComposing ||
+      baseAddresses?.revocableArbiterNonComposing ||
+      zeroAddress,
+    revocationTimeArbiterNonComposing:
+      contractAddresses?.revocationTimeArbiterNonComposing ||
+      baseAddresses?.revocationTimeArbiterNonComposing ||
+      zeroAddress,
+    schemaArbiterNonComposing:
+      contractAddresses?.schemaArbiterNonComposing ||
+      baseAddresses?.schemaArbiterNonComposing ||
+      zeroAddress,
+    timestampArbiterNonComposing:
+      contractAddresses?.timestampArbiterNonComposing ||
+      baseAddresses?.timestampArbiterNonComposing ||
+      zeroAddress,
+    uidArbiterNonComposing:
+      contractAddresses?.uidArbiterNonComposing ||
+      baseAddresses?.uidArbiterNonComposing ||
+      zeroAddress,
+    valueArbiterNonComposing:
+      contractAddresses?.valueArbiterNonComposing ||
+      baseAddresses?.valueArbiterNonComposing ||
+      zeroAddress,
   };
 
   return {
-    /** Methods for interacting with Arbiters */
+    /** Unified client for all arbiter functionality */
     arbiters: makeArbitersClient(viemClient, addresses),
 
     /** Methods for interacting with ERC20 tokens */
@@ -283,3 +367,11 @@ export const makeClient = (
 
 export * from "./config";
 export * from "./types";
+
+// Main arbiter clients - use these for new development
+export * from "./clients/generalArbiters";
+export * from "./clients/attestationPropertiesArbiters";
+export * from "./clients/logicalArbiters";
+
+// Deprecated - use specific clients above instead
+export * from "./clients/arbiters";
