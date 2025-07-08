@@ -216,7 +216,7 @@ test("tradeErc20ForCustom", async () => {
   //     address arbiter;
   //     bytes demand;
   // }
-  const decodedStatement = clientSeller.erc20.decodeEscrowStatement(
+  const decodedStatement = clientSeller.erc20.decodeEscrowObligation(
     buyStatement.data,
   );
   // TrustedPartyArbiter.DemandData
@@ -265,7 +265,7 @@ test("tradeErc20ForCustom", async () => {
   console.log("result statement: ", resultStatement);
 
   // and collect the payment from escrow
-  const collection = await clientSeller.erc20.collectPayment(
+  const collection = await clientSeller.erc20.collectEscrow(
     escrow.attested.uid,
     resultStatement.uid,
   );

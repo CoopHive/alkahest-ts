@@ -64,13 +64,13 @@ describe("StringObligation Tests", () => {
       );
     });
 
-    test("testMakeStatement", async () => {
+    test("testDoObligation", async () => {
       // Setup test data
       const testString = "Test String Data";
 
       // Make a statement using alice's client - returns transaction hash
       const { attested: attestedEvent } =
-        await aliceClient.stringObligation.makeStatement(testString);
+        await aliceClient.stringObligation.doObligation(testString);
 
       // Verify attestation UID exists
       expect(attestedEvent.uid).not.toBe(
@@ -84,7 +84,7 @@ describe("StringObligation Tests", () => {
 
       // Make a statement using alice's client - returns transaction hash
       const { attested: attestedEvent } =
-        await aliceClient.stringObligation.makeStatement(testString);
+        await aliceClient.stringObligation.doObligation(testString);
 
       // Get the complete obligation/statement
       const obligation = await aliceClient.stringObligation.getObligation(
@@ -111,7 +111,7 @@ describe("StringObligation Tests", () => {
 
       // Make a JSON statement
       const { attested: attestedEvent } =
-        await aliceClient.stringObligation.makeStatementJson(testJsonData);
+        await aliceClient.stringObligation.doObligationJson(testJsonData);
 
       // Verify attestation UID exists
       expect(attestedEvent.uid).not.toBe(

@@ -45,7 +45,7 @@ test("arbitratePast with enhanced time filters", async () => {
   );
 
   // Create multiple fulfillments at different times
-  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -53,7 +53,7 @@ test("arbitratePast with enhanced time filters", async () => {
   // Wait a bit longer
   await new Promise(resolve => setTimeout(resolve, 3000));
 
-  const { attested: fulfillment2 } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment2 } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -107,12 +107,12 @@ test("arbitratePast with attestation property filters", async () => {
   );
 
   // Create fulfillments from different attesters
-  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
 
-  const { attested: fulfillment2 } = await testContext.aliceClient.stringObligation.makeStatement(
+  const { attested: fulfillment2 } = await testContext.aliceClient.stringObligation.doObligation(
     "bar",
     escrow.uid,
   );
@@ -169,9 +169,9 @@ test("arbitratePast with batch processing filters", async () => {
 
   // Create multiple fulfillments sequentially to avoid timing issues
   const fulfillments = [];
-  fulfillments.push(await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid));
-  fulfillments.push(await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid));
-  fulfillments.push(await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid));
+  fulfillments.push(await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid));
+  fulfillments.push(await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid));
+  fulfillments.push(await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid));
 
   // Test maxStatements filter
   const { decisions: limitedDecisions } = await testContext.bobClient.oracle.arbitratePast({
@@ -228,7 +228,7 @@ test("arbitratePast with dry run mode", async () => {
     0n,
   );
 
-  const { attested: fulfillment } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -272,7 +272,7 @@ test("arbitratePast with block range filters", async () => {
     0n,
   );
 
-  const { attested: fulfillment } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -343,7 +343,7 @@ test("arbitratePast with performance filters", async () => {
     0n,
   );
 
-  const { attested: fulfillment } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -396,9 +396,9 @@ test("arbitratePast with combined filters", async () => {
   );
 
   // Create multiple fulfillments sequentially to avoid timing issues
-  await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid);
-  await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid);
-  await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid);
+  await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
+  await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
+  await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
 
   // Test combination of filters
   const { decisions: combinedDecisions } = await testContext.bobClient.oracle.arbitratePast({

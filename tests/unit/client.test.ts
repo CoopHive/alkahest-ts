@@ -166,7 +166,7 @@ describe("Client Tests", () => {
     test("should wait for an escrow fulfillment", async () => {
       // First create a string attestation by Bob to use for fulfillment
       const { attested: fulfillmentEvent } =
-        await bobClient.stringObligation.makeStatement("fulfillment data");
+        await bobClient.stringObligation.doObligation("fulfillment data");
       const fulfillmentUid = fulfillmentEvent.uid as `0x${string}`;
 
       await aliceClient.erc20.approve(
@@ -187,7 +187,7 @@ describe("Client Tests", () => {
       );
 
       // Bob collects the escrow by providing the fulfillment
-      await bobClient.erc20.collectPayment(escrowData.uid, fulfillmentUid);
+      await bobClient.erc20.collectEscrow(escrowData.uid, fulfillmentUid);
 
       // Wait for the fulfillment promise to resolve
       const fulfillment = await fulfillmentPromise;

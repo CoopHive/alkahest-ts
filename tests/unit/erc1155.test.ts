@@ -419,7 +419,7 @@ describe("ERC1155 Tests", () => {
       await bobClient.bundle.approve(bundle, "escrow");
 
       // Create ERC1155 payment statement for Alice's tokens
-      const erc1155PaymentStatement = bobClient.erc1155.encodePaymentStatement(
+      const erc1155PaymentStatement = bobClient.erc1155.encodePaymentObligation(
         {
           address: aliceErc1155Token,
           id: aliceErc1155TokenId,
@@ -508,7 +508,7 @@ describe("ERC1155 Tests", () => {
       );
     });
 
-    test("testCollectExpired", async () => {
+    test("testReclaimExpired", async () => {
       const currentTime = Math.floor(Date.now() / 1000);
       const shortExpiration = BigInt(currentTime + 60); // 60 seconds from now
 
@@ -530,7 +530,7 @@ describe("ERC1155 Tests", () => {
       await testClient.increaseTime({ seconds: 120 }); // Advance 120 seconds
 
       // Alice collects her expired escrow
-      await aliceClient.erc1155.collectExpired(buyAttestation.uid);
+      await aliceClient.erc1155.reclaimExpired(buyAttestation.uid);
 
       // Verify Alice got her tokens back
       const aliceBalance = await testClient.getErc1155Balance(

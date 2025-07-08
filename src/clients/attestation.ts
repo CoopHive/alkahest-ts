@@ -71,7 +71,7 @@ export const makeAttestationClient = (
      * @param data - StatementData object to encode
      * @returns the abi encoded StatementData as bytes
      */
-    encodeEscrowStatement: (data: {
+    encodeEscrowObligation: (data: {
       attestation: {
         schema: `0x${string}`;
         data: {
@@ -93,7 +93,7 @@ export const makeAttestationClient = (
      * @param data - StatementData object to encode
      * @returns the abi encoded StatementData as bytes
      */
-    encodeEscrow2Statement: (data: {
+    encodeEscrow2Obligation: (data: {
       attestationUid: `0x${string}`;
       arbiter: `0x${string}`;
       demand: `0x${string}`;
@@ -107,23 +107,23 @@ export const makeAttestationClient = (
     },
     /**
      * Decodes AttestationEscrowObligation.StatementData from bytes.
-     * @param statementData - StatementData as abi encoded bytes
+     * @param obligationData - StatementData as abi encoded bytes
      * @returns the decoded StatementData object
      */
-    decodeEscrowStatement: (statementData: `0x${string}`) => {
-      return decodeAbiParameters(attestationAbi, statementData)[0];
+    decodeEscrowObligation: (obligationData: `0x${string}`) => {
+      return decodeAbiParameters(attestationAbi, obligationData)[0];
     },
     /**
      * Decodes AttestationEscrowObligation2.StatementData from bytes.
-     * @param statementData - StatementData as abi encoded bytes
+     * @param obligationData - StatementData as abi encoded bytes
      * @returns the decoded StatementData object
      */
-    decodeEscrow2Statement: (statementData: `0x${string}`) => {
+    decodeEscrow2Obligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
         parseAbiParameters(
           "(address arbiter, bytes demand, bytes32 attestationUid)",
         ),
-        statementData,
+        obligationData,
       )[0];
     },
     getEscrowSchema,
@@ -260,7 +260,7 @@ export const makeAttestationClient = (
      * @param fulfillmentAttestation - The UID of the fulfillment attestation
      * @returns The transaction hash and validation attestation data
      */
-    collectPayment: async (
+    collectEscrow: async (
       escrowAttestation: `0x${string}`,
       fulfillmentAttestation: `0x${string}`,
     ) => {
@@ -322,7 +322,7 @@ export const makeAttestationClient = (
      * @param fulfillmentAttestation - The UID of the fulfillment attestation
      * @returns The transaction hash and validation attestation data
      */
-    collectPayment2: async (
+    collectEscrow2: async (
       escrowAttestation: `0x${string}`,
       fulfillmentAttestation: `0x${string}`,
     ) => {
