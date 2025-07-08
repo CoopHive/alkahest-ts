@@ -23,9 +23,9 @@ export const makeTokenBundleClient = (
   addresses: ChainAddresses,
 ) => {
   /**
-   * Encodes TokenBundleEscrowObligation.StatementData to bytes using raw parameters.
-   * @param data - StatementData object to encode
-   * @returns the abi encoded StatementData as bytes
+   * Encodes TokenBundleEscrowObligation.ObligationData to bytes using raw parameters.
+   * @param data - ObligationData object to encode
+   * @returns the abi encoded ObligationData as bytes
    */
   const encodeEscrowObligationRaw = (data: {
     erc20Tokens: `0x${string}`[];
@@ -47,9 +47,9 @@ export const makeTokenBundleClient = (
   };
 
   /**
-   * Encodes TokenBundlePaymentObligation.StatementData to bytes using raw parameters.
-   * @param data - StatementData object to encode
-   * @returns the abi encoded StatementData as bytes
+   * Encodes TokenBundlePaymentObligation.ObligationData to bytes using raw parameters.
+   * @param data - ObligationData object to encode
+   * @returns the abi encoded ObligationData as bytes
    */
   const encodePaymentObligationRaw = (data: {
     erc20Tokens: `0x${string}`[];
@@ -73,10 +73,10 @@ export const makeTokenBundleClient = (
     encodeEscrowObligationRaw,
     encodePaymentObligationRaw,
     /**
-     * Encodes TokenBundleEscrowObligation.StatementData to bytes using type-based parameters.
+     * Encodes TokenBundleEscrowObligation.ObligationData to bytes using type-based parameters.
      * @param bundle - Bundle of tokens for payment
      * @param demand - Custom demand details
-     * @returns the abi encoded StatementData as bytes
+     * @returns the abi encoded ObligationData as bytes
      */
     encodeEscrowObligation: (bundle: TokenBundle, demand: Demand) => {
       const flatBundle = flattenTokenBundle(bundle);
@@ -89,10 +89,10 @@ export const makeTokenBundleClient = (
     },
 
     /**
-     * Encodes TokenBundlePaymentObligation.StatementData to bytes using type-based parameters.
+     * Encodes TokenBundlePaymentObligation.ObligationData to bytes using type-based parameters.
      * @param bundle - Bundle of tokens for payment
      * @param payee - Address to receive the payment
-     * @returns the abi encoded StatementData as bytes
+     * @returns the abi encoded ObligationData as bytes
      */
     encodePaymentObligation: (bundle: TokenBundle, payee: `0x${string}`) => {
       const flatBundle = flattenTokenBundle(bundle);
@@ -104,9 +104,9 @@ export const makeTokenBundleClient = (
     },
 
     /**
-     * Decodes TokenBundleEscrowObligation.StatementData from bytes.
-     * @param obligationData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes TokenBundleEscrowObligation.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
@@ -117,9 +117,9 @@ export const makeTokenBundleClient = (
       )[0];
     },
     /**
-     * Decodes TokenBundlePaymentObligation.StatementData from bytes.
-     * @param obligationData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes TokenBundlePaymentObligation.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
     decodePaymentObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(

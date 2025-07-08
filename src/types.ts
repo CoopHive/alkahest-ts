@@ -185,8 +185,8 @@ export interface BlockFilters {
 }
 
 export interface BatchFilters {
-  /** Limit number of statements to process */
-  maxStatements?: number;
+  /** Limit number of obligations to process */
+  maxObligations?: number;
   /** Process recent attestations first */
   prioritizeRecent?: boolean;
   /** Process in batches of this size */
@@ -210,6 +210,6 @@ export interface EnhancedArbitrateFilters extends
   PerformanceFilters {
   /** Only arbitrate if escrow demands current oracle */
   onlyIfEscrowDemandsCurrentOracle?: boolean;
-  /** Skip statements that have already been arbitrated */
+  /** Skip obligations that have already been arbitrated */
   skipAlreadyArbitrated?: boolean;
 }

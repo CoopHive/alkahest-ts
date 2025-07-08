@@ -111,9 +111,9 @@ export const makeStringObligationClient = (
     },
     getSchema,
     /**
-     * Gets a complete obligation from its attestation UID, combining attestation metadata with decoded statement data
+     * Gets a complete obligation from its attestation UID, combining attestation metadata with decoded obligation data
      * @param uid - UID of the attestation
-     * @returns The complete obligation including attestation metadata and decoded statement data
+     * @returns The complete obligation including attestation metadata and decoded obligation data
      */
     getObligation: async (uid: `0x${string}`) => {
       const [attestation, schema] = await Promise.all([

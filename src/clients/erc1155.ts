@@ -28,9 +28,9 @@ export const makeErc1155Client = (
   addresses: ChainAddresses,
 ) => {
   /**
-   * Encodes ERC1155EscrowObligation.StatementData to bytes using raw parameters.
-   * @param data - StatementData object to encode
-   * @returns the abi encoded StatementData as bytes
+   * Encodes ERC1155EscrowObligation.ObligationData to bytes using raw parameters.
+   * @param data - ObligationData object to encode
+   * @returns the abi encoded ObligationData as bytes
    */
   const encodeEscrowObligationRaw = (data: {
     arbiter: `0x${string}`;
@@ -48,9 +48,9 @@ export const makeErc1155Client = (
   };
 
   /**
-   * Encodes ERC1155PaymentObligation.StatementData to bytes using raw parameters.
-   * @param data - StatementData object to encode
-   * @returns the abi encoded StatementData as bytes
+   * Encodes ERC1155PaymentObligation.ObligationData to bytes using raw parameters.
+   * @param data - ObligationData object to encode
+   * @returns the abi encoded ObligationData as bytes
    */
   const encodePaymentObligationRaw = (data: {
     token: `0x${string}`;
@@ -70,10 +70,10 @@ export const makeErc1155Client = (
     encodeEscrowObligationRaw,
     encodePaymentObligationRaw,
     /**
-     * Encodes ERC1155EscrowObligation.StatementData to bytes using type-based parameters.
+     * Encodes ERC1155EscrowObligation.ObligationData to bytes using type-based parameters.
      * @param token - ERC1155 token details
      * @param demand - Custom demand details
-     * @returns the abi encoded StatementData as bytes
+     * @returns the abi encoded ObligationData as bytes
      */
     encodeEscrowObligation: (token: Erc1155, demand: Demand) => {
       return encodeEscrowObligationRaw({
@@ -86,10 +86,10 @@ export const makeErc1155Client = (
     },
 
     /**
-     * Encodes ERC1155PaymentObligation.StatementData to bytes using type-based parameters.
+     * Encodes ERC1155PaymentObligation.ObligationData to bytes using type-based parameters.
      * @param token - ERC1155 token details
      * @param payee - Address to receive the payment
-     * @returns the abi encoded StatementData as bytes
+     * @returns the abi encoded ObligationData as bytes
      */
     encodePaymentObligation: (token: Erc1155, payee: `0x${string}`) => {
       return encodePaymentObligationRaw({
@@ -101,9 +101,9 @@ export const makeErc1155Client = (
     },
 
     /**
-     * Decodes ERC1155EscrowObligation.StatementData from bytes.
-     * @param obligationData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes ERC1155EscrowObligation.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
@@ -114,9 +114,9 @@ export const makeErc1155Client = (
       )[0];
     },
     /**
-     * Decodes ERC1155PaymentObligation.StatementData from bytes.
-     * @param obligationData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes ERC1155PaymentObligation.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
     decodePaymentObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(

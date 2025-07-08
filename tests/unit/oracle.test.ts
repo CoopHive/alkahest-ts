@@ -54,9 +54,9 @@ test("trivialArbitratePast", async () => {
   const decisions = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (_statement) => true,
+    arbitrate: async (_obligation) => true,
   });
 
   decisions.decisions.forEach(($) => expect($?.decision).toBe(true));
@@ -91,12 +91,12 @@ test("trivialListenAndArbitrate", async () => {
   const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrate({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (_statement) => true,
+    arbitrate: async (_obligation) => true,
     onAfterArbitrate: async (decision) => {
       expect(decision?.attestation.uid).toEqual(fulfillment.uid);
-      expect(decision?.statement[0].item).toEqual("foo");
+      expect(decision?.obligation[0].item).toEqual("foo");
       expect(decision?.decision).toBe(true);
     },
     pollingInterval: 50,
@@ -153,13 +153,13 @@ test("conditionalArbitratePast", async () => {
   const decisions = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (_statement) => _statement[0].item === "good",
+    arbitrate: async (_obligation) => _obligation[0].item === "good",
   });
 
   decisions.decisions.forEach(($) =>
-    expect($?.decision).toBe($?.statement[0].item === "good"),
+    expect($?.decision).toBe($?.obligation[0].item === "good"),
   );
 
   const failedCollection = testContext.bobClient.erc20.collectEscrow(
@@ -198,11 +198,11 @@ test("conditionalListenAndArbitrate", async () => {
   const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrate({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (_statement) => _statement[0].item === "good",
+    arbitrate: async (_obligation) => _obligation[0].item === "good",
     onAfterArbitrate: async (decision) => {
-      expect(decision?.decision).toBe(decision?.statement[0].item === "good");
+      expect(decision?.decision).toBe(decision?.obligation[0].item === "good");
     },
     pollingInterval: 50,
   });
@@ -267,9 +267,9 @@ test("trivialArbitratePastEscrow", async () => {
     },
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (_statement, _demand) => true,
+    arbitrate: async (_obligation, _demand) => true,
   });
 
   decisions.decisions.forEach(($) => expect($?.decision).toBe(true));
@@ -309,12 +309,12 @@ test("trivialListenAndArbitrateEscrow", async () => {
       },
       fulfillment: {
         attester: testContext.addresses.stringObligation,
-        statementAbi: parseAbiParameters("(string item)"),
+        obligationAbi: parseAbiParameters("(string item)"),
       },
-      arbitrate: async (_statement, _demand) => true,
+      arbitrate: async (_obligation, _demand) => true,
       onAfterArbitrate: async (decision) => {
         expect(decision?.attestation.uid).toEqual(fulfillment.uid);
-        expect(decision?.statement[0].item).toEqual("foo");
+        expect(decision?.obligation[0].item).toEqual("foo");
         expect(decision?.decision).toBe(true);
       },
       pollingInterval: 50,
@@ -375,14 +375,14 @@ test("conditionalArbitratePastEscrow", async () => {
     },
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (_statement, _demand) =>
-      _statement[0].item === _demand[0].mockDemand,
+    arbitrate: async (_obligation, _demand) =>
+      _obligation[0].item === _demand[0].mockDemand,
   });
 
   decisions.decisions.forEach(($) =>
-    expect($!.demand[0].mockDemand === $!.statement[0].item).toBe($!.decision !== null ? $!.decision : false),
+    expect($!.demand[0].mockDemand === $!.obligation[0].item).toBe($!.decision !== null ? $!.decision : false),
   );
 
   const failedCollection = testContext.bobClient.erc20.collectEscrow(
@@ -425,13 +425,13 @@ test("conditionalListenAndArbitrateEscrow", async () => {
     },
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (_statement, _demand) =>
-      _statement[0].item === _demand[0].mockDemand,
+    arbitrate: async (_obligation, _demand) =>
+      _obligation[0].item === _demand[0].mockDemand,
     onAfterArbitrate: async (decision) => {
       expect(decision?.decision).toBe(
-        decision?.statement[0].item === decision?.demand[0].mockDemand,
+        decision?.obligation[0].item === decision?.demand[0].mockDemand,
       );
     },
     pollingInterval: 50,
@@ -494,11 +494,11 @@ test("arbitratePast with skipAlreadyArbitrated option", async () => {
   const { decisions: firstDecisions } =
     await testContext.bobClient.oracle.arbitratePast({
       fulfillment: {
-        statementAbi: parseAbiParameters("(string item)"),
+        obligationAbi: parseAbiParameters("(string item)"),
         attester: testContext.addresses.stringObligation,
       },
-      arbitrate: async (statement) => {
-        return statement[0].item === "foo";
+      arbitrate: async (obligation) => {
+        return obligation[0].item === "foo";
       },
       skipAlreadyArbitrated: false, // Explicitly set to false
     });
@@ -520,11 +520,11 @@ test("arbitratePast with skipAlreadyArbitrated option", async () => {
   const { decisions: secondDecisions } =
     await testContext.bobClient.oracle.arbitratePast({
       fulfillment: {
-        statementAbi: parseAbiParameters("(string item)"),
+        obligationAbi: parseAbiParameters("(string item)"),
         attester: testContext.addresses.stringObligation,
       },
-      arbitrate: async (statement) => {
-        return statement[0].item === "foo";
+      arbitrate: async (obligation) => {
+        return obligation[0].item === "foo";
       },
       skipAlreadyArbitrated: false,
     });
@@ -535,11 +535,11 @@ test("arbitratePast with skipAlreadyArbitrated option", async () => {
   const { decisions: thirdDecisions } =
     await testContext.bobClient.oracle.arbitratePast({
       fulfillment: {
-        statementAbi: parseAbiParameters("(string item)"),
+        obligationAbi: parseAbiParameters("(string item)"),
         attester: testContext.addresses.stringObligation,
       },
-      arbitrate: async (statement) => {
-        return statement[0].item === "foo";
+      arbitrate: async (obligation) => {
+        return obligation[0].item === "foo";
       },
       skipAlreadyArbitrated: true,
     });
@@ -581,10 +581,10 @@ test("arbitratePastForEscrow with skipAlreadyArbitrated option", async () => {
       },
       fulfillment: {
         attester: testContext.addresses.stringObligation,
-        statementAbi: parseAbiParameters("(string item)"),
+        obligationAbi: parseAbiParameters("(string item)"),
       },
-      arbitrate: async (statement, demand) => {
-        return statement[0].item === demand[0].mockDemand;
+      arbitrate: async (obligation, demand) => {
+        return obligation[0].item === demand[0].mockDemand;
       },
       skipAlreadyArbitrated: false,
     });
@@ -606,10 +606,10 @@ test("arbitratePastForEscrow with skipAlreadyArbitrated option", async () => {
       },
       fulfillment: {
         attester: testContext.addresses.stringObligation,
-        statementAbi: parseAbiParameters("(string item)"),
+        obligationAbi: parseAbiParameters("(string item)"),
       },
-      arbitrate: async (statement, demand) => {
-        return statement[0].item === demand[0].mockDemand;
+      arbitrate: async (obligation, demand) => {
+        return obligation[0].item === demand[0].mockDemand;
       },
       skipAlreadyArbitrated: true,
     });
@@ -651,17 +651,17 @@ test("listenAndArbitrateNewFulfillments - only listens for new events", async ()
   const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillments({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement) => {
+    arbitrate: async (obligation) => {
       arbitrationsProcessed++;
-      if (statement[0].item === "new-test") {
+      if (obligation[0].item === "new-test") {
         newFulfillmentProcessed = true;
       }
-      return statement[0].item === "new-test";
+      return obligation[0].item === "new-test";
     },
     onAfterArbitrate: async (decision) => {
-      expect(decision?.statement[0].item).toEqual("new-test");
+      expect(decision?.obligation[0].item).toEqual("new-test");
       expect(decision?.decision).toBe(true);
     },
     pollingInterval: 25,
@@ -722,16 +722,16 @@ test("listenAndArbitrateNewFulfillments with conditional arbitration", async () 
   const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillments({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement) => {
-      const shouldAccept = statement[0].item === "accept";
+    arbitrate: async (obligation) => {
+      const shouldAccept = obligation[0].item === "accept";
       if (shouldAccept) acceptedCount++;
       else rejectedCount++;
       return shouldAccept;
     },
     onAfterArbitrate: async (decision) => {
-      expect(decision?.decision).toBe(decision?.statement[0].item === "accept");
+      expect(decision?.decision).toBe(decision?.obligation[0].item === "accept");
     },
     pollingInterval: 25,
   });
@@ -767,11 +767,11 @@ test("listenAndArbitrateNewFulfillmentsForEscrow with skipAlreadyArbitrated", as
     },
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement, demand) => {
+    arbitrate: async (obligation, demand) => {
       arbitrationsAttempted++;
-      return statement[0].item === demand[0].mockDemand;
+      return obligation[0].item === demand[0].mockDemand;
     },
     skipAlreadyArbitrated: true,
     pollingInterval: 25,
@@ -835,11 +835,11 @@ test("listenAndArbitrateNewFulfillments with onlyIfEscrowDemandsCurrentOracle", 
   const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillments({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement) => {
+    arbitrate: async (obligation) => {
       arbitrationsProcessed++;
-      processedFulfillments.push(statement[0].item);
+      processedFulfillments.push(obligation[0].item);
       return true;
     },
     onlyIfEscrowDemandsCurrentOracle: true,
@@ -920,12 +920,12 @@ test("listenAndArbitrateNewFulfillmentsForEscrow - listens to past and new escro
     },
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement, demand) => {
+    arbitrate: async (obligation, demand) => {
       arbitrationsProcessed++;
-      processedFulfillments.push(`${statement[0].item}-${demand[0].mockDemand}`);
-      return statement[0].item.includes(demand[0].mockDemand);
+      processedFulfillments.push(`${obligation[0].item}-${demand[0].mockDemand}`);
+      return obligation[0].item.includes(demand[0].mockDemand);
     },
     pollingInterval: 50,
   });

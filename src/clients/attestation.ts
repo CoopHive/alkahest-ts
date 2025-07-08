@@ -67,9 +67,9 @@ export const makeAttestationClient = (
 
   return {
     /**
-     * Encodes AttestationEscrowObligation.StatementData to bytes.
-     * @param data - StatementData object to encode
-     * @returns the abi encoded StatementData as bytes
+     * Encodes AttestationEscrowObligation.ObligationData to bytes.
+     * @param data - ObligationData object to encode
+     * @returns the abi encoded ObligationData as bytes
      */
     encodeEscrowObligation: (data: {
       attestation: {
@@ -89,9 +89,9 @@ export const makeAttestationClient = (
       return encodeAbiParameters(attestationAbi, [data]);
     },
     /**
-     * Encodes AttestationEscrowObligation2.StatementData to bytes.
-     * @param data - StatementData object to encode
-     * @returns the abi encoded StatementData as bytes
+     * Encodes AttestationEscrowObligation2.ObligationData to bytes.
+     * @param data - ObligationData object to encode
+     * @returns the abi encoded ObligationData as bytes
      */
     encodeEscrow2Obligation: (data: {
       attestationUid: `0x${string}`;
@@ -106,17 +106,17 @@ export const makeAttestationClient = (
       );
     },
     /**
-     * Decodes AttestationEscrowObligation.StatementData from bytes.
-     * @param obligationData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes AttestationEscrowObligation.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(attestationAbi, obligationData)[0];
     },
     /**
-     * Decodes AttestationEscrowObligation2.StatementData from bytes.
-     * @param obligationData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes AttestationEscrowObligation2.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
     decodeEscrow2Obligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
@@ -129,9 +129,9 @@ export const makeAttestationClient = (
     getEscrowSchema,
     getEscrow2Schema,
     /**
-     * Gets a complete obligation from its attestation UID, combining attestation metadata with decoded statement data
+     * Gets a complete obligation from its attestation UID, combining attestation metadata with decoded obligation data
      * @param uid - UID of the attestation
-     * @returns The complete obligation including attestation metadata and decoded statement data
+     * @returns The complete obligation including attestation metadata and decoded obligation data
      */
     getEscrowObligation: async (uid: `0x${string}`) => {
       const [attestation, schema] = await Promise.all([
@@ -208,7 +208,7 @@ export const makeAttestationClient = (
     /**
      * Creates an escrow using an attestation as the escrowed item.
      * This function uses the original AttestationEscrowObligation contract where the full attestation
-     * data is stored in the escrow statement. When collecting payment, this contract creates a new
+     * data is stored in the escrow obligation. When collecting payment, this contract creates a new
      * attestation as the collection event, requiring the contract to have attestation rights.
      *
      * @param attestation - The attestation data to be escrowed
