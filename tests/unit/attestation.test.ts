@@ -262,12 +262,12 @@ describe("Attestation Tests", () => {
     test("testDoObligation", async () => {
       // This test directly mirrors the Solidity test in AttestationEscrowObligation2Test.sol, lines 95-128
 
-      // Create the statement data as in Solidity test (lines 99-103)
+      // Create the obligation data as in Solidity test (lines 99-103)
       const demandData = ("0x" +
         Buffer.from("test demand").toString("hex")) as `0x${string}`;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now - EXPIRATION_TIME (line 105)
 
-      // Create the statement - lines 106-107
+      // Create the obligation - lines 106-107
       const { hash: escrowHash } =
         await aliceClient.attestation.buyWithAttestation2(
           preExistingAttestationId,
@@ -288,7 +288,7 @@ describe("Attestation Tests", () => {
         "0x0000000000000000000000000000000000000000000000000000000000000000",
       );
 
-      // Get the attestation from EAS - like getStatement(uid) in line 113
+      // Get the attestation from EAS - using getAttestation(uid)
       const attestation = await aliceClient.getAttestation(escrowUid);
 
       // Get the attestation schema ID - matches line 116
@@ -324,7 +324,7 @@ describe("Attestation Tests", () => {
 
       // Setup: create an escrow with the accepting TrivialArbiter - lines 166-177
 
-      // Create the statement data - lines 169-173
+      // Create the obligation data - lines 169-173
       const demandData = ("0x" +
         Buffer.from("test demand").toString("hex")) as `0x${string}`;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day expiration - line 175

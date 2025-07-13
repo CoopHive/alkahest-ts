@@ -802,7 +802,7 @@ test("listenAndArbitrateNewFulfillmentsForEscrow with skipAlreadyArbitrated", as
   // Should have processed the first arbitration
   expect(arbitrationsAttempted).toBe(1);
 
-  // Create another fulfillment with the same statement - should be skipped due to already arbitrated
+  // Create another fulfillment with the same obligation - should be skipped due to already arbitrated
   const { attested: duplicateFulfillment } =
     await testContext.bobClient.stringObligation.doObligation(
       "skip-test",

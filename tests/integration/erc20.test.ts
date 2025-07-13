@@ -205,10 +205,10 @@ test("tradeErc20ForCustom", async () => {
   );
   console.log("escrow: ", escrow);
 
-  // now the seller manually decodes the statement and demand
+  // now the seller manually decodes the obligation and demand
   // and creates a StringResultObligation
   // and manually collects payment
-  const buyStatement = await clientSeller.getAttestation(escrow.attested.uid);
+  const buyObligation = await clientSeller.getAttestation(escrow.attested.uid);
   // ERC20EscrowObligation.StatementData
   // struct StatementData {
   //     address token;
@@ -216,13 +216,13 @@ test("tradeErc20ForCustom", async () => {
   //     address arbiter;
   //     bytes demand;
   // }
-  const decodedStatement = clientSeller.erc20.decodeEscrowObligation(
-    buyStatement.data,
+  const decodedObligation = clientSeller.erc20.decodeEscrowObligation(
+    buyObligation.data,
   );
   // TrustedPartyArbiter.DemandData
   // if using a custom arbiter, you can instead use decodeAbiParameters directly like below
   const decodedDemand = clientSeller.arbiters.decodeTrustedPartyDemand(
-    decodedStatement.demand,
+    decodedObligation.demand,
   );
   // custom base demand described above
   const decodedBaseDemand = decodeAbiParameters(
@@ -238,7 +238,7 @@ test("tradeErc20ForCustom", async () => {
   const result = decodedBaseDemand.query.toUpperCase();
   console.log("result: ", result);
 
-  // manually make result statement
+  // manually make result obligation
 
   // JobResultObligation.StatementData:
   // struct StatementData {
@@ -260,21 +260,21 @@ test("tradeErc20ForCustom", async () => {
     ],
   });
   console.log(resultHash);
-  const resultStatement =
+  const resultObligation =
     await clientSeller.getAttestedEventFromTxHash(resultHash);
-  console.log("result statement: ", resultStatement);
+  console.log("result obligation: ", resultObligation);
 
   // and collect the payment from escrow
   const collection = await clientSeller.erc20.collectEscrow(
     escrow.attested.uid,
-    resultStatement.uid,
+    resultObligation.uid,
   );
 
   console.log("collection: ", collection);
 
   // meanwhile, the buyer can wait for fulfillment of her escrow.
   // if called after fulfillment, like in this case, it will
-  // return the fulfilling statement immediately
+  // return the fulfilling obligation immediately
   // Use WebSocket client for faster event watching if available. This should auto fallback to HTTP if WS is not configured.
   const fulfillment = await clientBuyerWs.waitForFulfillment(
     contractAddresses["Base Sepolia"].erc20EscrowObligation,
@@ -282,7 +282,7 @@ test("tradeErc20ForCustom", async () => {
   );
   console.log("fulfillment: ", fulfillment);
 
-  // and extract the result from the fulfillment statement
+  // and extract the result from the fulfillment obligation
   if (!fulfillment.fulfillment) throw new Error("invalid fulfillment");
   const fulfillmentData = await clientBuyer.getAttestation(
     fulfillment.fulfillment,
