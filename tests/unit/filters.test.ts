@@ -45,7 +45,7 @@ test("arbitratePast with enhanced time filters", async () => {
   );
 
   // Create multiple fulfillments at different times
-  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -53,7 +53,7 @@ test("arbitratePast with enhanced time filters", async () => {
   // Wait a bit longer
   await new Promise(resolve => setTimeout(resolve, 3000));
 
-  const { attested: fulfillment2 } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment2 } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -62,9 +62,9 @@ test("arbitratePast with enhanced time filters", async () => {
   const { decisions: allDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
   });
 
   // Should have 2 statements
@@ -74,9 +74,9 @@ test("arbitratePast with enhanced time filters", async () => {
   const { decisions: recentDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     minAge: 2n, // 2 seconds (should filter out the recent fulfillment2)
   });
 
@@ -107,12 +107,12 @@ test("arbitratePast with attestation property filters", async () => {
   );
 
   // Create fulfillments from different attesters
-  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
 
-  const { attested: fulfillment2 } = await testContext.aliceClient.stringObligation.makeStatement(
+  const { attested: fulfillment2 } = await testContext.aliceClient.stringObligation.doObligation(
     "bar",
     escrow.uid,
   );
@@ -121,9 +121,9 @@ test("arbitratePast with attestation property filters", async () => {
   const { decisions: bobDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     specificAttester: testContext.addresses.stringObligation,
     skipAlreadyArbitrated: true,
   });
@@ -135,9 +135,9 @@ test("arbitratePast with attestation property filters", async () => {
   const { decisions: excludedDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     excludeAttesters: [testContext.alice], // Exclude Alice's attestations
     skipAlreadyArbitrated: true,
   });
@@ -169,18 +169,18 @@ test("arbitratePast with batch processing filters", async () => {
 
   // Create multiple fulfillments sequentially to avoid timing issues
   const fulfillments = [];
-  fulfillments.push(await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid));
-  fulfillments.push(await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid));
-  fulfillments.push(await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid));
+  fulfillments.push(await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid));
+  fulfillments.push(await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid));
+  fulfillments.push(await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid));
 
   // Test maxStatements filter
   const { decisions: limitedDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
-    maxStatements: 2, // Limit to 2 statements
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
+    maxObligations: 2, // Limit to 2 obligations
     dryRun: true, // Use dry run to avoid executing transactions
   });
 
@@ -195,11 +195,11 @@ test("arbitratePast with batch processing filters", async () => {
   const { decisions: prioritizedDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     prioritizeRecent: true,
-    maxStatements: 1,
+    maxObligations: 1,
     dryRun: true, // Use dry run to avoid executing transactions
   });
 
@@ -228,7 +228,7 @@ test("arbitratePast with dry run mode", async () => {
     0n,
   );
 
-  const { attested: fulfillment } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -237,9 +237,9 @@ test("arbitratePast with dry run mode", async () => {
   const { decisions: dryRunDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     dryRun: true, // Only simulate, don't execute
     skipAlreadyArbitrated: true,
   });
@@ -272,7 +272,7 @@ test("arbitratePast with block range filters", async () => {
     0n,
   );
 
-  const { attested: fulfillment } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -284,9 +284,9 @@ test("arbitratePast with block range filters", async () => {
   const { decisions: allDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     dryRun: true, // Use dry run to avoid executing arbitrations
   });
 
@@ -297,9 +297,9 @@ test("arbitratePast with block range filters", async () => {
   const { decisions: recentBlockDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     fromBlock: currentBlock, // Use current block to ensure we include the fulfillment
     dryRun: true, // Use dry run to avoid executing arbitrations
   });
@@ -313,9 +313,9 @@ test("arbitratePast with block range filters", async () => {
   const { decisions: pastBlockDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     fromBlock: "earliest",
     toBlock: "latest", // Use "latest" tag for reliable block range filtering
     dryRun: true, // Use dry run to avoid executing arbitrations
@@ -343,7 +343,7 @@ test("arbitratePast with performance filters", async () => {
     0n,
   );
 
-  const { attested: fulfillment } = await testContext.bobClient.stringObligation.makeStatement(
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation(
     "foo",
     escrow.uid,
   );
@@ -352,9 +352,9 @@ test("arbitratePast with performance filters", async () => {
   const { decisions: gasLimitedDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     maxGasPerTx: 100000n, // Set a reasonable gas limit
     skipAlreadyArbitrated: true,
   });
@@ -366,9 +366,9 @@ test("arbitratePast with performance filters", async () => {
   const { decisions: skipValidationDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
     skipValidation: true, // Skip validation checks
     skipAlreadyArbitrated: true,
   });
@@ -396,18 +396,18 @@ test("arbitratePast with combined filters", async () => {
   );
 
   // Create multiple fulfillments sequentially to avoid timing issues
-  await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid);
-  await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid);
-  await testContext.bobClient.stringObligation.makeStatement("foo", escrow.uid);
+  await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
+  await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
+  await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
 
   // Test combination of filters
   const { decisions: combinedDecisions } = await testContext.bobClient.oracle.arbitratePast({
     fulfillment: {
       attester: testContext.addresses.stringObligation,
-      statementAbi: parseAbiParameters("(string item)"),
+      obligationAbi: parseAbiParameters("(string item)"),
     },
-    arbitrate: async (statement: readonly [{ item: string }]) => statement[0].item === "foo",
-    maxStatements: 2, // Limit batch size
+    arbitrate: async (obligation: readonly [{ item: string }]) => obligation[0].item === "foo",
+    maxObligations: 2, // Limit batch size
     prioritizeRecent: true, // Prioritize recent attestations
     dryRun: true, // Only simulate
     maxGasPerTx: 100000n, // Gas limit

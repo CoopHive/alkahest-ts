@@ -23,11 +23,11 @@ export const makeTokenBundleClient = (
   addresses: ChainAddresses,
 ) => {
   /**
-   * Encodes TokenBundleEscrowObligation.StatementData to bytes using raw parameters.
-   * @param data - StatementData object to encode
-   * @returns the abi encoded StatementData as bytes
+   * Encodes TokenBundleEscrowObligation.ObligationData to bytes using raw parameters.
+   * @param data - ObligationData object to encode
+   * @returns the abi encoded ObligationData as bytes
    */
-  const encodeEscrowStatementRaw = (data: {
+  const encodeEscrowObligationRaw = (data: {
     erc20Tokens: `0x${string}`[];
     erc20Amounts: bigint[];
     erc721Tokens: `0x${string}`[];
@@ -47,11 +47,11 @@ export const makeTokenBundleClient = (
   };
 
   /**
-   * Encodes TokenBundlePaymentObligation.StatementData to bytes using raw parameters.
-   * @param data - StatementData object to encode
-   * @returns the abi encoded StatementData as bytes
+   * Encodes TokenBundlePaymentObligation.ObligationData to bytes using raw parameters.
+   * @param data - ObligationData object to encode
+   * @returns the abi encoded ObligationData as bytes
    */
-  const encodePaymentStatementRaw = (data: {
+  const encodePaymentObligationRaw = (data: {
     erc20Tokens: `0x${string}`[];
     erc20Amounts: bigint[];
     erc721Tokens: `0x${string}`[];
@@ -70,18 +70,18 @@ export const makeTokenBundleClient = (
   };
 
   return {
-    encodeEscrowStatementRaw,
-    encodePaymentStatementRaw,
+    encodeEscrowObligationRaw,
+    encodePaymentObligationRaw,
     /**
-     * Encodes TokenBundleEscrowObligation.StatementData to bytes using type-based parameters.
+     * Encodes TokenBundleEscrowObligation.ObligationData to bytes using type-based parameters.
      * @param bundle - Bundle of tokens for payment
      * @param demand - Custom demand details
-     * @returns the abi encoded StatementData as bytes
+     * @returns the abi encoded ObligationData as bytes
      */
-    encodeEscrowStatement: (bundle: TokenBundle, demand: Demand) => {
+    encodeEscrowObligation: (bundle: TokenBundle, demand: Demand) => {
       const flatBundle = flattenTokenBundle(bundle);
 
-      return encodeEscrowStatementRaw({
+      return encodeEscrowObligationRaw({
         ...flatBundle,
         arbiter: demand.arbiter,
         demand: demand.demand,
@@ -89,44 +89,44 @@ export const makeTokenBundleClient = (
     },
 
     /**
-     * Encodes TokenBundlePaymentObligation.StatementData to bytes using type-based parameters.
+     * Encodes TokenBundlePaymentObligation.ObligationData to bytes using type-based parameters.
      * @param bundle - Bundle of tokens for payment
      * @param payee - Address to receive the payment
-     * @returns the abi encoded StatementData as bytes
+     * @returns the abi encoded ObligationData as bytes
      */
-    encodePaymentStatement: (bundle: TokenBundle, payee: `0x${string}`) => {
+    encodePaymentObligation: (bundle: TokenBundle, payee: `0x${string}`) => {
       const flatBundle = flattenTokenBundle(bundle);
 
-      return encodePaymentStatementRaw({
+      return encodePaymentObligationRaw({
         ...flatBundle,
         payee,
       });
     },
 
     /**
-     * Decodes TokenBundleEscrowObligation.StatementData from bytes.
-     * @param statementData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes TokenBundleEscrowObligation.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
-    decodeEscrowStatement: (statementData: `0x${string}`) => {
+    decodeEscrowObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
         parseAbiParameters(
           "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
         ),
-        statementData,
+        obligationData,
       )[0];
     },
     /**
-     * Decodes TokenBundlePaymentObligation.StatementData from bytes.
-     * @param statementData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes TokenBundlePaymentObligation.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
-    decodePaymentStatement: (statementData: `0x${string}`) => {
+    decodePaymentObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
         parseAbiParameters(
           "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address payee)",
         ),
-        statementData,
+        obligationData,
       )[0];
     },
     /**
@@ -135,7 +135,7 @@ export const makeTokenBundleClient = (
      * @param fulfillment - UID of the fulfillment attestation
      * @returns Transaction hash
      */
-    collectPayment: async (
+    collectEscrow: async (
       buyAttestation: `0x${string}`,
       fulfillment: `0x${string}`,
     ) => {
@@ -153,7 +153,7 @@ export const makeTokenBundleClient = (
      * @param buyAttestation - UID of the expired buy attestation
      * @returns Transaction hash
      */
-    collectExpired: async (buyAttestation: `0x${string}`) => {
+    reclaimExpired: async (buyAttestation: `0x${string}`) => {
       const hash = await viemClient.writeContract({
         address: addresses.tokenBundleEscrowObligation,
         abi: tokenBundleEscrowAbi.abi,

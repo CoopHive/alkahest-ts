@@ -337,9 +337,9 @@ describe("WebSocket Transport Support", () => {
       const { unwatch } = await client.oracle.listenAndArbitrate({
         fulfillment: {
           attester: contractAddresses["Base Sepolia"].stringObligation,
-          statementAbi: parseAbiParameters("(string item)"),
+          obligationAbi: parseAbiParameters("(string item)"),
         },
-        arbitrate: async (statement) => statement[0].item === "test",
+        arbitrate: async (obligation) => obligation[0].item === "test",
         onAfterArbitrate: async (decision) => {
           console.log("WebSocket arbitration:", decision);
         },

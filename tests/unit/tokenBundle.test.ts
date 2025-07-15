@@ -191,7 +191,7 @@ describe("TokenBundle Tests", () => {
       await bobClient.bundle.approve(bobBundle, "escrow");
 
       // Create bundle payment statement for Alice's bundle
-      const bundlePaymentStatement = bobClient.bundle.encodePaymentStatement(
+      const bundlePaymentStatement = bobClient.bundle.encodePaymentObligation(
         aliceBundle,
         bob,
       );
@@ -290,7 +290,7 @@ describe("TokenBundle Tests", () => {
       );
     });
 
-    test("testCollectExpired", async () => {
+    test("testReclaimExpired", async () => {
       const shortExpiration = BigInt(Math.floor(Date.now() / 1000) + 60); // 60 seconds from now
 
       // Create bundles
@@ -334,7 +334,7 @@ describe("TokenBundle Tests", () => {
       ).toBe(true);
 
       // Alice collects her expired escrow
-      await aliceClient.bundle.collectExpired(buyAttestation.uid);
+      await aliceClient.bundle.reclaimExpired(buyAttestation.uid);
 
       // Verify Alice got her tokens back
       const finalErc20Balance = await testClient.getErc20Balance(

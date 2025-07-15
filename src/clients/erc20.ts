@@ -92,11 +92,11 @@ export const makeErc20Client = (
   };
 
   /**
-   * Encodes ERC20EscrowObligation.StatementData to bytes using raw parameters.
-   * @param data - StatementData object to encode
-   * @returns the abi encoded StatementData as bytes
+   * Encodes ERC20EscrowObligation.ObligationData to bytes using raw parameters.
+   * @param data - ObligationData object to encode
+   * @returns the abi encoded ObligationData as bytes
    */
-  const encodeEscrowStatementRaw = (data: {
+  const encodeEscrowObligationRaw = (data: {
     arbiter: `0x${string}`;
     demand: `0x${string}`;
     token: `0x${string}`;
@@ -111,11 +111,11 @@ export const makeErc20Client = (
   };
 
   /**
-   * Encodes ERC20PaymentObligation.StatementData to bytes using raw parameters.
-   * @param data - StatementData object to encode
-   * @returns the abi encoded StatementData as bytes
+   * Encodes ERC20PaymentObligation.ObligationData to bytes using raw parameters.
+   * @param data - ObligationData object to encode
+   * @returns the abi encoded ObligationData as bytes
    */
-  const encodePaymentStatementRaw = (data: {
+  const encodePaymentObligationRaw = (data: {
     token: `0x${string}`;
     amount: bigint;
     payee: `0x${string}`;
@@ -127,16 +127,16 @@ export const makeErc20Client = (
   };
 
   return {
-    encodeEscrowStatementRaw,
-    encodePaymentStatementRaw,
+    encodeEscrowObligationRaw,
+    encodePaymentObligationRaw,
     /**
-     * Encodes ERC20EscrowObligation.StatementData to bytes using type-based parameters.
+     * Encodes ERC20EscrowObligation.ObligationData to bytes using type-based parameters.
      * @param token - ERC20 token details
      * @param demand - Custom demand details
-     * @returns the abi encoded StatementData as bytes
+     * @returns the abi encoded ObligationData as bytes
      */
-    encodeEscrowStatement: (token: Erc20, demand: Demand) => {
-      return encodeEscrowStatementRaw({
+    encodeEscrowObligation: (token: Erc20, demand: Demand) => {
+      return encodeEscrowObligationRaw({
         arbiter: demand.arbiter,
         demand: demand.demand,
         token: token.address,
@@ -145,48 +145,48 @@ export const makeErc20Client = (
     },
 
     /**
-     * Encodes ERC20PaymentObligation.StatementData to bytes using type-based parameters.
+     * Encodes ERC20PaymentObligation.ObligationData to bytes using type-based parameters.
      * @param token - ERC20 token details
      * @param payee - Address to receive the payment
-     * @returns the abi encoded StatementData as bytes
+     * @returns the abi encoded ObligationData as bytes
      */
-    encodePaymentStatement: (token: Erc20, payee: `0x${string}`) => {
-      return encodePaymentStatementRaw({
+    encodePaymentObligation: (token: Erc20, payee: `0x${string}`) => {
+      return encodePaymentObligationRaw({
         token: token.address,
         amount: token.value,
         payee,
       });
     },
     /**
-     * Decodes ERC20EscrowObligation.StatementData from bytes.
-     * @param statementData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes ERC20EscrowObligation.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
-    decodeEscrowStatement: (statementData: `0x${string}`) => {
+    decodeEscrowObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
         parseAbiParameters(
           "(address arbiter, bytes demand, address token, uint256 amount)",
         ),
-        statementData,
+        obligationData,
       )[0];
     },
     /**
-     * Decodes ERC20PaymentObligation.StatementData from bytes.
-     * @param statementData - StatementData as abi encoded bytes
-     * @returns the decoded StatementData object
+     * Decodes ERC20PaymentObligation.ObligationData from bytes.
+     * @param obligationData - ObligationData as abi encoded bytes
+     * @returns the decoded ObligationData object
      */
-    decodePaymentStatement: (statementData: `0x${string}`) => {
+    decodePaymentObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
         parseAbiParameters("(address token, uint256 amount, address payee)"),
-        statementData,
+        obligationData,
       )[0];
     },
     getEscrowSchema,
     getPaymentSchema,
     /**
-     * Gets a complete obligation from its attestation UID, combining attestation metadata with decoded statement data
+     * Gets a complete obligation from its attestation UID, combining attestation metadata with decoded obligation data
      * @param uid - UID of the attestation
-     * @returns The complete obligation including attestation metadata and decoded statement data
+     * @returns The complete obligation including attestation metadata and decoded obligation data
      */
     getEscrowObligation: async (uid: `0x${string}`) => {
       const [attestation, schema] = await Promise.all([
@@ -285,7 +285,7 @@ export const makeErc20Client = (
      * @param fulfillment - UID of the fulfillment attestation
      * @returns Transaction hash
      */
-    collectPayment: async (
+    collectEscrow: async (
       buyAttestation: `0x${string}`,
       fulfillment: `0x${string}`,
     ) => {
@@ -311,7 +311,7 @@ export const makeErc20Client = (
      * @param buyAttestation - UID of the expired buy attestation
      * @returns Transaction hash
      */
-    collectExpired: async (buyAttestation: `0x${string}`) => {
+    reclaimExpired: async (buyAttestation: `0x${string}`) => {
       const hash = await viemClient.writeContract({
         address: addresses.erc20EscrowObligation,
         abi: erc20EscrowAbi.abi,
@@ -644,7 +644,7 @@ export const makeErc20Client = (
         functionName: "getAttestation",
         args: [buyAttestation],
       });
-      const buyAttestationStatementData = decodeAbiParameters(
+      const buyAttestationObligationData = decodeAbiParameters(
         parseAbiParameters(
           "(address arbiter, bytes demand, address token, uint256 amount)",
         ),
@@ -652,7 +652,7 @@ export const makeErc20Client = (
       )[0];
       const demandData = decodeAbiParameters(
         parseAbiParameters("(address token, uint256 amount, address payee)"),
-        buyAttestationStatementData.demand,
+        buyAttestationObligationData.demand,
       )[0];
 
       const permit = await signPermit({
@@ -798,7 +798,7 @@ export const makeErc20Client = (
         functionName: "getAttestation",
         args: [buyAttestation],
       });
-      const buyAttestationStatementData = decodeAbiParameters(
+      const buyAttestationObligationData = decodeAbiParameters(
         parseAbiParameters(
           "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
         ),
@@ -806,7 +806,7 @@ export const makeErc20Client = (
       )[0];
       const demandData = decodeAbiParameters(
         parseAbiParameters("(address token, uint256 amount, address payee)"),
-        buyAttestationStatementData.demand,
+        buyAttestationObligationData.demand,
       )[0];
       const permit = await signPermit({
         ownerAddress: viemClient.account.address,
@@ -963,7 +963,7 @@ export const makeErc20Client = (
         functionName: "getAttestation",
         args: [buyAttestation],
       });
-      const buyAttestationStatementData = decodeAbiParameters(
+      const buyAttestationObligationData = decodeAbiParameters(
         [
           {
             type: "tuple",
@@ -980,7 +980,7 @@ export const makeErc20Client = (
       )[0];
       const demandData = decodeAbiParameters(
         parseAbiParameters("(address token, uint256 amount, address payee)"),
-        buyAttestationStatementData.demand,
+        buyAttestationObligationData.demand,
       )[0];
       const permit = await signPermit({
         ownerAddress: viemClient.account.address,
@@ -1142,7 +1142,7 @@ export const makeErc20Client = (
         functionName: "getAttestation",
         args: [buyAttestation],
       });
-      const buyAttestationStatementData = decodeAbiParameters(
+      const buyAttestationObligationData = decodeAbiParameters(
         parseAbiParameters(
           "(address arbiter, bytes demand, address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
         ),
@@ -1150,7 +1150,7 @@ export const makeErc20Client = (
       )[0];
       const demandData = decodeAbiParameters(
         parseAbiParameters("(address token, uint256 amount, address payee)"),
-        buyAttestationStatementData.demand,
+        buyAttestationObligationData.demand,
       )[0];
       const permit = await signPermit({
         ownerAddress: viemClient.account.address,

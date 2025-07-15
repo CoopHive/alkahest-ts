@@ -81,7 +81,7 @@ describe("Attestation Tests", () => {
       testSchemaId = await registerTestSchema();
     });
 
-    test("testMakeStatement", async () => {
+    test("testDoObligation", async () => {
       // Create an attestation
       const { attested: attestationData } =
         await aliceClient.attestation.createAttestation(
@@ -139,10 +139,10 @@ describe("Attestation Tests", () => {
       expect(attestation.recipient).toBe(aliceClient.address);
     });
 
-    test("testCollectPayment", async () => {
+    test("testCollectEscrow", async () => {
       // Bob creates a fulfillment attestation using StringObligation
       const { attested: fulfillmentEvent } =
-        await bobClient.stringObligation.makeStatement("fulfillment data");
+        await bobClient.stringObligation.doObligation("fulfillment data");
       const fulfillmentUid = fulfillmentEvent.uid as `0x${string}`;
 
       // Alice creates an escrow attestation that requires a fulfillment
@@ -176,7 +176,7 @@ describe("Attestation Tests", () => {
 
       // Bob collects the payment by providing his fulfillment
       const { attested: paymentData } =
-        await bobClient.attestation.collectPayment(
+        await bobClient.attestation.collectEscrow(
           escrowData.uid,
           fulfillmentUid,
         );
@@ -259,15 +259,15 @@ describe("Attestation Tests", () => {
       expect(attestation.uid).toBe(preExistingAttestationId);
     });
 
-    test("testMakeStatement", async () => {
+    test("testDoObligation", async () => {
       // This test directly mirrors the Solidity test in AttestationEscrowObligation2Test.sol, lines 95-128
 
-      // Create the statement data as in Solidity test (lines 99-103)
+      // Create the obligation data as in Solidity test (lines 99-103)
       const demandData = ("0x" +
         Buffer.from("test demand").toString("hex")) as `0x${string}`;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now - EXPIRATION_TIME (line 105)
 
-      // Create the statement - lines 106-107
+      // Create the obligation - lines 106-107
       const { hash: escrowHash } =
         await aliceClient.attestation.buyWithAttestation2(
           preExistingAttestationId,
@@ -288,7 +288,7 @@ describe("Attestation Tests", () => {
         "0x0000000000000000000000000000000000000000000000000000000000000000",
       );
 
-      // Get the attestation from EAS - like getStatement(uid) in line 113
+      // Get the attestation from EAS - using getAttestation(uid)
       const attestation = await aliceClient.getAttestation(escrowUid);
 
       // Get the attestation schema ID - matches line 116
@@ -319,12 +319,12 @@ describe("Attestation Tests", () => {
       // We've already verified the most important aspects - the attestation exists with the right schema
     });
 
-    test("testCollectPayment", async () => {
+    test("testCollectEscrow", async () => {
       // This test directly mirrors the Solidity test in AttestationEscrowObligation2Test.sol - lines 164-214
 
       // Setup: create an escrow with the accepting TrivialArbiter - lines 166-177
 
-      // Create the statement data - lines 169-173
+      // Create the obligation data - lines 169-173
       const demandData = ("0x" +
         Buffer.from("test demand").toString("hex")) as `0x${string}`;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day expiration - line 175
@@ -349,12 +349,12 @@ describe("Attestation Tests", () => {
 
       // Create the string data - lines 181-183
       const { attested: fulfillmentEvent } =
-        await bobClient.stringObligation.makeStatement("fulfillment data");
+        await bobClient.stringObligation.doObligation("fulfillment data");
       const fulfillmentUid = fulfillmentEvent.uid as `0x${string}`;
 
       // Collect payment - lines 188-189
 
-      const { hash: collectHash } = await bobClient.attestation.collectPayment2(
+      const { hash: collectHash } = await bobClient.attestation.collectEscrow2(
         escrowUid,
         fulfillmentUid,
       );

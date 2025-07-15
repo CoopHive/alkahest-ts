@@ -28,14 +28,14 @@ export const makeStringObligationClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
-  const decode = (statementData: `0x${string}`) => {
+  const decode = (obligationData: `0x${string}`) => {
     return decodeAbiParameters(
       parseAbiParameters("(string item)"),
-      statementData,
+      obligationData,
     )[0];
   };
 
-  const makeStatement = async (item: string, refUid?: `0x${string}`) => {
+  const doObligation = async (item: string, refUid?: `0x${string}`) => {
     const {request} = await viemClient.simulateContract({
         address: addresses.stringObligation,
         abi: stringObligationAbi.abi,
@@ -72,8 +72,8 @@ export const makeStringObligationClient = (
       return encodeAbiParameters(parseAbiParameters("(string item)"), [data]);
     },
     decode,
-    decodeJson: <T>(statementData: `0x${string}`) => {
-      const decoded = decode(statementData);
+    decodeJson: <T>(obligationData: `0x${string}`) => {
+      const decoded = decode(obligationData);
       return JSON.parse(decoded.item) as T;
     },
     decodeZod: <
@@ -81,7 +81,7 @@ export const makeStringObligationClient = (
       TAsync extends boolean = false,
       TSafe extends boolean = false,
     >(
-      statementData: `0x${string}`,
+      obligationData: `0x${string}`,
       schema: TSchema,
       schemaOptions?: Partial<z.ParseParams>,
       parseOptions: {
@@ -90,7 +90,7 @@ export const makeStringObligationClient = (
       } = { async: false, safe: false } as any,
     ): ZodParseReturnType<TSchema, TAsync, TSafe> => {
       const parseFunc = getZodParseFunc(parseOptions);
-      const decoded = decode(statementData);
+      const decoded = decode(obligationData);
 
       // Type assertion needed because TypeScript can't infer the connection between parseFunc and return type
       return schema[parseFunc](
@@ -99,21 +99,21 @@ export const makeStringObligationClient = (
       ) as ZodParseReturnType<TSchema, TAsync, TSafe>;
     },
     decodeArkType: <Schema extends Type<any, any>>(
-      statementData: `0x${string}`,
+      obligationData: `0x${string}`,
       schema: Schema,
     ): Schema["inferOut"] => {
-      const decoded = decode(statementData);
+      const decoded = decode(obligationData);
       return schema(JSON.parse(decoded.item)) as Schema["inferOut"];
     },
-    makeStatement,
-    makeStatementJson: async <T>(item: T, refUid?: `0x${string}`) => {
-      return await makeStatement(JSON.stringify(item), refUid);
+    doObligation,
+    doObligationJson: async <T>(item: T, refUid?: `0x${string}`) => {
+      return await doObligation(JSON.stringify(item), refUid);
     },
     getSchema,
     /**
-     * Gets a complete obligation from its attestation UID, combining attestation metadata with decoded statement data
+     * Gets a complete obligation from its attestation UID, combining attestation metadata with decoded obligation data
      * @param uid - UID of the attestation
-     * @returns The complete obligation including attestation metadata and decoded statement data
+     * @returns The complete obligation including attestation metadata and decoded obligation data
      */
     getObligation: async (uid: `0x${string}`) => {
       const [attestation, schema] = await Promise.all([

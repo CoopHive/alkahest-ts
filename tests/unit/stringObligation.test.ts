@@ -64,13 +64,13 @@ describe("StringObligation Tests", () => {
       );
     });
 
-    test("testMakeStatement", async () => {
+    test("testDoObligation", async () => {
       // Setup test data
       const testString = "Test String Data";
 
       // Make a statement using alice's client - returns transaction hash
       const { attested: attestedEvent } =
-        await aliceClient.stringObligation.makeStatement(testString);
+        await aliceClient.stringObligation.doObligation(testString);
 
       // Verify attestation UID exists
       expect(attestedEvent.uid).not.toBe(
@@ -78,15 +78,15 @@ describe("StringObligation Tests", () => {
       );
     });
 
-    test("testMakeAndGetStatement", async () => {
+    test("testMakeAndGetObligation", async () => {
       // Setup test data
       const testString = "Test String Data";
 
-      // Make a statement using alice's client - returns transaction hash
+      // Make an obligation using alice's client - returns transaction hash
       const { attested: attestedEvent } =
-        await aliceClient.stringObligation.makeStatement(testString);
+        await aliceClient.stringObligation.doObligation(testString);
 
-      // Get the complete obligation/statement
+      // Get the complete obligation
       const obligation = await aliceClient.stringObligation.getObligation(
         attestedEvent.uid,
       );
@@ -98,7 +98,7 @@ describe("StringObligation Tests", () => {
       expect(obligation.data.item).toBe(testString);
     });
 
-    test("testMakeJsonStatement", async () => {
+    test("testMakeJsonObligation", async () => {
       // Setup test JSON data
       const testJsonData = {
         name: "Test Object",
@@ -109,9 +109,9 @@ describe("StringObligation Tests", () => {
         },
       };
 
-      // Make a JSON statement
+      // Make a JSON obligation
       const { attested: attestedEvent } =
-        await aliceClient.stringObligation.makeStatementJson(testJsonData);
+        await aliceClient.stringObligation.doObligationJson(testJsonData);
 
       // Verify attestation UID exists
       expect(attestedEvent.uid).not.toBe(
@@ -128,8 +128,8 @@ describe("StringObligation Tests", () => {
       expect(jsonObligation.data.item).toEqual(testJsonData);
     });
 
-    test("testGetInvalidStatement", async () => {
-      // Try to get a non-existent statement/obligation
+    test("testGetInvalidObligation", async () => {
+      // Try to get a non-existent obligation
       const invalidUid =
         "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`;
 

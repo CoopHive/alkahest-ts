@@ -409,7 +409,7 @@ describe("ERC721 Tests", () => {
       await bobClient.bundle.approve(bundle, "escrow");
 
       // Create Erc721 payment statement for Alice's token
-      const erc721PaymentStatement = bobClient.erc721.encodePaymentStatement(
+      const erc721PaymentStatement = bobClient.erc721.encodePaymentObligation(
         { address: aliceErc721Token, id: aliceTokenId },
         bob,
       );
@@ -482,7 +482,7 @@ describe("ERC721 Tests", () => {
       );
     });
 
-    test("testCollectExpired", async () => {
+    test("testReclaimExpired", async () => {
       const currentTime = Math.floor(Date.now() / 1000);
       const shortExpiration = BigInt(currentTime + 60); // 60 seconds from now
 
@@ -503,7 +503,7 @@ describe("ERC721 Tests", () => {
       await testClient.increaseTime({ seconds: 120 }); // Advance 120 seconds
 
       // Alice collects her expired escrow
-      await aliceClient.erc721.collectExpired(buyAttestation.uid);
+      await aliceClient.erc721.reclaimExpired(buyAttestation.uid);
 
       // Verify Alice got her token back
       const tokenOwner = await testClient.getErc721Owner({

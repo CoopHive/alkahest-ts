@@ -130,7 +130,7 @@ const buyStatement = await clientSeller.getAttestation(escrow.attested.uid);
 //     address arbiter;
 //     bytes demand;
 // }
-const decodedStatement = clientSeller.erc20.decodeEscrowStatement(
+const decodedStatement = clientSeller.erc20.decodeEscrowObligation(
   buyStatement.data,
 );
 // TrustedPartyArbiter.DemandData
@@ -178,7 +178,7 @@ const resultStatement = await clientSeller.getAttestationFromTxHash(resultHash);
 console.log("result statement: ", resultStatement);
 
 // and collect the payment from escrow
-const collection = await clientSeller.erc20.collectPayment(
+const collection = await clientSeller.erc20.collectEscrow(
   escrow.attested.uid,
   resultStatement.uid,
 );

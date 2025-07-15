@@ -73,8 +73,8 @@ describe("ERC20 Tests", () => {
       amount: parseEther("100"),
     };
 
-    const encoded = aliceClient.erc20.encodeEscrowStatementRaw(data);
-    const decoded = aliceClient.erc20.decodeEscrowStatement(encoded);
+    const encoded = aliceClient.erc20.encodeEscrowObligationRaw(data);
+    const decoded = aliceClient.erc20.decodeEscrowObligation(encoded);
     expect(decoded.amount).toEqual(data.amount);
     expect(compareAddresses(decoded.token, data.token)).toBeTruthy();
     expect(compareAddresses(decoded.arbiter, data.arbiter)).toBeTruthy();
@@ -682,8 +682,8 @@ describe("ERC20 Tests", () => {
       // Bob approves his tokens and creates the bundle escrow
       await bobClient.bundle.approve(bundle, "escrow");
 
-      // Create ERC20 payment statement for Alice's tokens
-      const erc20PaymentStatement = bobClient.erc20.encodePaymentStatement(
+      // Create ERC20 payment obligation for Alice's tokens
+      const erc20PaymentObligation = bobClient.erc20.encodePaymentObligation(
         { address: aliceErc20Token, value: erc20Amount },
         bob,
       );
@@ -693,7 +693,7 @@ describe("ERC20 Tests", () => {
         bundle,
         {
           arbiter: testContext.addresses.erc20PaymentObligation,
-          demand: erc20PaymentStatement,
+          demand: erc20PaymentObligation,
         },
         expiration,
       );
