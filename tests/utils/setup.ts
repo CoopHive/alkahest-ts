@@ -141,7 +141,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   await anvil.start();
 
   const chain = foundry;
-  const transport = http("http://127.0.0.1:8545", {
+  const transport = http(`http://${anvil.host}:8545`, {
     timeout: 60_000,
   });
 
@@ -264,7 +264,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   // Deploy arbiters
   addresses.trivialArbiter = await deployContract(TrivialArbiter);
   addresses.trustedPartyArbiter = await deployContract(TrustedPartyArbiter);
-    addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter, [
+  addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter, [
     addresses.eas,
   ]);
   addresses.specificAttestationArbiter = await deployContract(
