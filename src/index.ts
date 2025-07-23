@@ -21,6 +21,7 @@ import {
 import { makeOracleClient } from "./oracle/oracle";
 import type { ChainAddresses } from "./types";
 import { getAttestation, getOptimalPollingInterval } from "./utils";
+import { createExtendFunction } from "./extension";
 
 import { abi as easAbi } from "./contracts/IEAS";
 
@@ -253,7 +254,7 @@ export const makeClient = (
       zeroAddress,
   };
 
-  return {
+  const client = {
     /** Unified client for all arbiter functionality */
     arbiters: makeArbitersClient(viemClient, addresses),
 
@@ -363,10 +364,36 @@ export const makeClient = (
       });
     },
   };
+
+  // Add the extend function to the client
+  const extendedClient = {
+    ...client,
+    /**
+     * Extends the client with additional functionality
+     * @param extension - Function that takes the current client and returns new actions
+     * @returns Extended client with both original and new functionality
+     * 
+     * @example
+     * ```ts
+     * const extendedClient = client.extend((client) => ({
+     *   customMethod: async () => {
+     *     // Use existing client functionality
+     *     const attestation = await client.getAttestation(uid);
+     *     // Add custom logic
+     *     return processAttestation(attestation);
+     *   }
+     * }));
+     * ```
+     */
+    extend: createExtendFunction(client),
+  };
+
+  return extendedClient;
 };
 
 export * from "./config";
 export * from "./types";
+export * from "./extension";
 
 // Main arbiter clients - use these for new development
 export * from "./clients/generalArbiters";
