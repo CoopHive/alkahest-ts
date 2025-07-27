@@ -103,7 +103,7 @@ describe("General Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.intrinsicsArbiter2,
         abi: intrinsicsArbiter2Abi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
@@ -120,7 +120,7 @@ describe("General Arbiters Tests", () => {
         await testClient.readContract({
           address: testContext.addresses.intrinsicsArbiter2,
           abi: intrinsicsArbiter2Abi.abi,
-          functionName: "checkStatement",
+          functionName: "checkObligation",
           args: [attestation, demand, counteroffer],
         });
         expect(false).toBe(true); // Should not reach here
@@ -175,7 +175,7 @@ describe("General Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.trustedPartyArbiter,
         abi: trustedPartyArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
@@ -197,7 +197,7 @@ describe("General Arbiters Tests", () => {
         await testClient.readContract({
           address: testContext.addresses.trustedPartyArbiter,
           abi: trustedPartyArbiterAbi.abi,
-          functionName: "checkStatement",
+          functionName: "checkObligation",
           args: [attestation, demand, counteroffer],
         });
         expect(false).toBe(true); // Should not reach here
@@ -246,7 +246,7 @@ describe("General Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.specificAttestationArbiter,
         abi: specificAttestationArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
@@ -263,7 +263,7 @@ describe("General Arbiters Tests", () => {
         await testClient.readContract({
           address: testContext.addresses.specificAttestationArbiter,
           abi: specificAttestationArbiterAbi.abi,
-          functionName: "checkStatement",
+          functionName: "checkObligation",
           args: [attestation, demand, counteroffer],
         });
         expect(false).toBe(true); // Should not reach here
@@ -318,7 +318,7 @@ describe("General Arbiters Tests", () => {
         const result = await testClient.readContract({
           address: testContext.addresses.trustedOracleArbiter,
           abi: trustedOracleArbiterAbi.abi,
-          functionName: "checkStatement",
+          functionName: "checkObligation",
           args: [attestation, demand, counteroffer],
         });
         
@@ -392,7 +392,7 @@ describe("General Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.trustedPartyArbiter,
         abi: trustedPartyArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, trustedPartyDemand, counteroffer],
       });
 

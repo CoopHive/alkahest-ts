@@ -237,7 +237,7 @@ export const makeAttestationClient = (
       const hash = await viemClient.writeContract({
         address: addresses.attestationEscrowObligation,
         abi: attestationEscrowAbi.abi,
-        functionName: "makeStatement",
+        functionName: "doObligation",
         args: [
           {
             attestation,
@@ -267,7 +267,7 @@ export const makeAttestationClient = (
       const hash = await viemClient.writeContract({
         address: addresses.attestationEscrowObligation,
         abi: attestationEscrowAbi.abi,
-        functionName: "collectPayment",
+        functionName: "collectEscrow",
         args: [escrowAttestation, fulfillmentAttestation],
       });
 
@@ -298,7 +298,7 @@ export const makeAttestationClient = (
       const hash = await viemClient.writeContract({
         address: addresses.attestationEscrowObligation2,
         abi: attestationEscrow2Abi.abi,
-        functionName: "makeStatement",
+        functionName: "doObligation",
         args: [
           {
             attestationUid,
@@ -329,7 +329,7 @@ export const makeAttestationClient = (
       const hash = await viemClient.writeContract({
         address: addresses.attestationEscrowObligation2,
         abi: attestationEscrow2Abi.abi,
-        functionName: "collectPayment",
+        functionName: "collectEscrow",
         args: [escrowAttestation, fulfillmentAttestation],
       });
 

@@ -215,7 +215,7 @@ export const makeErc721Client = (
       const hash = await viemClient.writeContract({
         address: addresses.erc721EscrowObligation,
         abi: erc721EscrowAbi.abi,
-        functionName: "collectExpired",
+        functionName: "reclaimExpired",
         args: [buyAttestation],
       });
       return hash;
