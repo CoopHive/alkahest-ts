@@ -334,17 +334,17 @@ export const makeClient = (
       fulfiller?: `0x${string}` | undefined;
     }> => {
       const fulfillmentEvent = parseAbiItem(
-        "event EscrowClaimed(bytes32 indexed payment, bytes32 indexed fulfillment, address indexed fulfiller)",
+        "event EscrowCollected(bytes32 indexed escrow, bytes32 indexed fulfillment, address indexed fulfiller)",
       );
       const logs = await viemClient.getLogs({
         address: contractAddress,
         event: fulfillmentEvent,
-        args: { payment: buyAttestation },
+        args: { escrow: buyAttestation },
         fromBlock: "earliest",
         toBlock: "latest",
       });
 
-      if (logs.length) return logs[0].args;
+      if (logs.length) return { payment: logs[0].args.escrow, fulfillment: logs[0].args.fulfillment, fulfiller: logs[0].args.fulfiller };
 
       // Use optimal polling interval based on transport type
       const optimalInterval = getOptimalPollingInterval(viemClient, pollingInterval);
@@ -353,9 +353,13 @@ export const makeClient = (
         const unwatch = viemClient.watchEvent({
           address: contractAddress,
           event: fulfillmentEvent,
-          args: { payment: buyAttestation },
+          args: { escrow: buyAttestation },
           onLogs: (logs) => {
-            resolve(logs[0].args);
+            resolve({ 
+              payment: logs[0].args.escrow, 
+              fulfillment: logs[0].args.fulfillment, 
+              fulfiller: logs[0].args.fulfiller 
+            });
             unwatch();
           },
           pollingInterval: optimalInterval,

@@ -142,7 +142,7 @@ export const makeTokenBundleClient = (
       const hash = await viemClient.writeContract({
         address: addresses.tokenBundleEscrowObligation,
         abi: tokenBundleEscrowAbi.abi,
-        functionName: "collectPayment",
+        functionName: "collectEscrow",
         args: [buyAttestation, fulfillment],
       });
       return hash;
@@ -157,7 +157,7 @@ export const makeTokenBundleClient = (
       const hash = await viemClient.writeContract({
         address: addresses.tokenBundleEscrowObligation,
         abi: tokenBundleEscrowAbi.abi,
-        functionName: "collectExpired",
+        functionName: "reclaimExpired",
         args: [buyAttestation],
       });
       return hash;
@@ -187,7 +187,7 @@ export const makeTokenBundleClient = (
       const hash = await viemClient.writeContract({
         address: addresses.tokenBundleEscrowObligation,
         abi: tokenBundleEscrowAbi.abi,
-        functionName: "makeStatement",
+        functionName: "doObligation",
         args: [
           {
             ...flattenTokenBundle(price),
@@ -219,7 +219,7 @@ export const makeTokenBundleClient = (
       const hash = await viemClient.writeContract({
         address: addresses.tokenBundlePaymentObligation,
         abi: tokenBundlePaymentAbi.abi,
-        functionName: "makeStatement",
+        functionName: "doObligation",
         args: [
           {
             ...flattenTokenBundle(price),

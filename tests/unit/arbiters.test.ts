@@ -80,58 +80,62 @@ describe("Arbiters Tests", () => {
 
   describe("TrivialArbiter", () => {
     // Mirrors test/unit/arbiters/TrivialArbiter.t.sol
-    test("testCheckStatementAlwaysReturnsTrue", async () => {
-      // Create a test attestation (values don't matter for TrivialArbiter)
+    test("testCheckObligationAlwaysReturnsTrue", async () => {
+      // Create mock data structures - from Solidity test lines 91-92
+      const mockUid = "0x1234567890123456789012345678901234567890123456789012345678901234" as `0x${string}`;
+      const mockSchema = "0x1234567890123456789012345678901234567890123456789012345678901234" as `0x${string}`;
+      
+      // Create a complete Attestation struct - matches line 93-94
       const attestation = {
-        uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
-        schema:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
-        time: BigInt(Math.floor(Date.now() / 1000)),
+        uid: mockUid,
+        schema: mockSchema,
+        time: 0n,
         expirationTime: 0n,
         revocationTime: 0n,
-        refUID:
-          "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
-        recipient: "0x0000000000000000000000000000000000000000" as const,
-        attester: "0x0000000000000000000000000000000000000000" as const,
+        refUID: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+        recipient: testContext.alice,
+        attester: testContext.bob,
         revocable: true,
-        data: "0x" as const,
+        data: "0x1234" as `0x${string}`,
       };
 
-      // Empty demand data
-      const demand = "0x" as const;
-      const counteroffer =
-        "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
+      const demand = "0x1234" as `0x${string}`;
+      const counteroffer = "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`;
 
-      // Check that the arbiter returns true
-      const result = await testClient.readContract({
+      // Call checkObligation and verify it returns true - line 95
+      const result = await testContext.testClient.readContract({
         address: testContext.addresses.trivialArbiter,
         abi: trivialArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
-      // Should always return true
       expect(result).toBe(true);
+    });
 
-      // Try with different values, should still return true
-      const attestation2 = {
-        ...attestation,
-        uid: "0x0000000000000000000000000000000000000000000000000000000000000001" as const,
+    test("testCheckObligationCanCallReadFunction", async () => {
+      // Create mock data
+      const mockAttestation = {
+        uid: "0x1234567890123456789012345678901234567890123456789012345678901234" as `0x${string}`,
+        schema: "0x1234567890123456789012345678901234567890123456789012345678901234" as `0x${string}`,
+        time: 0n,
+        expirationTime: 0n,
+        revocationTime: 0n,
+        refUID: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
+        recipient: testContext.alice,
+        attester: testContext.bob,
+        revocable: true,
+        data: "0x1234" as `0x${string}`,
       };
 
-      const demand2 = "0x736f6d652064617461" as const; // "some data" in hex
-      const counteroffer2 =
-        "0x000000000000000000000000000000000000000000000000000000000000002a" as const; // 42 in hex
-
-      const result2 = await testClient.readContract({
+      const result = await testContext.testClient.readContract({
         address: testContext.addresses.trivialArbiter,
         abi: trivialArbiterAbi.abi,
-        functionName: "checkStatement",
-        args: [attestation2, demand2, counteroffer2],
+        functionName: "checkObligation",
+        args: [mockAttestation, "0x1234" as `0x${string}`, "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`],
       });
 
-      // Should always return true
-      expect(result2).toBe(true);
+      expect(result).toBe(true);
     });
   });
 
@@ -142,7 +146,7 @@ describe("Arbiters Tests", () => {
     const creator = "0x0000000000000000000000000000000000000123" as const;
     const nonCreator = "0x0000000000000000000000000000000000000456" as const;
 
-    test("testCheckStatementWithCorrectCreator", async () => {
+    test("testCheckObligationWithCorrectCreator", async () => {
       // Create a test attestation with the correct recipient (creator)
       const attestation = {
         uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
@@ -181,14 +185,14 @@ describe("Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.trustedPartyArbiter,
         abi: trustedPartyArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
       expect(result).toBe(true);
     });
 
-    test("testCheckStatementWithIncorrectCreator", async () => {
+    test("testCheckObligationWithIncorrectCreator", async () => {
       // Create a test attestation with an incorrect recipient (not the creator)
       const attestation = {
         uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
@@ -228,7 +232,7 @@ describe("Arbiters Tests", () => {
         await testClient.readContract({
           address: testContext.addresses.trustedPartyArbiter,
           abi: trustedPartyArbiterAbi.abi,
-          functionName: "checkStatement",
+          functionName: "checkObligation",
           args: [attestation, demand, counteroffer],
         });
         // If we didn't get an error, the test should fail
@@ -278,7 +282,7 @@ describe("Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.trustedOracleArbiter,
         abi: trustedOracleArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
@@ -319,7 +323,7 @@ describe("Arbiters Tests", () => {
       const initialResult = await testClient.readContract({
         address: testContext.addresses.trustedOracleArbiter,
         abi: trustedOracleArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
@@ -341,14 +345,14 @@ describe("Arbiters Tests", () => {
       const finalResult = await testClient.readContract({
         address: testContext.addresses.trustedOracleArbiter,
         abi: trustedOracleArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
       expect(finalResult).toBe(true);
     });
 
-    test("testCheckStatementWithDifferentOracles", async () => {
+    test("testCheckObligationWithDifferentOracles", async () => {
       // Set up two different oracles with different decisions
       const oracle1 = oracle;
       const oracle2 = alice;
@@ -406,7 +410,7 @@ describe("Arbiters Tests", () => {
       const result1 = await testClient.readContract({
         address: testContext.addresses.trustedOracleArbiter,
         abi: trustedOracleArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand1, counteroffer],
       });
 
@@ -423,14 +427,14 @@ describe("Arbiters Tests", () => {
       const result2 = await testClient.readContract({
         address: testContext.addresses.trustedOracleArbiter,
         abi: trustedOracleArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand2, counteroffer],
       });
 
       expect(result2).toBe(false);
     });
 
-    test("testCheckStatementWithNoDecision", async () => {
+    test("testCheckObligationWithNoDecision", async () => {
       // Create a new oracle address that hasn't made a decision
       const newOracle = privateKeyToAddress(generatePrivateKey());
 
@@ -465,7 +469,7 @@ describe("Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.trustedOracleArbiter,
         abi: trustedOracleArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
@@ -475,7 +479,7 @@ describe("Arbiters Tests", () => {
 
   describe("SpecificAttestationArbiter", () => {
     // Mirrors test/unit/arbiters/SpecificAttestationArbiter.t.sol
-    test("testCheckStatementWithCorrectUID", async () => {
+    test("testCheckObligationWithCorrectUID", async () => {
       // Create a test attestation
       const uid =
         "0x0000000000000000000000000000000000000000000000000000000000000001" as const;
@@ -509,14 +513,14 @@ describe("Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.specificAttestationArbiter,
         abi: specificAttestationArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
       expect(result).toBe(true);
     });
 
-    test("testCheckStatementWithIncorrectUID", async () => {
+    test("testCheckObligationWithIncorrectUID", async () => {
       // Create a test attestation
       const uid =
         "0x0000000000000000000000000000000000000000000000000000000000000001" as const;
@@ -551,7 +555,7 @@ describe("Arbiters Tests", () => {
         await testClient.readContract({
           address: testContext.addresses.specificAttestationArbiter,
           abi: specificAttestationArbiterAbi.abi,
-          functionName: "checkStatement",
+          functionName: "checkObligation",
           args: [attestation, demand, counteroffer],
         });
         // If we didn't get an error, the test should fail
@@ -584,7 +588,7 @@ describe("Arbiters Tests", () => {
       expect(decodedDemand.schema).toBe(schema);
     });
 
-    test("testCheckStatementWithMatchingSchema", async () => {
+    test("testCheckObligationWithMatchingSchema", async () => {
       // Create a test attestation with matching schema
       const attestation = {
         uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
@@ -610,14 +614,14 @@ describe("Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.intrinsicsArbiter2,
         abi: intrinsicsArbiter2Abi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
       expect(result).toBe(true);
     });
 
-    test("testCheckStatementWithNonMatchingSchema", async () => {
+    test("testCheckObligationWithNonMatchingSchema", async () => {
       // Create a test attestation with different schema
       const differentSchema =
         "0x5555555555555555555555555555555555555555555555555555555555555555" as const;
@@ -646,7 +650,7 @@ describe("Arbiters Tests", () => {
         await testClient.readContract({
           address: testContext.addresses.intrinsicsArbiter2,
           abi: intrinsicsArbiter2Abi.abi,
-          functionName: "checkStatement",
+          functionName: "checkObligation",
           args: [attestation, demand, counteroffer],
         });
         expect(false).toBe(true); // Should not reach here
@@ -682,7 +686,7 @@ describe("Arbiters Tests", () => {
       expect(decodedDemand.demands).toEqual(demandData.demands);
     });
 
-    test("testCheckStatementWithAnyTrueArbiter", async () => {
+    test("testCheckObligationWithAnyTrueArbiter", async () => {
       // Create attestation
       const attestation = {
         uid: "0x0000000000000000000000000000000000000000000000000000000000000000" as const,
@@ -719,14 +723,14 @@ describe("Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.anyArbiter,
         abi: anyArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
       expect(result).toBe(true);
     });
 
-    test("testCheckStatementWithAllFalseArbiters", async () => {
+    test("testCheckObligationWithAllFalseArbiters", async () => {
       // Prepare attestation
       const statementUid =
         "0x0000000000000000000000000000000000000000000000000000000000000001" as const;
@@ -774,7 +778,7 @@ describe("Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.anyArbiter,
         abi: anyArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
@@ -805,7 +809,7 @@ describe("Arbiters Tests", () => {
       expect(decodedDemand.demands).toEqual(demandData.demands);
     });
 
-    test("testCheckStatementWithAllTrueArbiters", async () => {
+    test("testCheckObligationWithAllTrueArbiters", async () => {
       // Create attestation
       const uid =
         "0x0000000000000000000000000000000000000000000000000000000000000001" as const;
@@ -849,14 +853,14 @@ describe("Arbiters Tests", () => {
       const result = await testClient.readContract({
         address: testContext.addresses.allArbiter,
         abi: allArbiterAbi.abi,
-        functionName: "checkStatement",
+        functionName: "checkObligation",
         args: [attestation, demand, counteroffer],
       });
 
       expect(result).toBe(true);
     });
 
-    test("testCheckStatementWithOneFalseArbiter", async () => {
+    test("testCheckObligationWithOneFalseArbiter", async () => {
       // Create attestation
       const attestation = {
         uid: "0x0000000000000000000000000000000000000000000000000000000000000001" as const,
@@ -897,7 +901,7 @@ describe("Arbiters Tests", () => {
         await testClient.readContract({
           address: testContext.addresses.allArbiter,
           abi: allArbiterAbi.abi,
-          functionName: "checkStatement",
+          functionName: "checkObligation",
           args: [attestation, demand, counteroffer],
         });
         expect(false).toBe(true); // Should not reach here

@@ -294,7 +294,7 @@ export const makeErc20Client = (
        const {request} = await viemClient.simulateContract({
           address: addresses.erc20EscrowObligation,
           abi: erc20EscrowAbi.abi,
-          functionName: "collectPayment",
+          functionName: "collectEscrow",
           args: [buyAttestation, fulfillment],
         });
         hash = await viemClient.writeContract(request);
@@ -315,7 +315,7 @@ export const makeErc20Client = (
       const hash = await viemClient.writeContract({
         address: addresses.erc20EscrowObligation,
         abi: erc20EscrowAbi.abi,
-        functionName: "collectExpired",
+        functionName: "reclaimExpired",
         args: [buyAttestation],
       });
       return hash;
@@ -341,7 +341,7 @@ export const makeErc20Client = (
       const hash = await viemClient.writeContract({
         address: addresses.erc20EscrowObligation,
         abi: erc20EscrowAbi.abi,
-        functionName: "makeStatement",
+        functionName: "doObligation",
         args: [
           {
             token: price.address,
@@ -438,7 +438,7 @@ export const makeErc20Client = (
       const hash = await viemClient.writeContract({
         address: addresses.erc20PaymentObligation,
         abi: erc20PaymentAbi.abi,
-        functionName: "makeStatement",
+        functionName: "doObligation",
         args: [
           {
             token: price.address,
