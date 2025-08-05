@@ -67,7 +67,7 @@ export const getAttestation = async (
 export const getAttestedEventFromTxHash = async (
   client: ViemClient,
   hash: `0x${string}`,
-) => {
+): Promise<any> => {
   let tx;
   try {
     tx = await client.waitForTransactionReceipt({ hash });
@@ -79,11 +79,11 @@ export const getAttestedEventFromTxHash = async (
     eventName: "Attested",
     logs: tx.logs,
   });
-  
+
   if (events.length === 0) {
     throw new Error(`No Attested event found in transaction ${hash}`);
   }
-  
+
   return events[0].args;
 };
 
