@@ -23,7 +23,7 @@ import type { ChainAddresses } from "./types";
 import { getAttestation, getOptimalPollingInterval } from "./utils";
 
 import { abi as easAbi } from "./contracts/IEAS";
-
+import { makeDefaultExtension, makeExtendableClient } from "./extensions";
 /**
  * Creates an Alkahest client for interacting with the protocol
  * @param walletClient - Viem wallet client object
@@ -43,6 +43,36 @@ export const makeClient = (
   walletClient: WalletClient<Transport, Chain, Account>,
   contractAddresses?: Partial<ChainAddresses>,
 ) => {
+  const client = makeMinimalClient(walletClient, contractAddresses);
+  return client.extend(makeDefaultExtension);
+};
+
+
+/**
+ * Creates a minimal Alkahest client with only core functionality
+ * @param walletClient - Viem wallet client object
+ * @param contractAddresses - Optional custom contract addresses (useful for local testing)
+ * @returns Minimal client object that can be extended with additional functionality
+ * 
+ * @example
+ * ```ts
+ * // Create minimal client
+ * const baseClient = makeMinimalClient(walletClient);
+ * 
+ * // Extend with default functionality
+ * const fullClient = baseClient.extend(makeDefaultExtension);
+ * 
+ * // Or extend with custom functionality
+ * const customClient = baseClient.extend((client) => ({
+ *   erc20: makeErc20Client(client.viemClient, client.contractAddresses),
+ *   customMethod: () => "custom functionality"
+ * }));
+ * ```
+ */
+export const makeMinimalClient = (
+  walletClient: WalletClient<Transport, Chain, Account>,
+  contractAddresses?: Partial<ChainAddresses>,
+) => {
   const viemClient = walletClient.extend(publicActions);
 
   // Determine base addresses to use
@@ -50,7 +80,7 @@ export const makeClient = (
   if (supportedChains.includes(viemClient.chain.name)) {
     baseAddresses =
       defaultContractAddresses[
-        viemClient.chain.name as keyof typeof defaultContractAddresses
+      viemClient.chain.name as keyof typeof defaultContractAddresses
       ];
   }
 
@@ -253,30 +283,7 @@ export const makeClient = (
       zeroAddress,
   };
 
-  return {
-    /** Unified client for all arbiter functionality */
-    arbiters: makeArbitersClient(viemClient, addresses),
-
-    /** Methods for interacting with ERC20 tokens */
-    erc20: makeErc20Client(viemClient, addresses),
-
-    /** Methods for interacting with ERC721 tokens */
-    erc721: makeErc721Client(viemClient, addresses),
-
-    /** Methods for interacting with ERC1155 tokens */
-    erc1155: makeErc1155Client(viemClient, addresses),
-
-    /** Methods for interacting with token bundles */
-    bundle: makeTokenBundleClient(viemClient, addresses),
-
-    /** Methods for interacting with attestations */
-    attestation: makeAttestationClient(viemClient, addresses),
-
-    /** Utilities for StringObligation */
-    stringObligation: makeStringObligationClient(viemClient, addresses),
-
-    oracle: makeOracleClient(viemClient, addresses),
-
+  const client = {
     /** The underlying Viem client */
     viemClient,
 
@@ -355,10 +362,10 @@ export const makeClient = (
           event: fulfillmentEvent,
           args: { escrow: buyAttestation },
           onLogs: (logs) => {
-            resolve({ 
-              payment: logs[0].args.escrow, 
-              fulfillment: logs[0].args.fulfillment, 
-              fulfiller: logs[0].args.fulfiller 
+            resolve({
+              payment: logs[0].args.escrow,
+              fulfillment: logs[0].args.fulfillment,
+              fulfiller: logs[0].args.fulfiller
             });
             unwatch();
           },
@@ -367,10 +374,13 @@ export const makeClient = (
       });
     },
   };
+
+  return makeExtendableClient(client);
 };
 
 export * from "./config";
 export * from "./types";
+export * from "./extensions";
 
 // Main arbiter clients - use these for new development
 export * from "./clients/generalArbiters";

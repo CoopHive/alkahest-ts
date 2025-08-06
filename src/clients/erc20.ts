@@ -27,7 +27,7 @@ import { abi as erc20EscrowAbi } from "../contracts/ERC20EscrowObligation";
 import { abi as erc20PaymentAbi } from "../contracts/ERC20PaymentObligation";
 import { abi as erc20Abi } from "../contracts/ERC20Permit";
 import { abi as easAbi } from "../contracts/IEAS";
-import type { ApprovalPurpose } from "../../dist";
+import type { ApprovalPurpose } from "../types";
 
 export const makeErc20Client = (
   viemClient: ViemClient,
@@ -291,7 +291,7 @@ export const makeErc20Client = (
     ) => {
       let hash;
       try {
-       const {request} = await viemClient.simulateContract({
+        const { request } = await viemClient.simulateContract({
           address: addresses.erc20EscrowObligation,
           abi: erc20EscrowAbi.abi,
           functionName: "collectEscrow",
