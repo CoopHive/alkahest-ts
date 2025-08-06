@@ -12,6 +12,43 @@ import { abi as IntrinsicsArbiter2Abi } from "../contracts/IntrinsicsArbiter2";
 import { abi as TrustedPartyArbiterAbi } from "../contracts/TrustedPartyArbiter";
 import { abi as SpecificAttestationArbiterAbi } from "../contracts/SpecificAttestationArbiter";
 
+// Extract DemandData struct ABI from contract ABIs at module initialization
+const intrinsicsArbiter2DecodeDemandFunction = IntrinsicsArbiter2Abi.abi.find(
+  (item) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const trustedPartyArbiterDecodeDemandFunction = TrustedPartyArbiterAbi.abi.find(
+  (item) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const specificAttestationArbiterDecodeDemandFunction = SpecificAttestationArbiterAbi.abi.find(
+  (item) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const trustedOracleArbiterDecodeDemandFunction = trustedOracleArbiterAbi.abi.find(
+  (item) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+
+// Extract the DemandData struct types from the function outputs
+const intrinsicsArbiter2DemandDataType = intrinsicsArbiter2DecodeDemandFunction?.outputs?.[0];
+const trustedPartyArbiterDemandDataType = trustedPartyArbiterDecodeDemandFunction?.outputs?.[0];
+const specificAttestationArbiterDemandDataType = specificAttestationArbiterDecodeDemandFunction?.outputs?.[0];
+const trustedOracleArbiterDemandDataType = trustedOracleArbiterDecodeDemandFunction?.outputs?.[0];
+
+// Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
+if (!intrinsicsArbiter2DemandDataType) {
+  throw new Error('Failed to extract ABI type from IntrinsicsArbiter2 contract JSON. The contract definition may be missing or malformed.');
+}
+
+if (!trustedPartyArbiterDemandDataType) {
+  throw new Error('Failed to extract ABI type from TrustedPartyArbiter contract JSON. The contract definition may be missing or malformed.');
+}
+
+if (!specificAttestationArbiterDemandDataType) {
+  throw new Error('Failed to extract ABI type from SpecificAttestationArbiter contract JSON. The contract definition may be missing or malformed.');
+}
+
+if (!trustedOracleArbiterDemandDataType) {
+  throw new Error('Failed to extract ABI type from TrustedOracleArbiter contract JSON. The contract definition may be missing or malformed.');
+}
+
 /**
  * General Arbiters Client
  * 
@@ -27,25 +64,6 @@ export const makeGeneralArbitersClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
-  // Extract DemandData struct ABI from contract ABIs
-  const intrinsicsArbiter2DecodeDemandFunction = IntrinsicsArbiter2Abi.abi.find(
-    (item) => item.type === 'function' && item.name === 'decodeDemandData'
-  );
-  const trustedPartyArbiterDecodeDemandFunction = TrustedPartyArbiterAbi.abi.find(
-    (item) => item.type === 'function' && item.name === 'decodeDemandData'
-  );
-  const specificAttestationArbiterDecodeDemandFunction = SpecificAttestationArbiterAbi.abi.find(
-    (item) => item.type === 'function' && item.name === 'decodeDemandData'
-  );
-  const trustedOracleArbiterDecodeDemandFunction = trustedOracleArbiterAbi.abi.find(
-    (item) => item.type === 'function' && item.name === 'decodeDemandData'
-  );
-
-  // Extract the DemandData struct types from the function outputs
-  const intrinsicsArbiter2DemandDataType = intrinsicsArbiter2DecodeDemandFunction?.outputs?.[0];
-  const trustedPartyArbiterDemandDataType = trustedPartyArbiterDecodeDemandFunction?.outputs?.[0];
-  const specificAttestationArbiterDemandDataType = specificAttestationArbiterDecodeDemandFunction?.outputs?.[0];
-  const trustedOracleArbiterDemandDataType = trustedOracleArbiterDecodeDemandFunction?.outputs?.[0];
 
   // Cache the parsed event ABIs to avoid re-parsing on each call
   const arbitrationMadeEvent = parseAbiItem(
@@ -63,9 +81,6 @@ export const makeGeneralArbitersClient = (
      * @returns abi encoded bytes
      */
     encodeIntrinsics2Demand: (demand: { schema: `0x${string}` }) => {
-      if (!intrinsicsArbiter2DemandDataType) {
-        throw new Error("IntrinsicsArbiter2 DemandData ABI not found");
-      }
       return encodeAbiParameters([intrinsicsArbiter2DemandDataType], [demand]);
     },
 
@@ -75,9 +90,6 @@ export const makeGeneralArbitersClient = (
      * @returns the decoded DemandData object
      */
     decodeIntrinsics2Demand: (demandData: `0x${string}`) => {
-      if (!intrinsicsArbiter2DemandDataType) {
-        throw new Error("IntrinsicsArbiter2 DemandData ABI not found");
-      }
       return decodeAbiParameters([intrinsicsArbiter2DemandDataType], demandData)[0];
     },
 
@@ -91,9 +103,6 @@ export const makeGeneralArbitersClient = (
       baseDemand: `0x${string}`;
       creator: `0x${string}`;
     }) => {
-      if (!trustedPartyArbiterDemandDataType) {
-        throw new Error("TrustedPartyArbiter DemandData ABI not found");
-      }
       return encodeAbiParameters([trustedPartyArbiterDemandDataType], [demand]);
     },
 
@@ -103,9 +112,6 @@ export const makeGeneralArbitersClient = (
      * @returns the decoded DemandData object
      */
     decodeTrustedPartyDemand: (demandData: `0x${string}`) => {
-      if (!trustedPartyArbiterDemandDataType) {
-        throw new Error("TrustedPartyArbiter DemandData ABI not found");
-      }
       return decodeAbiParameters([trustedPartyArbiterDemandDataType], demandData)[0];
     },
 
@@ -115,9 +121,6 @@ export const makeGeneralArbitersClient = (
      * @returns abi encoded bytes
      */
     encodeSpecificAttestationDemand: (demand: { uid: `0x${string}` }) => {
-      if (!specificAttestationArbiterDemandDataType) {
-        throw new Error("SpecificAttestationArbiter DemandData ABI not found");
-      }
       return encodeAbiParameters([specificAttestationArbiterDemandDataType], [demand]);
     },
 
@@ -127,9 +130,6 @@ export const makeGeneralArbitersClient = (
      * @returns the decoded DemandData object
      */
     decodeSpecificAttestationDemand: (demandData: `0x${string}`) => {
-      if (!specificAttestationArbiterDemandDataType) {
-        throw new Error("SpecificAttestationArbiter DemandData ABI not found");
-      }
       return decodeAbiParameters([specificAttestationArbiterDemandDataType], demandData)[0];
     },
 
@@ -142,9 +142,6 @@ export const makeGeneralArbitersClient = (
       oracle: `0x${string}`;
       data: `0x${string}`;
     }) => {
-      if (!trustedOracleArbiterDemandDataType) {
-        throw new Error("TrustedOracleArbiter DemandData ABI not found");
-      }
       return encodeAbiParameters([trustedOracleArbiterDemandDataType], [demand]);
     },
 
@@ -154,9 +151,6 @@ export const makeGeneralArbitersClient = (
      * @returns the decoded DemandData object
      */
     decodeTrustedOracleDemand: (demandData: `0x${string}`) => {
-      if (!trustedOracleArbiterDemandDataType) {
-        throw new Error("TrustedOracleArbiter DemandData ABI not found");
-      }
       return decodeAbiParameters([trustedOracleArbiterDemandDataType], demandData)[0];
     },
 

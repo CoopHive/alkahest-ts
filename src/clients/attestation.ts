@@ -26,46 +26,18 @@ export const makeAttestationClient = (
     (item) => item.type === "function" && item.name === "decodeObligationData"
   )?.outputs?.[0];
 
-  // Fallback ABI structure for AttestationEscrowObligation
-  const fallbackAttestationAbi = [
-    { name: "arbiter", type: "address", internalType: "address" },
-    { name: "demand", type: "bytes", internalType: "bytes" },
-    {
-      name: "attestation",
-      type: "tuple",
-      internalType: "struct AttestationRequest",
-      components: [
-        { name: "schema", type: "bytes32", internalType: "bytes32" },
-        {
-          name: "data",
-          type: "tuple",
-          internalType: "struct AttestationRequestData",
-          components: [
-            {
-              name: "recipient",
-              type: "address",
-              internalType: "address",
-            },
-            {
-              name: "expirationTime",
-              type: "uint64",
-              internalType: "uint64",
-            },
-            { name: "revocable", type: "bool", internalType: "bool" },
-            { name: "refUID", type: "bytes32", internalType: "bytes32" },
-            { name: "data", type: "bytes", internalType: "bytes" },
-            { name: "value", type: "uint256", internalType: "uint256" },
-          ],
-        },
-      ],
-    },
-  ];
+  // Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
+  if (!escrowObligationDataType) {
+    throw new Error('Failed to extract ABI type from AttestationEscrowObligation contract JSON. The contract definition may be missing or malformed.');
+  }
 
-  // Use ABI from contract if available, otherwise fallback to manual definition
-  const attestationAbi = escrowObligationDataType ? [escrowObligationDataType] : fallbackAttestationAbi;
-  const attestation2Abi = escrow2ObligationDataType ? [escrow2ObligationDataType] : parseAbiParameters(
-    "(address arbiter, bytes demand, bytes32 attestationUid)",
-  );
+  if (!escrow2ObligationDataType) {
+    throw new Error('Failed to extract ABI type from AttestationEscrowObligation2 contract JSON. The contract definition may be missing or malformed.');
+  }
+
+  // Use contract ABIs directly
+  const attestationAbi = [escrowObligationDataType];
+  const attestation2Abi = [escrow2ObligationDataType];
 
   const getEscrowSchema = async () =>
     await viemClient.readContract({

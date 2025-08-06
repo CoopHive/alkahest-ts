@@ -1,7 +1,6 @@
 import {
   decodeAbiParameters,
   encodeAbiParameters,
-  parseAbiParameters,
 } from "viem";
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
@@ -32,6 +31,180 @@ import { abi as SchemaArbiterNonComposingAbi } from "../contracts/SchemaArbiterN
 import { abi as UidArbiterComposingAbi } from "../contracts/UidArbiterComposing";
 import { abi as UidArbiterNonComposingAbi } from "../contracts/UidArbiterNonComposing";
 
+// Extract DemandData struct ABIs from contract ABIs at module initialization
+const attesterArbiterComposingDecodeDemandFunction = AttesterArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const attesterArbiterNonComposingDecodeDemandFunction = AttesterArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const timeAfterArbiterComposingDecodeDemandFunction = TimeAfterArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const timeAfterArbiterNonComposingDecodeDemandFunction = TimeAfterArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const timeBeforeArbiterComposingDecodeDemandFunction = TimeBeforeArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const timeBeforeArbiterNonComposingDecodeDemandFunction = TimeBeforeArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const timeEqualArbiterComposingDecodeDemandFunction = TimeEqualArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const timeEqualArbiterNonComposingDecodeDemandFunction = TimeEqualArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const expirationTimeAfterArbiterComposingDecodeDemandFunction = ExpirationTimeAfterArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const expirationTimeAfterArbiterNonComposingDecodeDemandFunction = ExpirationTimeAfterArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const expirationTimeBeforeArbiterComposingDecodeDemandFunction = ExpirationTimeBeforeArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const expirationTimeBeforeArbiterNonComposingDecodeDemandFunction = ExpirationTimeBeforeArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const expirationTimeEqualArbiterComposingDecodeDemandFunction = ExpirationTimeEqualArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const expirationTimeEqualArbiterNonComposingDecodeDemandFunction = ExpirationTimeEqualArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const recipientArbiterComposingDecodeDemandFunction = RecipientArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const recipientArbiterNonComposingDecodeDemandFunction = RecipientArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const refUidArbiterComposingDecodeDemandFunction = RefUidArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const refUidArbiterNonComposingDecodeDemandFunction = RefUidArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const revocableArbiterComposingDecodeDemandFunction = RevocableArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const revocableArbiterNonComposingDecodeDemandFunction = RevocableArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const schemaArbiterComposingDecodeDemandFunction = SchemaArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const schemaArbiterNonComposingDecodeDemandFunction = SchemaArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const uidArbiterComposingDecodeDemandFunction = UidArbiterComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const uidArbiterNonComposingDecodeDemandFunction = UidArbiterNonComposingAbi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+
+// Extract the DemandData struct types from the function outputs
+const attesterArbiterComposingDemandDataType = (attesterArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const attesterArbiterNonComposingDemandDataType = (attesterArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const timeAfterArbiterComposingDemandDataType = (timeAfterArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const timeAfterArbiterNonComposingDemandDataType = (timeAfterArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const timeBeforeArbiterComposingDemandDataType = (timeBeforeArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const timeBeforeArbiterNonComposingDemandDataType = (timeBeforeArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const timeEqualArbiterComposingDemandDataType = (timeEqualArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const timeEqualArbiterNonComposingDemandDataType = (timeEqualArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const expirationTimeAfterArbiterComposingDemandDataType = (expirationTimeAfterArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const expirationTimeAfterArbiterNonComposingDemandDataType = (expirationTimeAfterArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const expirationTimeBeforeArbiterComposingDemandDataType = (expirationTimeBeforeArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const expirationTimeBeforeArbiterNonComposingDemandDataType = (expirationTimeBeforeArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const expirationTimeEqualArbiterComposingDemandDataType = (expirationTimeEqualArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const expirationTimeEqualArbiterNonComposingDemandDataType = (expirationTimeEqualArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const recipientArbiterComposingDemandDataType = (recipientArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const recipientArbiterNonComposingDemandDataType = (recipientArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const refUidArbiterComposingDemandDataType = (refUidArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const refUidArbiterNonComposingDemandDataType = (refUidArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const revocableArbiterComposingDemandDataType = (revocableArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const revocableArbiterNonComposingDemandDataType = (revocableArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const schemaArbiterComposingDemandDataType = (schemaArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const schemaArbiterNonComposingDemandDataType = (schemaArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const uidArbiterComposingDemandDataType = (uidArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const uidArbiterNonComposingDemandDataType = (uidArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+
+// Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
+if (!attesterArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from AttesterArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!attesterArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from AttesterArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!timeAfterArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from TimeAfterArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!timeAfterArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from TimeAfterArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!timeBeforeArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from TimeBeforeArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!timeBeforeArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from TimeBeforeArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!timeEqualArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from TimeEqualArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!timeEqualArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from TimeEqualArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!expirationTimeAfterArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from ExpirationTimeAfterArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!expirationTimeAfterArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from ExpirationTimeAfterArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!expirationTimeBeforeArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from ExpirationTimeBeforeArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!expirationTimeBeforeArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from ExpirationTimeBeforeArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!expirationTimeEqualArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from ExpirationTimeEqualArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!expirationTimeEqualArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from ExpirationTimeEqualArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!recipientArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from RecipientArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!recipientArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from RecipientArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!refUidArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from RefUidArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!refUidArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from RefUidArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!revocableArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from RevocableArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!revocableArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from RevocableArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!schemaArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from SchemaArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!schemaArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from SchemaArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!uidArbiterComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from UidArbiterComposing contract JSON. The contract definition may be missing or malformed.');
+}
+if (!uidArbiterNonComposingDemandDataType) {
+  throw new Error('Failed to extract ABI type from UidArbiterNonComposing contract JSON. The contract definition may be missing or malformed.');
+}
+
 /**
  * Attestation Properties Arbiters Client
  * 
@@ -54,80 +227,6 @@ export const makeAttestationPropertiesArbitersClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
-  // Extract DemandData struct ABI from contract ABIs
-  const attesterArbiterComposingDemandDataType = (AttesterArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const attesterArbiterNonComposingDemandDataType = (AttesterArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const timeAfterArbiterComposingDemandDataType = (TimeAfterArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const timeAfterArbiterNonComposingDemandDataType = (TimeAfterArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const timeBeforeArbiterComposingDemandDataType = (TimeBeforeArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const timeBeforeArbiterNonComposingDemandDataType = (TimeBeforeArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const timeEqualArbiterComposingDemandDataType = (TimeEqualArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const timeEqualArbiterNonComposingDemandDataType = (TimeEqualArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const expirationTimeAfterArbiterComposingDemandDataType = (ExpirationTimeAfterArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const expirationTimeAfterArbiterNonComposingDemandDataType = (ExpirationTimeAfterArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const expirationTimeBeforeArbiterComposingDemandDataType = (ExpirationTimeBeforeArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const expirationTimeBeforeArbiterNonComposingDemandDataType = (ExpirationTimeBeforeArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const expirationTimeEqualArbiterComposingDemandDataType = (ExpirationTimeEqualArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const expirationTimeEqualArbiterNonComposingDemandDataType = (ExpirationTimeEqualArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const recipientArbiterComposingDemandDataType = (RecipientArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const recipientArbiterNonComposingDemandDataType = (RecipientArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const refUidArbiterComposingDemandDataType = (RefUidArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const refUidArbiterNonComposingDemandDataType = (RefUidArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const revocableArbiterComposingDemandDataType = (RevocableArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const revocableArbiterNonComposingDemandDataType = (RevocableArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const schemaArbiterComposingDemandDataType = (SchemaArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const schemaArbiterNonComposingDemandDataType = (SchemaArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const uidArbiterComposingDemandDataType = (UidArbiterComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-  const uidArbiterNonComposingDemandDataType = (UidArbiterNonComposingAbi.find(
-    (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-  ) as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-
   return {
     // Attester Arbiters
     /**
@@ -139,20 +238,14 @@ export const makeAttestationPropertiesArbitersClient = (
       baseDemand: `0x${string}`;
       attester: `0x${string}`;
     }) => {
-      return encodeAbiParameters(
-        attesterArbiterComposingDemandDataType ? [attesterArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, address attester)"),
-        [demand],
-      );
+      return encodeAbiParameters([attesterArbiterComposingDemandDataType], [demand]);
     },
 
     /**
      * Decodes AttesterArbiterComposing.DemandData from bytes.
      */
     decodeAttesterArbiterComposingDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        attesterArbiterComposingDemandDataType ? [attesterArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, address attester)"),
-        demandData,
-      )[0];
+      return decodeAbiParameters([attesterArbiterComposingDemandDataType], demandData)[0];
     },
 
     /**
@@ -162,20 +255,14 @@ export const makeAttestationPropertiesArbitersClient = (
     encodeAttesterArbiterNonComposingDemand: (demand: {
       attester: `0x${string}`;
     }) => {
-      return encodeAbiParameters(
-        attesterArbiterNonComposingDemandDataType ? [attesterArbiterNonComposingDemandDataType] : parseAbiParameters("(address attester)"),
-        [demand],
-      );
+      return encodeAbiParameters([attesterArbiterNonComposingDemandDataType], [demand]);
     },
 
     /**
      * Decodes AttesterArbiterNonComposing.DemandData from bytes.
      */
     decodeAttesterArbiterNonComposingDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        attesterArbiterNonComposingDemandDataType ? [attesterArbiterNonComposingDemandDataType] : parseAbiParameters("(address attester)"),
-        demandData,
-      )[0];
+      return decodeAbiParameters([attesterArbiterNonComposingDemandDataType], demandData)[0];
     },
 
     // Time After Arbiters
@@ -189,7 +276,7 @@ export const makeAttestationPropertiesArbitersClient = (
       time: bigint;
     }) => {
       return encodeAbiParameters(
-        timeAfterArbiterComposingDemandDataType ? [timeAfterArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        [timeAfterArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -199,7 +286,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeTimeAfterArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        timeAfterArbiterComposingDemandDataType ? [timeAfterArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        [timeAfterArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -212,7 +299,7 @@ export const makeAttestationPropertiesArbitersClient = (
       time: bigint;
     }) => {
       return encodeAbiParameters(
-        timeAfterArbiterNonComposingDemandDataType ? [timeAfterArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 time)"),
+        [timeAfterArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -222,7 +309,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeTimeAfterArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        timeAfterArbiterNonComposingDemandDataType ? [timeAfterArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 time)"),
+        [timeAfterArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -238,7 +325,7 @@ export const makeAttestationPropertiesArbitersClient = (
       time: bigint;
     }) => {
       return encodeAbiParameters(
-        timeBeforeArbiterComposingDemandDataType ? [timeBeforeArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        [timeBeforeArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -248,7 +335,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeTimeBeforeArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        timeBeforeArbiterComposingDemandDataType ? [timeBeforeArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        [timeBeforeArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -261,7 +348,7 @@ export const makeAttestationPropertiesArbitersClient = (
       time: bigint;
     }) => {
       return encodeAbiParameters(
-        timeBeforeArbiterNonComposingDemandDataType ? [timeBeforeArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 time)"),
+        [timeBeforeArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -271,7 +358,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeTimeBeforeArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        timeBeforeArbiterNonComposingDemandDataType ? [timeBeforeArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 time)"),
+        [timeBeforeArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -287,7 +374,7 @@ export const makeAttestationPropertiesArbitersClient = (
       time: bigint;
     }) => {
       return encodeAbiParameters(
-        timeEqualArbiterComposingDemandDataType ? [timeEqualArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        [timeEqualArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -297,7 +384,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeTimeEqualArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        timeEqualArbiterComposingDemandDataType ? [timeEqualArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 time)"),
+        [timeEqualArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -310,7 +397,7 @@ export const makeAttestationPropertiesArbitersClient = (
       time: bigint;
     }) => {
       return encodeAbiParameters(
-        timeEqualArbiterNonComposingDemandDataType ? [timeEqualArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 time)"),
+        [timeEqualArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -320,7 +407,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeTimeEqualArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        timeEqualArbiterNonComposingDemandDataType ? [timeEqualArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 time)"),
+        [timeEqualArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -336,7 +423,7 @@ export const makeAttestationPropertiesArbitersClient = (
       expirationTime: bigint;
     }) => {
       return encodeAbiParameters(
-        expirationTimeAfterArbiterComposingDemandDataType ? [expirationTimeAfterArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        [expirationTimeAfterArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -346,7 +433,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeExpirationTimeAfterArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        expirationTimeAfterArbiterComposingDemandDataType ? [expirationTimeAfterArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        [expirationTimeAfterArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -359,7 +446,7 @@ export const makeAttestationPropertiesArbitersClient = (
       expirationTime: bigint;
     }) => {
       return encodeAbiParameters(
-        expirationTimeAfterArbiterNonComposingDemandDataType ? [expirationTimeAfterArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 expirationTime)"),
+        [expirationTimeAfterArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -369,7 +456,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeExpirationTimeAfterArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        expirationTimeAfterArbiterNonComposingDemandDataType ? [expirationTimeAfterArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 expirationTime)"),
+        [expirationTimeAfterArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -385,7 +472,7 @@ export const makeAttestationPropertiesArbitersClient = (
       expirationTime: bigint;
     }) => {
       return encodeAbiParameters(
-        expirationTimeBeforeArbiterComposingDemandDataType ? [expirationTimeBeforeArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        [expirationTimeBeforeArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -395,7 +482,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeExpirationTimeBeforeArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        expirationTimeBeforeArbiterComposingDemandDataType ? [expirationTimeBeforeArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        [expirationTimeBeforeArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -408,7 +495,7 @@ export const makeAttestationPropertiesArbitersClient = (
       expirationTime: bigint;
     }) => {
       return encodeAbiParameters(
-        expirationTimeBeforeArbiterNonComposingDemandDataType ? [expirationTimeBeforeArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 expirationTime)"),
+        [expirationTimeBeforeArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -418,7 +505,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeExpirationTimeBeforeArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        expirationTimeBeforeArbiterNonComposingDemandDataType ? [expirationTimeBeforeArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 expirationTime)"),
+        [expirationTimeBeforeArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -434,7 +521,7 @@ export const makeAttestationPropertiesArbitersClient = (
       expirationTime: bigint;
     }) => {
       return encodeAbiParameters(
-        expirationTimeEqualArbiterComposingDemandDataType ? [expirationTimeEqualArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        [expirationTimeEqualArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -444,7 +531,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeExpirationTimeEqualArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        expirationTimeEqualArbiterComposingDemandDataType ? [expirationTimeEqualArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, uint64 expirationTime)"),
+        [expirationTimeEqualArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -457,7 +544,7 @@ export const makeAttestationPropertiesArbitersClient = (
       expirationTime: bigint;
     }) => {
       return encodeAbiParameters(
-        expirationTimeEqualArbiterNonComposingDemandDataType ? [expirationTimeEqualArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 expirationTime)"),
+        [expirationTimeEqualArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -467,7 +554,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeExpirationTimeEqualArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        expirationTimeEqualArbiterNonComposingDemandDataType ? [expirationTimeEqualArbiterNonComposingDemandDataType] : parseAbiParameters("(uint64 expirationTime)"),
+        [expirationTimeEqualArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -483,7 +570,7 @@ export const makeAttestationPropertiesArbitersClient = (
       recipient: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        recipientArbiterComposingDemandDataType ? [recipientArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, address recipient)"),
+        [recipientArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -493,7 +580,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeRecipientArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        recipientArbiterComposingDemandDataType ? [recipientArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, address recipient)"),
+        [recipientArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -506,7 +593,7 @@ export const makeAttestationPropertiesArbitersClient = (
       recipient: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        recipientArbiterNonComposingDemandDataType ? [recipientArbiterNonComposingDemandDataType] : parseAbiParameters("(address recipient)"),
+        [recipientArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -516,7 +603,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeRecipientArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        recipientArbiterNonComposingDemandDataType ? [recipientArbiterNonComposingDemandDataType] : parseAbiParameters("(address recipient)"),
+        [recipientArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -532,7 +619,7 @@ export const makeAttestationPropertiesArbitersClient = (
       refUID: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        refUidArbiterComposingDemandDataType ? [refUidArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 refUID)"),
+        [refUidArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -542,7 +629,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeRefUidArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        refUidArbiterComposingDemandDataType ? [refUidArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 refUID)"),
+        [refUidArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -555,7 +642,7 @@ export const makeAttestationPropertiesArbitersClient = (
       refUID: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        refUidArbiterNonComposingDemandDataType ? [refUidArbiterNonComposingDemandDataType] : parseAbiParameters("(bytes32 refUID)"),
+        [refUidArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -565,7 +652,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeRefUidArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        refUidArbiterNonComposingDemandDataType ? [refUidArbiterNonComposingDemandDataType] : parseAbiParameters("(bytes32 refUID)"),
+        [refUidArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -581,7 +668,7 @@ export const makeAttestationPropertiesArbitersClient = (
       revocable: boolean;
     }) => {
       return encodeAbiParameters(
-        revocableArbiterComposingDemandDataType ? [revocableArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, bool revocable)"),
+        [revocableArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -591,7 +678,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeRevocableArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        revocableArbiterComposingDemandDataType ? [revocableArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, bool revocable)"),
+        [revocableArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -604,7 +691,7 @@ export const makeAttestationPropertiesArbitersClient = (
       revocable: boolean;
     }) => {
       return encodeAbiParameters(
-        revocableArbiterNonComposingDemandDataType ? [revocableArbiterNonComposingDemandDataType] : parseAbiParameters("(bool revocable)"),
+        [revocableArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -614,7 +701,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeRevocableArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        revocableArbiterNonComposingDemandDataType ? [revocableArbiterNonComposingDemandDataType] : parseAbiParameters("(bool revocable)"),
+        [revocableArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -630,7 +717,7 @@ export const makeAttestationPropertiesArbitersClient = (
       schema: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        schemaArbiterComposingDemandDataType ? [schemaArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 schema)"),
+        [schemaArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -640,7 +727,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeSchemaArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        schemaArbiterComposingDemandDataType ? [schemaArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 schema)"),
+        [schemaArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -653,7 +740,7 @@ export const makeAttestationPropertiesArbitersClient = (
       schema: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        schemaArbiterNonComposingDemandDataType ? [schemaArbiterNonComposingDemandDataType] : parseAbiParameters("(bytes32 schema)"),
+        [schemaArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -663,7 +750,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeSchemaArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        schemaArbiterNonComposingDemandDataType ? [schemaArbiterNonComposingDemandDataType] : parseAbiParameters("(bytes32 schema)"),
+        [schemaArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -679,7 +766,7 @@ export const makeAttestationPropertiesArbitersClient = (
       uid: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        uidArbiterComposingDemandDataType ? [uidArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 uid)"),
+        [uidArbiterComposingDemandDataType],
         [demand],
       );
     },
@@ -689,7 +776,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeUidArbiterComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        uidArbiterComposingDemandDataType ? [uidArbiterComposingDemandDataType] : parseAbiParameters("(address baseArbiter, bytes baseDemand, bytes32 uid)"),
+        [uidArbiterComposingDemandDataType],
         demandData,
       )[0];
     },
@@ -702,7 +789,7 @@ export const makeAttestationPropertiesArbitersClient = (
       uid: `0x${string}`;
     }) => {
       return encodeAbiParameters(
-        uidArbiterNonComposingDemandDataType ? [uidArbiterNonComposingDemandDataType] : parseAbiParameters("(bytes32 uid)"),
+        [uidArbiterNonComposingDemandDataType],
         [demand],
       );
     },
@@ -712,7 +799,7 @@ export const makeAttestationPropertiesArbitersClient = (
      */
     decodeUidArbiterNonComposingDemand: (demandData: `0x${string}`) => {
       return decodeAbiParameters(
-        uidArbiterNonComposingDemandDataType ? [uidArbiterNonComposingDemandDataType] : parseAbiParameters("(bytes32 uid)"),
+        [uidArbiterNonComposingDemandDataType],
         demandData,
       )[0];
     },
