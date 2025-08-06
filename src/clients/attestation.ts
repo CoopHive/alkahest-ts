@@ -27,7 +27,7 @@ export const makeAttestationClient = (
   )?.outputs?.[0];
 
   // Fallback ABI structure for AttestationEscrowObligation
-  const attestationAbi = [
+  const fallbackAttestationAbi = [
     { name: "arbiter", type: "address", internalType: "address" },
     { name: "demand", type: "bytes", internalType: "bytes" },
     {
@@ -60,6 +60,12 @@ export const makeAttestationClient = (
       ],
     },
   ];
+
+  // Use ABI from contract if available, otherwise fallback to manual definition
+  const attestationAbi = escrowObligationDataType ? [escrowObligationDataType] : fallbackAttestationAbi;
+  const attestation2Abi = escrow2ObligationDataType ? [escrow2ObligationDataType] : parseAbiParameters(
+    "(address arbiter, bytes demand, bytes32 attestationUid)",
+  );
 
   const getEscrowSchema = async () =>
     await viemClient.readContract({
@@ -96,10 +102,7 @@ export const makeAttestationClient = (
       arbiter: `0x${string}`;
       demand: `0x${string}`;
     }) => {
-      return encodeAbiParameters(
-        escrowObligationDataType ? [escrowObligationDataType] : attestationAbi, 
-        [data]
-      );
+      return encodeAbiParameters(attestationAbi, [data]);
     },
     /**
      * Encodes AttestationEscrowObligation2.ObligationData to bytes.
@@ -111,12 +114,7 @@ export const makeAttestationClient = (
       arbiter: `0x${string}`;
       demand: `0x${string}`;
     }) => {
-      return encodeAbiParameters(
-        escrow2ObligationDataType ? [escrow2ObligationDataType] : parseAbiParameters(
-          "(address arbiter, bytes demand, bytes32 attestationUid)",
-        ),
-        [data],
-      );
+      return encodeAbiParameters(attestation2Abi, [data]);
     },
     /**
      * Decodes AttestationEscrowObligation.ObligationData from bytes.
@@ -124,10 +122,7 @@ export const makeAttestationClient = (
      * @returns the decoded ObligationData object
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
-      return decodeAbiParameters(
-        escrowObligationDataType ? [escrowObligationDataType] : attestationAbi, 
-        obligationData
-      )[0];
+      return decodeAbiParameters(attestationAbi, obligationData)[0];
     },
     /**
      * Decodes AttestationEscrowObligation2.ObligationData from bytes.
@@ -135,12 +130,7 @@ export const makeAttestationClient = (
      * @returns the decoded ObligationData object
      */
     decodeEscrow2Obligation: (obligationData: `0x${string}`) => {
-      return decodeAbiParameters(
-        escrow2ObligationDataType ? [escrow2ObligationDataType] : parseAbiParameters(
-          "(address arbiter, bytes demand, bytes32 attestationUid)",
-        ),
-        obligationData,
-      )[0];
+      return decodeAbiParameters(attestation2Abi, obligationData)[0];
     },
     getEscrowSchema,
     getEscrow2Schema,
@@ -158,10 +148,7 @@ export const makeAttestationClient = (
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);
       }
-      const data = decodeAbiParameters(
-        escrowObligationDataType ? [escrowObligationDataType] : attestationAbi,
-        attestation.data,
-      )[0];
+      const data = decodeAbiParameters(attestationAbi, attestation.data)[0];
 
       return {
         ...attestation,
@@ -177,12 +164,7 @@ export const makeAttestationClient = (
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);
       }
-      const data = decodeAbiParameters(
-        escrow2ObligationDataType ? [escrow2ObligationDataType] : parseAbiParameters(
-          "(address arbiter, bytes demand, bytes32 attestationUid)",
-        ),
-        attestation.data,
-      )[0];
+      const data = decodeAbiParameters(attestation2Abi, attestation.data)[0];
 
       return {
         ...attestation,
