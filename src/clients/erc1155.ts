@@ -20,22 +20,32 @@ import { abi as erc1155Abi } from "../contracts/IERC1155";
 import {
   decodeAbiParameters,
   encodeAbiParameters,
-  parseAbiParameters,
 } from "viem";
+
+// Extract ABI types at module initialization with fail-fast error handling
+const erc1155EscrowDecodeFunction = erc1155EscrowAbi.abi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeObligationData'
+);
+const erc1155PaymentDecodeFunction = erc1155PaymentAbi.abi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeObligationData'
+);
+
+// Extract the ObligationData struct types from the function outputs
+const erc1155EscrowObligationDataType = (erc1155EscrowDecodeFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const erc1155PaymentObligationDataType = (erc1155PaymentDecodeFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+
+// Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
+if (!erc1155EscrowObligationDataType) {
+  throw new Error('Failed to extract ABI type from ERC1155EscrowObligation contract JSON. The contract definition may be missing or malformed.');
+}
+if (!erc1155PaymentObligationDataType) {
+  throw new Error('Failed to extract ABI type from ERC1155PaymentObligation contract JSON. The contract definition may be missing or malformed.');
+}
 
 export const makeErc1155Client = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
-  // Extract ABI types for encoding/decoding from contract ABIs
-  const escrowObligationDataType = erc1155EscrowAbi.abi.find(
-    (item) => item.type === "function" && item.name === "decodeObligationData"
-  )?.outputs?.[0];
-
-  const paymentObligationDataType = erc1155PaymentAbi.abi.find(
-    (item) => item.type === "function" && item.name === "decodeObligationData"
-  )?.outputs?.[0];
-
   /**
    * Encodes ERC1155EscrowObligation.ObligationData to bytes using raw parameters.
    * @param data - ObligationData object to encode
@@ -49,9 +59,7 @@ export const makeErc1155Client = (
     amount: bigint;
   }) => {
     return encodeAbiParameters(
-      escrowObligationDataType ? [escrowObligationDataType] : parseAbiParameters(
-        "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
-      ),
+      [erc1155EscrowObligationDataType],
       [data],
     );
   };
@@ -68,9 +76,7 @@ export const makeErc1155Client = (
     payee: `0x${string}`;
   }) => {
     return encodeAbiParameters(
-      paymentObligationDataType ? [paymentObligationDataType] : parseAbiParameters(
-        "(address token, uint256 tokenId, uint256 amount, address payee)",
-      ),
+      [erc1155PaymentObligationDataType],
       [data],
     );
   };
@@ -116,9 +122,7 @@ export const makeErc1155Client = (
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
-        escrowObligationDataType ? [escrowObligationDataType] : parseAbiParameters(
-          "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
-        ),
+        [erc1155EscrowObligationDataType],
         obligationData,
       )[0];
     },
@@ -129,9 +133,7 @@ export const makeErc1155Client = (
      */
     decodePaymentObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
-        paymentObligationDataType ? [paymentObligationDataType] : parseAbiParameters(
-          "(address token, uint256 tokenId, uint256 amount, address payee)",
-        ),
+        [erc1155PaymentObligationDataType],
         obligationData,
       )[0];
     },
