@@ -10,7 +10,6 @@ import { abi as attestationBarterUtilsAbi } from "../contracts/AttestationBarter
 import {
   decodeAbiParameters,
   encodeAbiParameters,
-  parseAbiParameters,
 } from "viem";
 
 export const makeAttestationClient = (

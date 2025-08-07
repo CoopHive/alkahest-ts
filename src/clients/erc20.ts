@@ -18,7 +18,6 @@ import {
   encodeAbiParameters,
   hexToNumber,
   parseAbiParameter,
-  parseAbiParameters,
   slice,
 } from "viem";
 
@@ -26,8 +25,44 @@ import { abi as erc20BarterUtilsAbi } from "../contracts/ERC20BarterCrossToken";
 import { abi as erc20EscrowAbi } from "../contracts/ERC20EscrowObligation";
 import { abi as erc20PaymentAbi } from "../contracts/ERC20PaymentObligation";
 import { abi as erc20Abi } from "../contracts/ERC20Permit";
+import { abi as erc721EscrowAbi } from "../contracts/ERC721EscrowObligation";
+import { abi as tokenBundlePaymentAbi } from "../contracts/TokenBundlePaymentObligation";
 import { abi as easAbi } from "../contracts/IEAS";
 import type { ApprovalPurpose } from "../../dist";
+
+// Extract ObligationData struct ABIs from contract ABIs at module initialization
+const erc20EscrowDoObligationFunction = erc20EscrowAbi.abi.find(
+  (item: any) => item.type === 'function' && item.name === 'doObligation'
+);
+const erc20PaymentDoObligationFunction = erc20PaymentAbi.abi.find(
+  (item: any) => item.type === 'function' && item.name === 'doObligation'
+);
+const erc721EscrowDoObligationFunction = erc721EscrowAbi.abi.find(
+  (item: any) => item.type === 'function' && item.name === 'doObligation'
+);
+const tokenBundlePaymentDecodeFunction = tokenBundlePaymentAbi.abi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeObligationData'
+);
+
+// Extract the ObligationData struct types from the function inputs
+const erc20EscrowObligationDataType = (erc20EscrowDoObligationFunction as { inputs: readonly any[] } | undefined)?.inputs?.[0];
+const erc20PaymentObligationDataType = (erc20PaymentDoObligationFunction as { inputs: readonly any[] } | undefined)?.inputs?.[0];
+const erc721EscrowObligationDataType = (erc721EscrowDoObligationFunction as { inputs: readonly any[] } | undefined)?.inputs?.[0];
+const tokenBundlePaymentObligationDataType = (tokenBundlePaymentDecodeFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+
+// Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
+if (!erc20EscrowObligationDataType) {
+  throw new Error('Failed to extract ABI type from ERC20EscrowObligation contract JSON. The contract definition may be missing or malformed.');
+}
+if (!erc20PaymentObligationDataType) {
+  throw new Error('Failed to extract ABI type from ERC20PaymentObligation contract JSON. The contract definition may be missing or malformed.');
+}
+if (!erc721EscrowObligationDataType) {
+  throw new Error('Failed to extract ABI type from ERC721EscrowObligation contract JSON. The contract definition may be missing or malformed.');
+}
+if (!tokenBundlePaymentObligationDataType) {
+  throw new Error('Failed to extract ABI type from TokenBundlePaymentObligation contract JSON. The contract definition may be missing or malformed.');
+}
 
 export const makeErc20Client = (
   viemClient: ViemClient,
@@ -102,12 +137,7 @@ export const makeErc20Client = (
     token: `0x${string}`;
     amount: bigint;
   }) => {
-    return encodeAbiParameters(
-      parseAbiParameters(
-        "(address arbiter, bytes demand, address token, uint256 amount)",
-      ),
-      [data],
-    );
+    return encodeAbiParameters([erc20EscrowObligationDataType], [data]);
   };
 
   /**
@@ -120,10 +150,7 @@ export const makeErc20Client = (
     amount: bigint;
     payee: `0x${string}`;
   }) => {
-    return encodeAbiParameters(
-      parseAbiParameters("(address token, uint256 amount, address payee)"),
-      [data],
-    );
+    return encodeAbiParameters([erc20PaymentObligationDataType], [data]);
   };
 
   return {
@@ -163,12 +190,7 @@ export const makeErc20Client = (
      * @returns the decoded ObligationData object
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters(
-          "(address arbiter, bytes demand, address token, uint256 amount)",
-        ),
-        obligationData,
-      )[0];
+      return decodeAbiParameters([erc20EscrowObligationDataType], obligationData)[0];
     },
     /**
      * Decodes ERC20PaymentObligation.ObligationData from bytes.
@@ -176,10 +198,7 @@ export const makeErc20Client = (
      * @returns the decoded ObligationData object
      */
     decodePaymentObligation: (obligationData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters("(address token, uint256 amount, address payee)"),
-        obligationData,
-      )[0];
+      return decodeAbiParameters([erc20PaymentObligationDataType], obligationData)[0];
     },
     getEscrowSchema,
     getPaymentSchema,
@@ -197,12 +216,7 @@ export const makeErc20Client = (
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);
       }
-      const data = decodeAbiParameters(
-        parseAbiParameters(
-          "(address arbiter, bytes demand, address token, uint256 amount)",
-        ),
-        attestation.data,
-      )[0];
+      const data = decodeAbiParameters([erc20EscrowObligationDataType], attestation.data)[0];
 
       return {
         ...attestation,
@@ -218,10 +232,7 @@ export const makeErc20Client = (
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);
       }
-      const data = decodeAbiParameters(
-        parseAbiParameters("(address token, uint256 amount, address payee)"),
-        attestation.data,
-      )[0];
+      const data = decodeAbiParameters([erc20PaymentObligationDataType], attestation.data)[0];
 
       return {
         ...attestation,
@@ -645,13 +656,11 @@ export const makeErc20Client = (
         args: [buyAttestation],
       });
       const buyAttestationObligationData = decodeAbiParameters(
-        parseAbiParameters(
-          "(address arbiter, bytes demand, address token, uint256 amount)",
-        ),
+        [erc20EscrowObligationDataType],
         buyAttestationData.data,
       )[0];
       const demandData = decodeAbiParameters(
-        parseAbiParameters("(address token, uint256 amount, address payee)"),
+        [erc20PaymentObligationDataType],
         buyAttestationObligationData.demand,
       )[0];
 
@@ -799,13 +808,11 @@ export const makeErc20Client = (
         args: [buyAttestation],
       });
       const buyAttestationObligationData = decodeAbiParameters(
-        parseAbiParameters(
-          "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
-        ),
+        [erc721EscrowObligationDataType],
         buyAttestationData.data,
       )[0];
       const demandData = decodeAbiParameters(
-        parseAbiParameters("(address token, uint256 amount, address payee)"),
+        [erc20PaymentObligationDataType],
         buyAttestationObligationData.demand,
       )[0];
       const permit = await signPermit({
@@ -979,7 +986,7 @@ export const makeErc20Client = (
         buyAttestationData.data,
       )[0];
       const demandData = decodeAbiParameters(
-        parseAbiParameters("(address token, uint256 amount, address payee)"),
+        [erc20PaymentObligationDataType],
         buyAttestationObligationData.demand,
       )[0];
       const permit = await signPermit({
@@ -1143,13 +1150,11 @@ export const makeErc20Client = (
         args: [buyAttestation],
       });
       const buyAttestationObligationData = decodeAbiParameters(
-        parseAbiParameters(
-          "(address arbiter, bytes demand, address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
-        ),
+        [tokenBundlePaymentObligationDataType],
         buyAttestationData.data,
       )[0];
       const demandData = decodeAbiParameters(
-        parseAbiParameters("(address token, uint256 amount, address payee)"),
+        [erc20PaymentObligationDataType],
         buyAttestationObligationData.demand,
       )[0];
       const permit = await signPermit({

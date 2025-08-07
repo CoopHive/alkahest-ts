@@ -15,7 +15,6 @@ import { abi as erc1155Abi } from "../contracts/IERC1155";
 import {
   decodeAbiParameters,
   encodeAbiParameters,
-  parseAbiParameters,
 } from "viem";
 
 export const makeTokenBundleClient = (
@@ -27,9 +26,17 @@ export const makeTokenBundleClient = (
     (item) => item.type === "function" && item.name === "decodeObligationData"
   )?.outputs?.[0];
 
+  if (!escrowObligationDataType) {
+    throw new Error("TokenBundleEscrowObligation contract ABI is missing decodeObligationData function outputs");
+  }
+
   const paymentObligationDataType = tokenBundlePaymentAbi.abi.find(
     (item) => item.type === "function" && item.name === "decodeObligationData"
   )?.outputs?.[0];
+
+  if (!paymentObligationDataType) {
+    throw new Error("TokenBundlePaymentObligation contract ABI is missing decodeObligationData function outputs");
+  }
 
   /**
    * Encodes TokenBundleEscrowObligation.ObligationData to bytes using raw parameters.
@@ -47,12 +54,7 @@ export const makeTokenBundleClient = (
     arbiter: `0x${string}`;
     demand: `0x${string}`;
   }) => {
-    return encodeAbiParameters(
-      escrowObligationDataType ? [escrowObligationDataType] : parseAbiParameters(
-        "(address arbiter, bytes demand, address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
-      ),
-      [data],
-    );
+    return encodeAbiParameters([escrowObligationDataType], [data]);
   };
 
   /**
@@ -70,12 +72,7 @@ export const makeTokenBundleClient = (
     erc1155Amounts: bigint[];
     payee: `0x${string}`;
   }) => {
-    return encodeAbiParameters(
-      paymentObligationDataType ? [paymentObligationDataType] : parseAbiParameters(
-        "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address payee)",
-      ),
-      [data],
-    );
+    return encodeAbiParameters([paymentObligationDataType], [data]);
   };
 
   return {
@@ -118,12 +115,7 @@ export const makeTokenBundleClient = (
      * @returns the decoded ObligationData object
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
-      return decodeAbiParameters(
-        escrowObligationDataType ? [escrowObligationDataType] : parseAbiParameters(
-          "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts)",
-        ),
-        obligationData,
-      )[0];
+      return decodeAbiParameters([escrowObligationDataType], obligationData)[0];
     },
     /**
      * Decodes TokenBundlePaymentObligation.ObligationData from bytes.
@@ -131,12 +123,7 @@ export const makeTokenBundleClient = (
      * @returns the decoded ObligationData object
      */
     decodePaymentObligation: (obligationData: `0x${string}`) => {
-      return decodeAbiParameters(
-        paymentObligationDataType ? [paymentObligationDataType] : parseAbiParameters(
-          "(address[] erc20Tokens, uint256[] erc20Amounts, address[] erc721Tokens, uint256[] erc721TokenIds, address[] erc1155Tokens, uint256[] erc1155TokenIds, uint256[] erc1155Amounts, address payee)",
-        ),
-        obligationData,
-      )[0];
+      return decodeAbiParameters([paymentObligationDataType], obligationData)[0];
     },
     /**
      * Collects payment from an escrow after fulfillment
