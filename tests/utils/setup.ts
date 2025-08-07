@@ -137,11 +137,16 @@ export type TestContext = {
  * @returns TestContext object with all necessary test resources
  */
 export async function setupTestEnvironment(): Promise<TestContext> {
-  const anvil = createAnvil();
+  // Use a dynamic port to avoid conflicts when running multiple tests
+  const port = Math.floor(Math.random() * 10000) + 50000; // Random port between 50000-60000
+  const anvil = createAnvil({
+    port,
+    host: "127.0.0.1",
+  });
   await anvil.start();
 
   const chain = foundry;
-  const transport = http(`http://${anvil.host}:8545`, {
+  const transport = http(`http://${anvil.host}:${anvil.port}`, {
     timeout: 60_000,
   });
 

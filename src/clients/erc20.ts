@@ -28,7 +28,7 @@ import { abi as erc20Abi } from "../contracts/ERC20Permit";
 import { abi as erc721EscrowAbi } from "../contracts/ERC721EscrowObligation";
 import { abi as tokenBundlePaymentAbi } from "../contracts/TokenBundlePaymentObligation";
 import { abi as easAbi } from "../contracts/IEAS";
-import type { ApprovalPurpose } from "../../dist";
+import type { ApprovalPurpose } from "../types";
 
 // Extract ObligationData struct ABIs from contract ABIs at module initialization
 const erc20EscrowDoObligationFunction = erc20EscrowAbi.abi.find(
@@ -302,7 +302,7 @@ export const makeErc20Client = (
     ) => {
       let hash;
       try {
-       const {request} = await viemClient.simulateContract({
+        const { request } = await viemClient.simulateContract({
           address: addresses.erc20EscrowObligation,
           abi: erc20EscrowAbi.abi,
           functionName: "collectEscrow",
