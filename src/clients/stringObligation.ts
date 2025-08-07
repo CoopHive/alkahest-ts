@@ -28,9 +28,14 @@ export const makeStringObligationClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
+  // Extract ABI type for encoding/decoding from contract ABI
+  const obligationDataType = stringObligationAbi.abi.find(
+    (item) => item.type === "function" && item.name === "decodeObligationData"
+  )?.outputs?.[0];
+
   const decode = (obligationData: `0x${string}`) => {
     return decodeAbiParameters(
-      parseAbiParameters("(string item)"),
+      obligationDataType ? [obligationDataType] : parseAbiParameters("(string item)"),
       obligationData,
     )[0];
   };
@@ -65,7 +70,10 @@ export const makeStringObligationClient = (
 
   return {
     encode: (data: { item: string }) => {
-      return encodeAbiParameters(parseAbiParameters("(string item)"), [data]);
+      return encodeAbiParameters(
+        obligationDataType ? [obligationDataType] : parseAbiParameters("(string item)"), 
+        [data]
+      );
     },
     decode,
     decodeJson: <T>(obligationData: `0x${string}`) => {
@@ -121,7 +129,7 @@ export const makeStringObligationClient = (
         throw new Error(`Unsupported schema: ${attestation.schema}`);
       }
       const data = decodeAbiParameters(
-        parseAbiParameters("(string item)"),
+        obligationDataType ? [obligationDataType] : parseAbiParameters("(string item)"),
         attestation.data,
       )[0];
 
@@ -140,7 +148,7 @@ export const makeStringObligationClient = (
         throw new Error(`Unsupported schema: ${attestation.schema}`);
       }
       const data = decodeAbiParameters(
-        parseAbiParameters("(string item)"),
+        obligationDataType ? [obligationDataType] : parseAbiParameters("(string item)"),
         attestation.data,
       )[0];
 

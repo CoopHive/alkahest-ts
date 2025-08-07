@@ -1,10 +1,32 @@
 import {
   decodeAbiParameters,
   encodeAbiParameters,
-  parseAbiParameters,
 } from "viem";
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
+import { abi as AllArbiterAbi } from "../contracts/AllArbiter";
+import { abi as AnyArbiterAbi } from "../contracts/AnyArbiter";
+
+// Extract DemandData struct ABI from contract ABIs at module initialization
+const anyArbiterDecodeDemandFunction = AnyArbiterAbi.abi.find(
+  (item) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+const allArbiterDecodeDemandFunction = AllArbiterAbi.abi.find(
+  (item) => item.type === 'function' && item.name === 'decodeDemandData'
+);
+
+// Extract the DemandData struct types from the function outputs
+const anyDemandDataType = anyArbiterDecodeDemandFunction?.outputs?.[0];
+const allDemandDataType = allArbiterDecodeDemandFunction?.outputs?.[0];
+
+// Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
+if (!anyDemandDataType) {
+  throw new Error('Failed to extract ABI type from AnyArbiter contract JSON. The contract definition may be missing or malformed.');
+}
+
+if (!allDemandDataType) {
+  throw new Error('Failed to extract ABI type from AllArbiter contract JSON. The contract definition may be missing or malformed.');
+}
 
 /**
  * Logical Arbiters Client
@@ -20,6 +42,7 @@ export const makeLogicalArbitersClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
+
   return {
     /**
      * Encodes AnyArbiter.DemandData to bytes.
@@ -30,10 +53,7 @@ export const makeLogicalArbitersClient = (
       arbiters: `0x${string}`[];
       demands: `0x${string}`[];
     }) => {
-      return encodeAbiParameters(
-        parseAbiParameters("(address[] arbiters, bytes[] demands)"),
-        [demand],
-      );
+      return encodeAbiParameters([anyDemandDataType], [demand]);
     },
 
     /**
@@ -42,10 +62,7 @@ export const makeLogicalArbitersClient = (
      * @returns the decoded DemandData object
      */
     decodeAnyArbiterDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters("(address[] arbiters, bytes[] demands)"),
-        demandData,
-      )[0];
+      return decodeAbiParameters([anyDemandDataType], demandData)[0];
     },
 
     /**
@@ -57,10 +74,7 @@ export const makeLogicalArbitersClient = (
       arbiters: `0x${string}`[];
       demands: `0x${string}`[];
     }) => {
-      return encodeAbiParameters(
-        parseAbiParameters("(address[] arbiters, bytes[] demands)"),
-        [demand],
-      );
+      return encodeAbiParameters([allDemandDataType], [demand]);
     },
 
     /**
@@ -69,10 +83,7 @@ export const makeLogicalArbitersClient = (
      * @returns the decoded DemandData object
      */
     decodeAllArbiterDemand: (demandData: `0x${string}`) => {
-      return decodeAbiParameters(
-        parseAbiParameters("(address[] arbiters, bytes[] demands)"),
-        demandData,
-      )[0];
+      return decodeAbiParameters([allDemandDataType], demandData)[0];
     },
   };
 };

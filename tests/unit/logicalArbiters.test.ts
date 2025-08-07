@@ -429,6 +429,226 @@ describe("Logical Arbiters Tests", () => {
     });
   });
 
+  describe("ABI-driven encoding validation", () => {
+    test("should use contract ABI when available for AnyArbiter", () => {
+      const client = testContext.aliceClient;
+      
+      const demand = {
+        arbiters: [alice, bob],
+        demands: ["0x1234" as `0x${string}`, "0x5678" as `0x${string}`],
+      };
+      
+      // Get the SDK encoding (should use contract ABI)
+      const sdkEncoded = client.arbiters.encodeAnyArbiterDemand(demand);
+      
+      // Verify it's valid hex
+      expect(sdkEncoded).toMatch(/^0x[0-9a-f]+$/i);
+      
+      // Verify decoding works correctly
+      const decoded = client.arbiters.decodeAnyArbiterDemand(sdkEncoded);
+      expectAddressesEqual(decoded.arbiters, demand.arbiters);
+      expect(decoded.demands).toEqual(demand.demands);
+      
+      // Verify it matches manual encoding (fallback behavior)
+      const manualEncoded = encodeAbiParameters(
+        parseAbiParameters("(address[] arbiters, bytes[] demands)"),
+        [demand]
+      );
+      expect(sdkEncoded).toBe(manualEncoded);
+    });
+
+    test("should use contract ABI when available for AllArbiter", () => {
+      const client = testContext.aliceClient;
+      
+      const demand = {
+        arbiters: [alice, bob, charlie],
+        demands: ["0xaaaa" as `0x${string}`, "0xbbbb" as `0x${string}`, "0xcccc" as `0x${string}`],
+      };
+      
+      // Get the SDK encoding (should use contract ABI)
+      const sdkEncoded = client.arbiters.encodeAllArbiterDemand(demand);
+      
+      // Verify it's valid hex
+      expect(sdkEncoded).toMatch(/^0x[0-9a-f]+$/i);
+      
+      // Verify decoding works correctly
+      const decoded = client.arbiters.decodeAllArbiterDemand(sdkEncoded);
+      expectAddressesEqual(decoded.arbiters, demand.arbiters);
+      expect(decoded.demands).toEqual(demand.demands);
+      
+      // Verify it matches manual encoding (fallback behavior)
+      const manualEncoded = encodeAbiParameters(
+        parseAbiParameters("(address[] arbiters, bytes[] demands)"),
+        [demand]
+      );
+      expect(sdkEncoded).toBe(manualEncoded);
+    });
+
+    test("should handle ABI extraction correctly", () => {
+      const client = testContext.aliceClient;
+      
+      // Test both arbiters with the same demand structure
+      const demand = {
+        arbiters: [alice],
+        demands: ["0x1111" as `0x${string}`],
+      };
+
+      const anyEncoded = client.arbiters.encodeAnyArbiterDemand(demand);
+      const allEncoded = client.arbiters.encodeAllArbiterDemand(demand);
+      
+      // Since both use the same DemandData struct, they should produce identical encoding
+      expect(anyEncoded).toBe(allEncoded);
+      
+      // Both should decode correctly with cross-decoding
+      const anyDecodedByAll = client.arbiters.decodeAllArbiterDemand(anyEncoded);
+      const allDecodedByAny = client.arbiters.decodeAnyArbiterDemand(allEncoded);
+      
+      expectAddressesEqual(anyDecodedByAll.arbiters, demand.arbiters);
+      expectAddressesEqual(allDecodedByAny.arbiters, demand.arbiters);
+      expect(anyDecodedByAll.demands).toEqual(demand.demands);
+      expect(allDecodedByAny.demands).toEqual(demand.demands);
+    });
+
+    test("should maintain type safety with ABI-driven approach", () => {
+      const client = testContext.aliceClient;
+      
+      const demand = {
+        arbiters: [alice, bob],
+        demands: ["0x1234" as `0x${string}`, "0x5678" as `0x${string}`],
+      };
+
+      // Encode using our ABI-driven method
+      const encoded = client.arbiters.encodeAnyArbiterDemand(demand);
+      
+      // Decode using our ABI-driven method
+      const decoded = client.arbiters.decodeAnyArbiterDemand(encoded);
+      
+      // Verify all types are preserved correctly
+      expect(Array.isArray(decoded.arbiters)).toBe(true);
+      expect(Array.isArray(decoded.demands)).toBe(true);
+      expect(decoded.arbiters.length).toBe(demand.arbiters.length);
+      expect(decoded.demands.length).toBe(demand.demands.length);
+      
+      // Verify address format
+      decoded.arbiters.forEach(addr => {
+        expect(addr).toMatch(/^0x[0-9a-fA-F]{40}$/);
+      });
+      
+      // Verify hex string format
+      decoded.demands.forEach(hex => {
+        expect(hex).toMatch(/^0x[0-9a-fA-F]*$/);
+      });
+    });
+
+    test("should handle edge cases with ABI-driven encoding", () => {
+      const client = testContext.aliceClient;
+      
+      // Test empty arrays
+      const emptyDemand = {
+        arbiters: [] as `0x${string}`[],
+        demands: [] as `0x${string}`[],
+      };
+      
+      const emptyEncoded = client.arbiters.encodeAnyArbiterDemand(emptyDemand);
+      const emptyDecoded = client.arbiters.decodeAnyArbiterDemand(emptyEncoded);
+      
+      expect(emptyDecoded.arbiters).toEqual(emptyDemand.arbiters);
+      expect(emptyDecoded.demands).toEqual(emptyDemand.demands);
+      
+      // Test single item arrays
+      const singleDemand = {
+        arbiters: [alice],
+        demands: ["0x" as `0x${string}`],
+      };
+      
+      const singleEncoded = client.arbiters.encodeAllArbiterDemand(singleDemand);
+      const singleDecoded = client.arbiters.decodeAllArbiterDemand(singleEncoded);
+      
+      expectAddressesEqual(singleDecoded.arbiters, singleDemand.arbiters);
+      expect(singleDecoded.demands).toEqual(singleDemand.demands);
+      
+      // Test large arrays (stress test ABI extraction)
+      const largeArbiters = Array.from({ length: 20 }, () => 
+        privateKeyToAddress(generatePrivateKey())
+      );
+      const largeDemands = Array.from({ length: 20 }, (_, i) => 
+        `0x${i.toString(16).padStart(4, "0")}` as `0x${string}`
+      );
+      
+      const largeDemand = { arbiters: largeArbiters, demands: largeDemands };
+      const largeEncoded = client.arbiters.encodeAnyArbiterDemand(largeDemand);
+      const largeDecoded = client.arbiters.decodeAnyArbiterDemand(largeEncoded);
+      
+      expectAddressesEqual(largeDecoded.arbiters, largeDemand.arbiters);
+      expect(largeDecoded.demands).toEqual(largeDemand.demands);
+    });
+
+    test("should produce consistent results across multiple calls", () => {
+      const client = testContext.aliceClient;
+      
+      const demand = {
+        arbiters: [alice, bob, charlie],
+        demands: ["0x1111" as `0x${string}`, "0x2222" as `0x${string}`, "0x3333" as `0x${string}`],
+      };
+
+      // Encode the same demand multiple times
+      const encoded1 = client.arbiters.encodeAnyArbiterDemand(demand);
+      const encoded2 = client.arbiters.encodeAnyArbiterDemand(demand);
+      const encoded3 = client.arbiters.encodeAllArbiterDemand(demand);
+      
+      // All should produce identical results (deterministic)
+      expect(encoded1).toBe(encoded2);
+      expect(encoded1).toBe(encoded3);
+      
+      // All should decode to the same result
+      const decoded1 = client.arbiters.decodeAnyArbiterDemand(encoded1);
+      const decoded2 = client.arbiters.decodeAllArbiterDemand(encoded2);
+      const decoded3 = client.arbiters.decodeAnyArbiterDemand(encoded3);
+      
+      expect(decoded1).toEqual(decoded2);
+      expect(decoded1).toEqual(decoded3);
+    });
+
+    test("should handle contract ABI vs fallback consistency", () => {
+      const client = testContext.aliceClient;
+      
+      // Test various demand structures to ensure ABI extraction works consistently
+      const testCases = [
+        {
+          arbiters: [alice],
+          demands: ["0x1234" as `0x${string}`],
+        },
+        {
+          arbiters: [alice, bob],
+          demands: ["0x1234" as `0x${string}`, "0x5678" as `0x${string}`],
+        },
+        {
+          arbiters: [alice, bob, charlie],
+          demands: ["0x1111" as `0x${string}`, "0x2222" as `0x${string}`, "0x3333" as `0x${string}`],
+        }
+      ];
+
+      testCases.forEach((demand, index) => {
+        // SDK encoding (uses ABI when available, fallback otherwise)
+        const sdkEncoded = client.arbiters.encodeAnyArbiterDemand(demand);
+        
+        // Manual encoding (always uses parseAbiParameters)
+        const manualEncoded = encodeAbiParameters(
+          parseAbiParameters("(address[] arbiters, bytes[] demands)"),
+          [demand]
+        );
+        
+        // Should produce identical results
+        expect(sdkEncoded).toBe(manualEncoded);
+        
+        // Decoding should work correctly
+        const decoded = client.arbiters.decodeAnyArbiterDemand(sdkEncoded);
+        expectAddressesEqual(decoded.arbiters, demand.arbiters);
+        expect(decoded.demands).toEqual(demand.demands);
+      });
+    });
+  });
+
   describe("Real-world usage patterns", () => {
     test("should handle typical multi-signature scenario", () => {
       const client = testContext.aliceClient;

@@ -27,6 +27,15 @@ export const makeErc1155Client = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
+  // Extract ABI types for encoding/decoding from contract ABIs
+  const escrowObligationDataType = erc1155EscrowAbi.abi.find(
+    (item) => item.type === "function" && item.name === "decodeObligationData"
+  )?.outputs?.[0];
+
+  const paymentObligationDataType = erc1155PaymentAbi.abi.find(
+    (item) => item.type === "function" && item.name === "decodeObligationData"
+  )?.outputs?.[0];
+
   /**
    * Encodes ERC1155EscrowObligation.ObligationData to bytes using raw parameters.
    * @param data - ObligationData object to encode
@@ -40,7 +49,7 @@ export const makeErc1155Client = (
     amount: bigint;
   }) => {
     return encodeAbiParameters(
-      parseAbiParameters(
+      escrowObligationDataType ? [escrowObligationDataType] : parseAbiParameters(
         "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
       ),
       [data],
@@ -59,7 +68,7 @@ export const makeErc1155Client = (
     payee: `0x${string}`;
   }) => {
     return encodeAbiParameters(
-      parseAbiParameters(
+      paymentObligationDataType ? [paymentObligationDataType] : parseAbiParameters(
         "(address token, uint256 tokenId, uint256 amount, address payee)",
       ),
       [data],
@@ -107,7 +116,7 @@ export const makeErc1155Client = (
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters(
+        escrowObligationDataType ? [escrowObligationDataType] : parseAbiParameters(
           "(address arbiter, bytes demand, address token, uint256 tokenId, uint256 amount)",
         ),
         obligationData,
@@ -120,7 +129,7 @@ export const makeErc1155Client = (
      */
     decodePaymentObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters(
+        paymentObligationDataType ? [paymentObligationDataType] : parseAbiParameters(
           "(address token, uint256 tokenId, uint256 amount, address payee)",
         ),
         obligationData,
