@@ -27,6 +27,15 @@ export const makeErc721Client = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
+  // Extract ABI types for encoding/decoding from contract ABIs
+  const escrowObligationDataType = erc721EscrowAbi.abi.find(
+    (item) => item.type === "function" && item.name === "decodeObligationData"
+  )?.outputs?.[0];
+
+  const paymentObligationDataType = erc721PaymentAbi.abi.find(
+    (item) => item.type === "function" && item.name === "decodeObligationData"
+  )?.outputs?.[0];
+
   /**
    * Encodes ERC721EscrowObligation.ObligationData to bytes using raw parameters.
    * @param data - ObligationData object to encode
@@ -39,7 +48,7 @@ export const makeErc721Client = (
     tokenId: bigint;
   }) => {
     return encodeAbiParameters(
-      parseAbiParameters(
+      escrowObligationDataType ? [escrowObligationDataType] : parseAbiParameters(
         "(address arbiter, bytes demand, address token, uint256 tokenId)",
       ),
       [data],
@@ -57,7 +66,7 @@ export const makeErc721Client = (
     payee: `0x${string}`;
   }) => {
     return encodeAbiParameters(
-      parseAbiParameters("(address token, uint256 tokenId, address payee)"),
+      paymentObligationDataType ? [paymentObligationDataType] : parseAbiParameters("(address token, uint256 tokenId, address payee)"),
       [data],
     );
   };
@@ -101,7 +110,7 @@ export const makeErc721Client = (
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters(
+        escrowObligationDataType ? [escrowObligationDataType] : parseAbiParameters(
           "(address token, uint256 tokenId, address arbiter, bytes demand)",
         ),
         obligationData,
@@ -114,7 +123,7 @@ export const makeErc721Client = (
      */
     decodePaymentObligation: (obligationData: `0x${string}`) => {
       return decodeAbiParameters(
-        parseAbiParameters("(address token, uint256 tokenId, address payee)"),
+        paymentObligationDataType ? [paymentObligationDataType] : parseAbiParameters("(address token, uint256 tokenId, address payee)"),
         obligationData,
       )[0];
     },
