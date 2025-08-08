@@ -9,6 +9,7 @@ import {
 } from "viem";
 import { makeArbitersClient } from "./clients/arbiters";
 import { makeAttestationClient } from "./clients/attestation";
+import { makeCommitObligationClient } from "./clients/commitObligation";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
@@ -168,6 +169,10 @@ export const makeMinimalClient = (
       contractAddresses?.stringObligation ||
       baseAddresses?.stringObligation ||
       zeroAddress,
+    commitObligation:
+      contractAddresses?.commitObligation ||
+      baseAddresses?.commitObligation ||
+      zeroAddress,
 
     trustedPartyArbiter:
       contractAddresses?.trustedPartyArbiter ||
@@ -184,6 +189,10 @@ export const makeMinimalClient = (
     trustedOracleArbiter:
       contractAddresses?.trustedOracleArbiter ||
       baseAddresses?.trustedOracleArbiter ||
+      zeroAddress,
+    commitTestsArbiter:
+      contractAddresses?.commitTestsArbiter ||
+      baseAddresses?.commitTestsArbiter ||
       zeroAddress,
     intrinsicsArbiter:
       contractAddresses?.intrinsicsArbiter ||

@@ -9,6 +9,13 @@ import type { ChainAddresses } from "../types";
 import { getOptimalPollingInterval } from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
+import { abi as commitTestsArbiterAbi } from "../contracts/CommitTestsArbiter";
+
+// Enum for CommitTestsArbiter.CommitAlgo from the contract
+export enum CommitTestsCommitAlgo {
+  Sha1 = 0,
+  Sha256 = 1,
+}
 
 /**
  * General Arbiters Client
@@ -18,6 +25,7 @@ import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbite
  * - TrustedPartyArbiter: Creator-based validation with composable base arbiter
  * - SpecificAttestationArbiter: Validates against a specific attestation UID
  * - TrustedOracleArbiter: Oracle-based decision making with arbitration requests
+ * - CommitTestsArbiter: Commit validation using oracle arbitration (same demand structure as TrustedOracleArbiter)
  */
 export const makeGeneralArbitersClient = (
   viemClient: ViemClient,
@@ -228,5 +236,37 @@ export const makeGeneralArbitersClient = (
         });
       });
     },
+
+    /**
+     * Encodes CommitTestsArbiter.CommitTestsDemandData to bytes.
+     * @param demand - struct CommitTestsDemandData {address oracle, string testsCommitHash, string testsCommand, uint8 testsCommitAlgo, string[] hosts}
+     * @returns abi encoded bytes
+     */
+    encodeCommitTestsDemand: (demand: {
+      oracle: `0x${string}`;
+      testsCommitHash: string;
+      testsCommand: string;
+      testsCommitAlgo: number; // 0 = Sha1, 1 = Sha256
+      hosts: string[];
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(address oracle, string testsCommitHash, string testsCommand, uint8 testsCommitAlgo, string[] hosts)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes CommitTestsArbiter.CommitTestsDemandData from bytes.
+     * @param demandData - CommitTestsDemandData as abi encoded bytes
+     * @returns the decoded CommitTestsDemandData object
+     */
+    decodeCommitTestsDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(address oracle, string testsCommitHash, string testsCommand, uint8 testsCommitAlgo, string[] hosts)"),
+        demandData,
+      )[0];
+    },
+
+
   };
 };
