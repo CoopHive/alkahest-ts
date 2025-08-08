@@ -2,6 +2,7 @@ import {
   decodeAbiParameters,
   encodeAbiParameters,
   parseAbiItem,
+  parseAbiParameters,
 } from "viem";
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
@@ -48,6 +49,13 @@ if (!specificAttestationArbiterDemandDataType) {
 if (!trustedOracleArbiterDemandDataType) {
   throw new Error('Failed to extract ABI type from TrustedOracleArbiter contract JSON. The contract definition may be missing or malformed.');
 }
+import { abi as commitTestsArbiterAbi } from "../contracts/CommitTestsArbiter";
+
+// Enum for CommitTestsArbiter.CommitAlgo from the contract
+export enum CommitTestsCommitAlgo {
+  Sha1 = 0,
+  Sha256 = 1,
+}
 
 /**
  * General Arbiters Client
@@ -59,6 +67,7 @@ if (!trustedOracleArbiterDemandDataType) {
  * - TrustedOracleArbiter: Oracle-based decision making with arbitration requests
  *   - Supports requestArbitration for requesting arbitration from specific oracles
  *   - Provides listening functions for oracles to respond only to arbitration requests
+ * - CommitTestsArbiter: Commit validation using oracle arbitration (same demand structure as TrustedOracleArbiter)
  */
 export const makeGeneralArbitersClient = (
   viemClient: ViemClient,
@@ -69,7 +78,7 @@ export const makeGeneralArbitersClient = (
   const arbitrationMadeEvent = parseAbiItem(
     "event ArbitrationMade(bytes32 indexed obligation, address indexed oracle, bool decision)",
   );
-  
+
   const arbitrationRequestedEvent = parseAbiItem(
     "event ArbitrationRequested(bytes32 indexed obligation, address indexed oracle)",
   );
@@ -314,6 +323,38 @@ export const makeGeneralArbitersClient = (
     },
 
     /**
+     * Encodes CommitTestsArbiter.CommitTestsDemandData to bytes.
+     * @param demand - struct CommitTestsDemandData {address oracle, string testsCommitHash, string testsCommand, uint8 testsCommitAlgo, string[] hosts}
+     * @returns abi encoded bytes
+     */
+    encodeCommitTestsDemand: (demand: {
+      oracle: `0x${string}`;
+      testsCommitHash: string;
+      testsCommand: string;
+      testsCommitAlgo: number; // 0 = Sha1, 1 = Sha256
+      hosts: string[];
+    }) => {
+      return encodeAbiParameters(
+        parseAbiParameters("(address oracle, string testsCommitHash, string testsCommand, uint8 testsCommitAlgo, string[] hosts)"),
+        [demand],
+      );
+    },
+
+    /**
+     * Decodes CommitTestsArbiter.CommitTestsDemandData from bytes.
+     * @param demandData - CommitTestsDemandData as abi encoded bytes
+     * @returns the decoded CommitTestsDemandData object
+     */
+    decodeCommitTestsDemand: (demandData: `0x${string}`) => {
+      return decodeAbiParameters(
+        parseAbiParameters("(address oracle, string testsCommitHash, string testsCommand, uint8 testsCommitAlgo, string[] hosts)"),
+        demandData,
+      )[0];
+    },
+
+
+
+    /**
      * Listen for arbitration requests and only arbitrate on request
      * This function continuously listens for ArbitrationRequested events
      * and calls the provided arbitration handler for each request
@@ -342,7 +383,7 @@ export const makeGeneralArbitersClient = (
               try {
                 // Call the arbitration handler to get the decision
                 const decision = await arbitrationHandler(requestedObligation, requestedOracle);
-                
+
                 // Submit the arbitration
                 await viemClient.writeContract({
                   address: addresses.trustedOracleArbiter,

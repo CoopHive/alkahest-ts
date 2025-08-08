@@ -25,11 +25,13 @@ export type ChainAddresses = {
   attestationBarterUtils: `0x${string}`;
 
   stringObligation: `0x${string}`;
+  commitObligation: `0x${string}`;
 
   trustedPartyArbiter: `0x${string}`;
   trivialArbiter: `0x${string}`;
   specificAttestationArbiter: `0x${string}`;
   trustedOracleArbiter: `0x${string}`;
+  commitTestsArbiter: `0x${string}`;
   anyArbiter: `0x${string}`;
   allArbiter: `0x${string}`;
   intrinsicsArbiter: `0x${string}`;

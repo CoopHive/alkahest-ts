@@ -38,10 +38,12 @@ import AttestationBarterUtils from "@contracts/AttestationBarterUtils.json";
 import AttestationEscrowObligation from "@contracts/AttestationEscrowObligation.json";
 import AttestationEscrowObligation2 from "@contracts/AttestationEscrowObligation2.json";
 import StringObligation from "@contracts/StringObligation.json";
+import CommitObligation from "@contracts/CommitObligation.json";
 import TrivialArbiter from "@contracts/TrivialArbiter.json";
 import TrustedOracleArbiter from "@contracts/TrustedOracleArbiter.json";
 import TrustedPartyArbiter from "@contracts/TrustedPartyArbiter.json";
 import SpecificAttestationArbiter from "@contracts/SpecificAttestationArbiter.json";
+import CommitTestsArbiter from "../../src/contracts/CommitTestsArbiter.json";
 import AnyArbiter from "../../src/contracts/AnyArbiter.json";
 import AllArbiter from "../../src/contracts/AllArbiter.json";
 import IntrinsicsArbiter from "../../src/contracts/IntrinsicsArbiter2.json";
@@ -77,6 +79,7 @@ export type TestContext = {
     trivialArbiter: `0x${string}`;
     trustedPartyArbiter: `0x${string}`;
     trustedOracleArbiter: `0x${string}`;
+    commitTestsArbiter: `0x${string}`;
     specificAttestationArbiter: `0x${string}`;
     intrinsicsArbiter: `0x${string}`;
     intrinsicsArbiter2: `0x${string}`;
@@ -110,6 +113,9 @@ export type TestContext = {
 
     // String obligation
     stringObligation: `0x${string}`;
+
+    // Commit obligation
+    commitObligation: `0x${string}`;
   };
 
   // Mock token addresses
@@ -210,6 +216,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     trivialArbiter: "" as `0x${string}`,
     trustedPartyArbiter: "" as `0x${string}`,
     trustedOracleArbiter: "" as `0x${string}`,
+    commitTestsArbiter: "" as `0x${string}`,
     specificAttestationArbiter: "" as `0x${string}`,
     intrinsicsArbiter: "" as `0x${string}`,
     intrinsicsArbiter2: "" as `0x${string}`,
@@ -237,6 +244,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     attestationBarterUtils: "" as `0x${string}`,
 
     stringObligation: "" as `0x${string}`,
+    commitObligation: "" as `0x${string}`,
   };
 
   const mockAddresses: TestContext["mockAddresses"] = {
@@ -270,6 +278,9 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   addresses.trivialArbiter = await deployContract(TrivialArbiter);
   addresses.trustedPartyArbiter = await deployContract(TrustedPartyArbiter);
   addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter, [
+    addresses.eas,
+  ]);
+  addresses.commitTestsArbiter = await deployContract(CommitTestsArbiter, [
     addresses.eas,
   ]);
   addresses.specificAttestationArbiter = await deployContract(
@@ -324,6 +335,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     AttestationEscrowObligation2,
   );
   addresses.stringObligation = await deployObligation(StringObligation);
+  addresses.commitObligation = await deployObligation(CommitObligation);
 
   // Deploy barter utils
 
