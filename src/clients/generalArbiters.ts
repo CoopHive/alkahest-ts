@@ -2,6 +2,7 @@ import {
   decodeAbiParameters,
   encodeAbiParameters,
   parseAbiItem,
+  parseAbiParameters,
 } from "viem";
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
@@ -382,7 +383,7 @@ export const makeGeneralArbitersClient = (
               try {
                 // Call the arbitration handler to get the decision
                 const decision = await arbitrationHandler(requestedObligation, requestedOracle);
-                
+
                 // Submit the arbitration
                 await viemClient.writeContract({
                   address: addresses.trustedOracleArbiter,
