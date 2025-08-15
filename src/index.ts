@@ -44,7 +44,7 @@ export const makeClient = (
   contractAddresses?: Partial<ChainAddresses>,
 ) => {
   const client = makeMinimalClient(walletClient, contractAddresses);
-  return client.extend(makeDefaultExtension);
+  return makeExtendableClient(client.extend(makeDefaultExtension));
 };
 
 
@@ -389,3 +389,14 @@ export * from "./clients/logicalArbiters";
 
 // Deprecated - use specific clients above instead
 export * from "./clients/arbiters";
+
+
+// Utility functions and types
+export {
+  getAttestation,
+  getAttestedEventFromTxHash,
+  flattenTokenBundle,
+  isWebSocketTransport,
+  getOptimalPollingInterval
+} from "./utils";
+export type { ViemClient } from "./utils";

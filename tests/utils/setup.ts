@@ -77,6 +77,7 @@ export type TestContext = {
     trivialArbiter: `0x${string}`;
     trustedPartyArbiter: `0x${string}`;
     trustedOracleArbiter: `0x${string}`;
+    commitTestsArbiter: `0x${string}`;
     specificAttestationArbiter: `0x${string}`;
     intrinsicsArbiter: `0x${string}`;
     intrinsicsArbiter2: `0x${string}`;
@@ -110,6 +111,9 @@ export type TestContext = {
 
     // String obligation
     stringObligation: `0x${string}`;
+
+    // Commit obligation
+    commitObligation: `0x${string}`;
   };
 
   // Mock token addresses
@@ -210,6 +214,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     trivialArbiter: "" as `0x${string}`,
     trustedPartyArbiter: "" as `0x${string}`,
     trustedOracleArbiter: "" as `0x${string}`,
+    commitTestsArbiter: "" as `0x${string}`,
     specificAttestationArbiter: "" as `0x${string}`,
     intrinsicsArbiter: "" as `0x${string}`,
     intrinsicsArbiter2: "" as `0x${string}`,
@@ -237,6 +242,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     attestationBarterUtils: "" as `0x${string}`,
 
     stringObligation: "" as `0x${string}`,
+    commitObligation: "" as `0x${string}`,
   };
 
   const mockAddresses: TestContext["mockAddresses"] = {
@@ -272,6 +278,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter, [
     addresses.eas,
   ]);
+
   addresses.specificAttestationArbiter = await deployContract(
     SpecificAttestationArbiter,
   );

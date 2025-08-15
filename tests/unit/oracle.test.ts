@@ -819,7 +819,7 @@ test("listenAndArbitrateNewFulfillmentsForEscrow with skipAlreadyArbitrated", as
 
 test("listenAndArbitrateNewFulfillments with onlyIfEscrowDemandsCurrentOracle", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
-  
+
   // Create demand for Bob (current oracle)
   const demandForBob = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
@@ -867,7 +867,7 @@ test("listenAndArbitrateNewFulfillments with onlyIfEscrowDemandsCurrentOracle", 
 
   // Get the full attestation to verify refUID
   const fullAttestation = await testContext.bobClient.getAttestation(fulfillment.uid);
-  
+
   // Verify the fulfillment is properly linked to the escrow
   expect(fullAttestation.refUID).toBe(escrowForBob.uid);
 
@@ -883,7 +883,7 @@ test("listenAndArbitrateNewFulfillments with onlyIfEscrowDemandsCurrentOracle", 
 
 test("listenAndArbitrateNewFulfillmentsForEscrow - listens to past and new escrows, only new fulfillments", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
-  
+
   // Create a past escrow BEFORE starting to listen
   const pastDemand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
