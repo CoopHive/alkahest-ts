@@ -398,3 +398,21 @@ export * from "./clients/logicalArbiters";
 
 // Deprecated - use specific clients above instead
 export * from "./clients/arbiters";
+
+// Commit obligation client
+export { makeCommitObligationClient, CommitAlgo } from "./clients/commitObligation";
+export type { CommitObligationData } from "./clients/commitObligation";
+
+// Utility functions and types
+export {
+  getAttestation,
+  getAttestedEventFromTxHash,
+  flattenTokenBundle,
+  isWebSocketTransport,
+  getOptimalPollingInterval
+} from "./utils";
+export type { ViemClient } from "./utils";
+
+// Test utilities
+export type { TestContext } from "../tests/utils/setup";
+export { setupTestEnvironment, teardownTestEnvironment } from "../tests/utils/setup";
