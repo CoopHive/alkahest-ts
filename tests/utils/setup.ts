@@ -38,12 +38,10 @@ import AttestationBarterUtils from "@contracts/AttestationBarterUtils.json";
 import AttestationEscrowObligation from "@contracts/AttestationEscrowObligation.json";
 import AttestationEscrowObligation2 from "@contracts/AttestationEscrowObligation2.json";
 import StringObligation from "@contracts/StringObligation.json";
-import CommitObligation from "@contracts/CommitObligation.json";
 import TrivialArbiter from "@contracts/TrivialArbiter.json";
 import TrustedOracleArbiter from "@contracts/TrustedOracleArbiter.json";
 import TrustedPartyArbiter from "@contracts/TrustedPartyArbiter.json";
 import SpecificAttestationArbiter from "@contracts/SpecificAttestationArbiter.json";
-import CommitTestsArbiter from "../../src/contracts/CommitTestsArbiter.json";
 import AnyArbiter from "../../src/contracts/AnyArbiter.json";
 import AllArbiter from "../../src/contracts/AllArbiter.json";
 import IntrinsicsArbiter from "../../src/contracts/IntrinsicsArbiter2.json";
@@ -280,9 +278,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter, [
     addresses.eas,
   ]);
-  addresses.commitTestsArbiter = await deployContract(CommitTestsArbiter, [
-    addresses.eas,
-  ]);
+
   addresses.specificAttestationArbiter = await deployContract(
     SpecificAttestationArbiter,
   );
@@ -335,7 +331,6 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     AttestationEscrowObligation2,
   );
   addresses.stringObligation = await deployObligation(StringObligation);
-  addresses.commitObligation = await deployObligation(CommitObligation);
 
   // Deploy barter utils
 

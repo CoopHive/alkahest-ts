@@ -9,7 +9,6 @@ import {
 } from "viem";
 import { makeArbitersClient } from "./clients/arbiters";
 import { makeAttestationClient } from "./clients/attestation";
-import { makeCommitObligationClient } from "./clients/commitObligation";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
@@ -45,7 +44,7 @@ export const makeClient = (
   contractAddresses?: Partial<ChainAddresses>,
 ) => {
   const client = makeMinimalClient(walletClient, contractAddresses);
-  return client.extend(makeDefaultExtension);
+  return makeExtendableClient(client.extend(makeDefaultExtension));
 };
 
 
@@ -169,10 +168,6 @@ export const makeMinimalClient = (
       contractAddresses?.stringObligation ||
       baseAddresses?.stringObligation ||
       zeroAddress,
-    commitObligation:
-      contractAddresses?.commitObligation ||
-      baseAddresses?.commitObligation ||
-      zeroAddress,
 
     trustedPartyArbiter:
       contractAddresses?.trustedPartyArbiter ||
@@ -189,10 +184,6 @@ export const makeMinimalClient = (
     trustedOracleArbiter:
       contractAddresses?.trustedOracleArbiter ||
       baseAddresses?.trustedOracleArbiter ||
-      zeroAddress,
-    commitTestsArbiter:
-      contractAddresses?.commitTestsArbiter ||
-      baseAddresses?.commitTestsArbiter ||
       zeroAddress,
     intrinsicsArbiter:
       contractAddresses?.intrinsicsArbiter ||
@@ -399,9 +390,6 @@ export * from "./clients/logicalArbiters";
 // Deprecated - use specific clients above instead
 export * from "./clients/arbiters";
 
-// Commit obligation client
-export { makeCommitObligationClient, CommitAlgo } from "./clients/commitObligation";
-export type { CommitObligationData } from "./clients/commitObligation";
 
 // Utility functions and types
 export {
@@ -412,7 +400,3 @@ export {
   getOptimalPollingInterval
 } from "./utils";
 export type { ViemClient } from "./utils";
-
-// Test utilities
-export type { TestContext } from "../tests/utils/setup";
-export { setupTestEnvironment, teardownTestEnvironment } from "../tests/utils/setup";
