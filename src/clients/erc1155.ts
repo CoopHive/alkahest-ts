@@ -20,27 +20,22 @@ import { abi as erc1155Abi } from "../contracts/IERC1155";
 import {
   decodeAbiParameters,
   encodeAbiParameters,
+  getAbiItem,
 } from "viem";
 
 // Extract ABI types at module initialization with fail-fast error handling
-const erc1155EscrowDecodeFunction = erc1155EscrowAbi.abi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeObligationData'
-);
-const erc1155PaymentDecodeFunction = erc1155PaymentAbi.abi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeObligationData'
-);
+const erc1155EscrowDecodeFunction = getAbiItem({
+  abi: erc1155EscrowAbi.abi,
+  name: 'decodeObligationData'
+});
+const erc1155PaymentDecodeFunction = getAbiItem({
+  abi: erc1155PaymentAbi.abi,
+  name: 'decodeObligationData'
+});
 
 // Extract the ObligationData struct types from the function outputs
-const erc1155EscrowObligationDataType = (erc1155EscrowDecodeFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const erc1155PaymentObligationDataType = (erc1155PaymentDecodeFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-
-// Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
-if (!erc1155EscrowObligationDataType) {
-  throw new Error('Failed to extract ABI type from ERC1155EscrowObligation contract JSON. The contract definition may be missing or malformed.');
-}
-if (!erc1155PaymentObligationDataType) {
-  throw new Error('Failed to extract ABI type from ERC1155PaymentObligation contract JSON. The contract definition may be missing or malformed.');
-}
+const erc1155EscrowObligationDataType = erc1155EscrowDecodeFunction.outputs[0];
+const erc1155PaymentObligationDataType = erc1155PaymentDecodeFunction.outputs[0];
 
 export const makeErc1155Client = (
   viemClient: ViemClient,

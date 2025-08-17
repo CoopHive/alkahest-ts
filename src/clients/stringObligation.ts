@@ -1,6 +1,7 @@
 import {
   decodeAbiParameters,
   encodeAbiParameters,
+  getAbiItem,
 } from "viem";
 import type { ViemClient } from "../utils";
 import { getAttestation, getAttestedEventFromTxHash } from "../utils";
@@ -11,17 +12,13 @@ import type { z, ZodTypeDef, SafeParseReturnType } from "zod";
 import type { Type } from "arktype";
 
 // Extract ABI type at module initialization with fail-fast error handling
-const stringObligationDecodeFunction = stringObligationAbi.abi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeObligationData'
-);
+const stringObligationDecodeFunction = getAbiItem({
+  abi: stringObligationAbi.abi,
+  name: 'decodeObligationData'
+});
 
 // Extract the ObligationData struct type from the function output
-const stringObligationDataType = (stringObligationDecodeFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-
-// Ensure ABI extraction succeeded - fail if JSONs are malformed
-if (!stringObligationDataType) {
-  throw new Error('Failed to extract ABI type from StringObligation contract JSON. The contract definition may be missing or malformed.');
-}
+const stringObligationDataType = stringObligationDecodeFunction.outputs[0];
 
 // Type helper for Zod parse functions return types
 type ZodParseReturnType<

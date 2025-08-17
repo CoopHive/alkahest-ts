@@ -1,6 +1,7 @@
 import {
   decodeAbiParameters,
   encodeAbiParameters,
+  getAbiItem,
 } from "viem";
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
@@ -8,25 +9,18 @@ import { abi as AllArbiterAbi } from "../contracts/AllArbiter";
 import { abi as AnyArbiterAbi } from "../contracts/AnyArbiter";
 
 // Extract DemandData struct ABI from contract ABIs at module initialization
-const anyArbiterDecodeDemandFunction = AnyArbiterAbi.abi.find(
-  (item) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const allArbiterDecodeDemandFunction = AllArbiterAbi.abi.find(
-  (item) => item.type === 'function' && item.name === 'decodeDemandData'
-);
+const anyArbiterDecodeDemandFunction = getAbiItem({
+  abi: AnyArbiterAbi.abi,
+  name: 'decodeDemandData'
+});
+const allArbiterDecodeDemandFunction = getAbiItem({
+  abi: AllArbiterAbi.abi,
+  name: 'decodeDemandData'
+});
 
 // Extract the DemandData struct types from the function outputs
-const anyDemandDataType = anyArbiterDecodeDemandFunction?.outputs?.[0];
-const allDemandDataType = allArbiterDecodeDemandFunction?.outputs?.[0];
-
-// Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
-if (!anyDemandDataType) {
-  throw new Error('Failed to extract ABI type from AnyArbiter contract JSON. The contract definition may be missing or malformed.');
-}
-
-if (!allDemandDataType) {
-  throw new Error('Failed to extract ABI type from AllArbiter contract JSON. The contract definition may be missing or malformed.');
-}
+const anyDemandDataType = anyArbiterDecodeDemandFunction.outputs[0];
+const allDemandDataType = allArbiterDecodeDemandFunction.outputs[0];
 
 /**
  * Logical Arbiters Client

@@ -1,6 +1,7 @@
 import {
   decodeAbiParameters,
   encodeAbiParameters,
+  getAbiItem,
 } from "viem";
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
@@ -32,104 +33,132 @@ import { abi as UidArbiterComposingAbi } from "../contracts/UidArbiterComposing"
 import { abi as UidArbiterNonComposingAbi } from "../contracts/UidArbiterNonComposing";
 
 // Extract DemandData struct ABIs from contract ABIs at module initialization
-const attesterArbiterComposingDecodeDemandFunction = AttesterArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const attesterArbiterNonComposingDecodeDemandFunction = AttesterArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const timeAfterArbiterComposingDecodeDemandFunction = TimeAfterArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const timeAfterArbiterNonComposingDecodeDemandFunction = TimeAfterArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const timeBeforeArbiterComposingDecodeDemandFunction = TimeBeforeArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const timeBeforeArbiterNonComposingDecodeDemandFunction = TimeBeforeArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const timeEqualArbiterComposingDecodeDemandFunction = TimeEqualArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const timeEqualArbiterNonComposingDecodeDemandFunction = TimeEqualArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const expirationTimeAfterArbiterComposingDecodeDemandFunction = ExpirationTimeAfterArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const expirationTimeAfterArbiterNonComposingDecodeDemandFunction = ExpirationTimeAfterArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const expirationTimeBeforeArbiterComposingDecodeDemandFunction = ExpirationTimeBeforeArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const expirationTimeBeforeArbiterNonComposingDecodeDemandFunction = ExpirationTimeBeforeArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const expirationTimeEqualArbiterComposingDecodeDemandFunction = ExpirationTimeEqualArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const expirationTimeEqualArbiterNonComposingDecodeDemandFunction = ExpirationTimeEqualArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const recipientArbiterComposingDecodeDemandFunction = RecipientArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const recipientArbiterNonComposingDecodeDemandFunction = RecipientArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const refUidArbiterComposingDecodeDemandFunction = RefUidArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const refUidArbiterNonComposingDecodeDemandFunction = RefUidArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const revocableArbiterComposingDecodeDemandFunction = RevocableArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const revocableArbiterNonComposingDecodeDemandFunction = RevocableArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const schemaArbiterComposingDecodeDemandFunction = SchemaArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const schemaArbiterNonComposingDecodeDemandFunction = SchemaArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const uidArbiterComposingDecodeDemandFunction = UidArbiterComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const uidArbiterNonComposingDecodeDemandFunction = UidArbiterNonComposingAbi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeDemandData'
-);
+const attesterArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: AttesterArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const attesterArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: AttesterArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const timeAfterArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: TimeAfterArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const timeAfterArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: TimeAfterArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const timeBeforeArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: TimeBeforeArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const timeBeforeArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: TimeBeforeArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const timeEqualArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: TimeEqualArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const timeEqualArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: TimeEqualArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const expirationTimeAfterArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: ExpirationTimeAfterArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const expirationTimeAfterArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: ExpirationTimeAfterArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const expirationTimeBeforeArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: ExpirationTimeBeforeArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const expirationTimeBeforeArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: ExpirationTimeBeforeArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const expirationTimeEqualArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: ExpirationTimeEqualArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const expirationTimeEqualArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: ExpirationTimeEqualArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const recipientArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: RecipientArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const recipientArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: RecipientArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const refUidArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: RefUidArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const refUidArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: RefUidArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const revocableArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: RevocableArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const revocableArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: RevocableArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const schemaArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: SchemaArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const schemaArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: SchemaArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
+const uidArbiterComposingDecodeDemandFunction = getAbiItem({
+  abi: UidArbiterComposingAbi,
+  name: 'decodeDemandData'
+});
+const uidArbiterNonComposingDecodeDemandFunction = getAbiItem({
+  abi: UidArbiterNonComposingAbi,
+  name: 'decodeDemandData'
+});
 
 // Extract the DemandData struct types from the function outputs
-const attesterArbiterComposingDemandDataType = (attesterArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const attesterArbiterNonComposingDemandDataType = (attesterArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const timeAfterArbiterComposingDemandDataType = (timeAfterArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const timeAfterArbiterNonComposingDemandDataType = (timeAfterArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const timeBeforeArbiterComposingDemandDataType = (timeBeforeArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const timeBeforeArbiterNonComposingDemandDataType = (timeBeforeArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const timeEqualArbiterComposingDemandDataType = (timeEqualArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const timeEqualArbiterNonComposingDemandDataType = (timeEqualArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const expirationTimeAfterArbiterComposingDemandDataType = (expirationTimeAfterArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const expirationTimeAfterArbiterNonComposingDemandDataType = (expirationTimeAfterArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const expirationTimeBeforeArbiterComposingDemandDataType = (expirationTimeBeforeArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const expirationTimeBeforeArbiterNonComposingDemandDataType = (expirationTimeBeforeArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const expirationTimeEqualArbiterComposingDemandDataType = (expirationTimeEqualArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const expirationTimeEqualArbiterNonComposingDemandDataType = (expirationTimeEqualArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const recipientArbiterComposingDemandDataType = (recipientArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const recipientArbiterNonComposingDemandDataType = (recipientArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const refUidArbiterComposingDemandDataType = (refUidArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const refUidArbiterNonComposingDemandDataType = (refUidArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const revocableArbiterComposingDemandDataType = (revocableArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const revocableArbiterNonComposingDemandDataType = (revocableArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const schemaArbiterComposingDemandDataType = (schemaArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const schemaArbiterNonComposingDemandDataType = (schemaArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const uidArbiterComposingDemandDataType = (uidArbiterComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-const uidArbiterNonComposingDemandDataType = (uidArbiterNonComposingDecodeDemandFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+const attesterArbiterComposingDemandDataType = attesterArbiterComposingDecodeDemandFunction.outputs[0];
+const attesterArbiterNonComposingDemandDataType = attesterArbiterNonComposingDecodeDemandFunction.outputs[0];
+const timeAfterArbiterComposingDemandDataType = timeAfterArbiterComposingDecodeDemandFunction.outputs[0];
+const timeAfterArbiterNonComposingDemandDataType = timeAfterArbiterNonComposingDecodeDemandFunction.outputs[0];
+const timeBeforeArbiterComposingDemandDataType = timeBeforeArbiterComposingDecodeDemandFunction.outputs[0];
+const timeBeforeArbiterNonComposingDemandDataType = timeBeforeArbiterNonComposingDecodeDemandFunction.outputs[0];
+const timeEqualArbiterComposingDemandDataType = timeEqualArbiterComposingDecodeDemandFunction.outputs[0];
+const timeEqualArbiterNonComposingDemandDataType = timeEqualArbiterNonComposingDecodeDemandFunction.outputs[0];
+const expirationTimeAfterArbiterComposingDemandDataType = expirationTimeAfterArbiterComposingDecodeDemandFunction.outputs[0];
+const expirationTimeAfterArbiterNonComposingDemandDataType = expirationTimeAfterArbiterNonComposingDecodeDemandFunction.outputs[0];
+const expirationTimeBeforeArbiterComposingDemandDataType = expirationTimeBeforeArbiterComposingDecodeDemandFunction.outputs[0];
+const expirationTimeBeforeArbiterNonComposingDemandDataType = expirationTimeBeforeArbiterNonComposingDecodeDemandFunction.outputs[0];
+const expirationTimeEqualArbiterComposingDemandDataType = expirationTimeEqualArbiterComposingDecodeDemandFunction.outputs[0];
+const expirationTimeEqualArbiterNonComposingDemandDataType = expirationTimeEqualArbiterNonComposingDecodeDemandFunction.outputs[0];
+const recipientArbiterComposingDemandDataType = recipientArbiterComposingDecodeDemandFunction.outputs[0];
+const recipientArbiterNonComposingDemandDataType = recipientArbiterNonComposingDecodeDemandFunction.outputs[0];
+const refUidArbiterComposingDemandDataType = refUidArbiterComposingDecodeDemandFunction.outputs[0];
+const refUidArbiterNonComposingDemandDataType = refUidArbiterNonComposingDecodeDemandFunction.outputs[0];
+const revocableArbiterComposingDemandDataType = revocableArbiterComposingDecodeDemandFunction.outputs[0];
+const revocableArbiterNonComposingDemandDataType = revocableArbiterNonComposingDecodeDemandFunction.outputs[0];
+const schemaArbiterComposingDemandDataType = schemaArbiterComposingDecodeDemandFunction.outputs[0];
+const schemaArbiterNonComposingDemandDataType = schemaArbiterNonComposingDecodeDemandFunction.outputs[0];
+const uidArbiterComposingDemandDataType = uidArbiterComposingDecodeDemandFunction.outputs[0];
+const uidArbiterNonComposingDemandDataType = uidArbiterNonComposingDecodeDemandFunction.outputs[0];
+
+/**
+ * Attestation Properties Arbiters Client
+ * 
 
 // Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
 if (!attesterArbiterComposingDemandDataType) {

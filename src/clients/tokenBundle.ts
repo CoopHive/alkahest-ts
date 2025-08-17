@@ -15,6 +15,7 @@ import { abi as erc1155Abi } from "../contracts/IERC1155";
 import {
   decodeAbiParameters,
   encodeAbiParameters,
+  getAbiItem,
 } from "viem";
 
 export const makeTokenBundleClient = (
@@ -22,21 +23,15 @@ export const makeTokenBundleClient = (
   addresses: ChainAddresses,
 ) => {
   // Extract ABI types for encoding/decoding from contract ABIs
-  const escrowObligationDataType = tokenBundleEscrowAbi.abi.find(
-    (item) => item.type === "function" && item.name === "decodeObligationData"
-  )?.outputs?.[0];
+  const escrowObligationDataType = getAbiItem({
+    abi: tokenBundleEscrowAbi.abi,
+    name: "decodeObligationData"
+  }).outputs[0];
 
-  if (!escrowObligationDataType) {
-    throw new Error("TokenBundleEscrowObligation contract ABI is missing decodeObligationData function outputs");
-  }
-
-  const paymentObligationDataType = tokenBundlePaymentAbi.abi.find(
-    (item) => item.type === "function" && item.name === "decodeObligationData"
-  )?.outputs?.[0];
-
-  if (!paymentObligationDataType) {
-    throw new Error("TokenBundlePaymentObligation contract ABI is missing decodeObligationData function outputs");
-  }
+  const paymentObligationDataType = getAbiItem({
+    abi: tokenBundlePaymentAbi.abi,
+    name: "decodeObligationData"
+  }).outputs[0];
 
   /**
    * Encodes TokenBundleEscrowObligation.ObligationData to bytes using raw parameters.
