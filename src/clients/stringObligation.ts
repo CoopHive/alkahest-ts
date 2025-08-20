@@ -1,7 +1,6 @@
 import {
   decodeAbiParameters,
   encodeAbiParameters,
-  parseAbiParameters,
 } from "viem";
 import type { ViemClient } from "../utils";
 import { getAttestation, getAttestedEventFromTxHash } from "../utils";
@@ -10,6 +9,19 @@ import { abi as stringObligationAbi } from "../contracts/StringObligation";
 import type { ChainAddresses } from "../types";
 import type { z, ZodTypeDef, SafeParseReturnType } from "zod";
 import type { Type } from "arktype";
+
+// Extract ABI type at module initialization with fail-fast error handling
+const stringObligationDecodeFunction = stringObligationAbi.abi.find(
+  (item: any) => item.type === 'function' && item.name === 'decodeObligationData'
+);
+
+// Extract the ObligationData struct type from the function output
+const stringObligationDataType = (stringObligationDecodeFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
+
+// Ensure ABI extraction succeeded - fail if JSONs are malformed
+if (!stringObligationDataType) {
+  throw new Error('Failed to extract ABI type from StringObligation contract JSON. The contract definition may be missing or malformed.');
+}
 
 // Type helper for Zod parse functions return types
 type ZodParseReturnType<
@@ -28,14 +40,9 @@ export const makeStringObligationClient = (
   viemClient: ViemClient,
   addresses: ChainAddresses,
 ) => {
-  // Extract ABI type for encoding/decoding from contract ABI
-  const obligationDataType = stringObligationAbi.abi.find(
-    (item) => item.type === "function" && item.name === "decodeObligationData"
-  )?.outputs?.[0];
-
   const decode = (obligationData: `0x${string}`) => {
     return decodeAbiParameters(
-      obligationDataType ? [obligationDataType] : parseAbiParameters("(string item)"),
+      [stringObligationDataType],
       obligationData,
     )[0];
   };
@@ -71,7 +78,7 @@ export const makeStringObligationClient = (
   return {
     encode: (data: { item: string }) => {
       return encodeAbiParameters(
-        obligationDataType ? [obligationDataType] : parseAbiParameters("(string item)"), 
+        [stringObligationDataType], 
         [data]
       );
     },
@@ -128,10 +135,7 @@ export const makeStringObligationClient = (
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);
       }
-      const data = decodeAbiParameters(
-        obligationDataType ? [obligationDataType] : parseAbiParameters("(string item)"),
-        attestation.data,
-      )[0];
+      const data = decodeAbiParameters([stringObligationDataType], attestation.data)[0];
 
       return {
         ...attestation,
@@ -147,10 +151,7 @@ export const makeStringObligationClient = (
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);
       }
-      const data = decodeAbiParameters(
-        obligationDataType ? [obligationDataType] : parseAbiParameters("(string item)"),
-        attestation.data,
-      )[0];
+      const data = decodeAbiParameters([stringObligationDataType], attestation.data)[0];
 
       return {
         ...attestation,
