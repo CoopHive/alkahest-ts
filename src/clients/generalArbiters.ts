@@ -2,7 +2,6 @@ import {
   decodeAbiParameters,
   encodeAbiParameters,
   parseAbiItem,
-  parseAbiParameters,
 } from "viem";
 import type { ViemClient } from "../utils";
 import type { ChainAddresses } from "../types";
@@ -61,7 +60,6 @@ if (!trustedOracleArbiterDemandDataType) {
  * - TrustedOracleArbiter: Oracle-based decision making with arbitration requests
  *   - Supports requestArbitration for requesting arbitration from specific oracles
  *   - Provides listening functions for oracles to respond only to arbitration requests
- * - CommitTestsArbiter: Commit validation using oracle arbitration (same demand structure as TrustedOracleArbiter)
  */
 export const makeGeneralArbitersClient = (
   viemClient: ViemClient,
