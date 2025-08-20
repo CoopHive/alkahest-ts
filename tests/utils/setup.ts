@@ -125,6 +125,15 @@ export type TestContext = {
     erc1155A: `0x${string}`;
     erc1155B: `0x${string}`;
   };
+
+  // Helper functions
+  deployContract: <T extends { abi: any; bytecode: { object: string } }>(
+    contract: T,
+    args?: any[]
+  ) => Promise<`0x${string}`>;
+  deployObligation: <T extends { abi: any; bytecode: { object: string } }>(
+    contract: T
+  ) => Promise<`0x${string}`>;
 };
 
 /**
@@ -483,6 +492,9 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     anvil,
     testClient,
     anvilInitState,
+
+    deployContract,
+    deployObligation,
 
     alice,
     bob,
