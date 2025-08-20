@@ -42,7 +42,7 @@ import { makeDefaultExtension, makeExtendableClient } from "./extensions";
 export const makeClient = (
   walletClient: WalletClient<Transport, Chain, Account>,
   contractAddresses?: Partial<ChainAddresses>,
-) => {
+): any => {
   const client = makeMinimalClient(walletClient, contractAddresses);
   return makeExtendableClient(client.extend(makeDefaultExtension));
 };
@@ -72,7 +72,7 @@ export const makeClient = (
 export const makeMinimalClient = (
   walletClient: WalletClient<Transport, Chain, Account>,
   contractAddresses?: Partial<ChainAddresses>,
-) => {
+): any => {
   const viemClient = walletClient.extend(publicActions);
 
   // Determine base addresses to use
