@@ -111,9 +111,6 @@ export type TestContext = {
 
     // String obligation
     stringObligation: `0x${string}`;
-
-    // Commit obligation
-    commitObligation: `0x${string}`;
   };
 
   // Mock token addresses
@@ -251,7 +248,6 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     attestationBarterUtils: "" as `0x${string}`,
 
     stringObligation: "" as `0x${string}`,
-    commitObligation: "" as `0x${string}`,
   };
 
   const mockAddresses: TestContext["mockAddresses"] = {
