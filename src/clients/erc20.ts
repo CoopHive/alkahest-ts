@@ -16,6 +16,7 @@ import type {
 import {
   decodeAbiParameters,
   encodeAbiParameters,
+  getAbiItem,
   hexToNumber,
   parseAbiParameter,
   slice,
@@ -31,38 +32,28 @@ import { abi as easAbi } from "../contracts/IEAS";
 import type { ApprovalPurpose } from "../types";
 
 // Extract ObligationData struct ABIs from contract ABIs at module initialization
-const erc20EscrowDoObligationFunction = erc20EscrowAbi.abi.find(
-  (item: any) => item.type === 'function' && item.name === 'doObligation'
-);
-const erc20PaymentDoObligationFunction = erc20PaymentAbi.abi.find(
-  (item: any) => item.type === 'function' && item.name === 'doObligation'
-);
-const erc721EscrowDoObligationFunction = erc721EscrowAbi.abi.find(
-  (item: any) => item.type === 'function' && item.name === 'doObligation'
-);
-const tokenBundlePaymentDecodeFunction = tokenBundlePaymentAbi.abi.find(
-  (item: any) => item.type === 'function' && item.name === 'decodeObligationData'
-);
+const erc20EscrowDoObligationFunction = getAbiItem({
+  abi: erc20EscrowAbi.abi,
+  name: 'doObligation'
+});
+const erc20PaymentDoObligationFunction = getAbiItem({
+  abi: erc20PaymentAbi.abi,
+  name: 'doObligation'
+});
+const erc721EscrowDoObligationFunction = getAbiItem({
+  abi: erc721EscrowAbi.abi,
+  name: 'doObligation'
+});
+const tokenBundlePaymentDecodeFunction = getAbiItem({
+  abi: tokenBundlePaymentAbi.abi,
+  name: 'decodeObligationData'
+});
 
 // Extract the ObligationData struct types from the function inputs
-const erc20EscrowObligationDataType = (erc20EscrowDoObligationFunction as { inputs: readonly any[] } | undefined)?.inputs?.[0];
-const erc20PaymentObligationDataType = (erc20PaymentDoObligationFunction as { inputs: readonly any[] } | undefined)?.inputs?.[0];
-const erc721EscrowObligationDataType = (erc721EscrowDoObligationFunction as { inputs: readonly any[] } | undefined)?.inputs?.[0];
-const tokenBundlePaymentObligationDataType = (tokenBundlePaymentDecodeFunction as { outputs: readonly any[] } | undefined)?.outputs?.[0];
-
-// Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
-if (!erc20EscrowObligationDataType) {
-  throw new Error('Failed to extract ABI type from ERC20EscrowObligation contract JSON. The contract definition may be missing or malformed.');
-}
-if (!erc20PaymentObligationDataType) {
-  throw new Error('Failed to extract ABI type from ERC20PaymentObligation contract JSON. The contract definition may be missing or malformed.');
-}
-if (!erc721EscrowObligationDataType) {
-  throw new Error('Failed to extract ABI type from ERC721EscrowObligation contract JSON. The contract definition may be missing or malformed.');
-}
-if (!tokenBundlePaymentObligationDataType) {
-  throw new Error('Failed to extract ABI type from TokenBundlePaymentObligation contract JSON. The contract definition may be missing or malformed.');
-}
+const erc20EscrowObligationDataType = erc20EscrowDoObligationFunction.inputs[0];
+const erc20PaymentObligationDataType = erc20PaymentDoObligationFunction.inputs[0];
+const erc721EscrowObligationDataType = erc721EscrowDoObligationFunction.inputs[0];
+const tokenBundlePaymentObligationDataType = tokenBundlePaymentDecodeFunction.outputs[0];
 
 export const makeErc20Client = (
   viemClient: ViemClient,

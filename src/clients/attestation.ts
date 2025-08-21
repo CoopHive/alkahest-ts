@@ -10,6 +10,7 @@ import { abi as attestationBarterUtilsAbi } from "../contracts/AttestationBarter
 import {
   decodeAbiParameters,
   encodeAbiParameters,
+  getAbiItem,
 } from "viem";
 
 export const makeAttestationClient = (
@@ -17,22 +18,15 @@ export const makeAttestationClient = (
   addresses: ChainAddresses,
 ) => {
   // Extract ABI types for encoding/decoding from contract ABIs
-  const escrowObligationDataType = attestationEscrowAbi.abi.find(
-    (item) => item.type === "function" && item.name === "decodeObligationData"
-  )?.outputs?.[0];
+  const escrowObligationDataType = getAbiItem({
+    abi: attestationEscrowAbi.abi,
+    name: "decodeObligationData"
+  }).outputs[0];
 
-  const escrow2ObligationDataType = attestationEscrow2Abi.abi.find(
-    (item) => item.type === "function" && item.name === "decodeObligationData"
-  )?.outputs?.[0];
-
-  // Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
-  if (!escrowObligationDataType) {
-    throw new Error('Failed to extract ABI type from AttestationEscrowObligation contract JSON. The contract definition may be missing or malformed.');
-  }
-
-  if (!escrow2ObligationDataType) {
-    throw new Error('Failed to extract ABI type from AttestationEscrowObligation2 contract JSON. The contract definition may be missing or malformed.');
-  }
+  const escrow2ObligationDataType = getAbiItem({
+    abi: attestationEscrow2Abi.abi,
+    name: "decodeObligationData"
+  }).outputs[0];
 
   // Use contract ABIs directly
   const attestationAbi = [escrowObligationDataType];

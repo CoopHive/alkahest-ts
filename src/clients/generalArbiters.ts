@@ -1,6 +1,7 @@
 import {
   decodeAbiParameters,
   encodeAbiParameters,
+  getAbiItem,
   parseAbiItem,
 } from "viem";
 import type { ViemClient } from "../utils";
@@ -13,41 +14,28 @@ import { abi as TrustedPartyArbiterAbi } from "../contracts/TrustedPartyArbiter"
 import { abi as SpecificAttestationArbiterAbi } from "../contracts/SpecificAttestationArbiter";
 
 // Extract DemandData struct ABI from contract ABIs at module initialization
-const intrinsicsArbiter2DecodeDemandFunction = IntrinsicsArbiter2Abi.abi.find(
-  (item) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const trustedPartyArbiterDecodeDemandFunction = TrustedPartyArbiterAbi.abi.find(
-  (item) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const specificAttestationArbiterDecodeDemandFunction = SpecificAttestationArbiterAbi.abi.find(
-  (item) => item.type === 'function' && item.name === 'decodeDemandData'
-);
-const trustedOracleArbiterDecodeDemandFunction = trustedOracleArbiterAbi.abi.find(
-  (item) => item.type === 'function' && item.name === 'decodeDemandData'
-);
+const intrinsicsArbiter2DecodeDemandFunction = getAbiItem({
+  abi: IntrinsicsArbiter2Abi.abi,
+  name: 'decodeDemandData'
+});
+const trustedPartyArbiterDecodeDemandFunction = getAbiItem({
+  abi: TrustedPartyArbiterAbi.abi,
+  name: 'decodeDemandData'
+});
+const specificAttestationArbiterDecodeDemandFunction = getAbiItem({
+  abi: SpecificAttestationArbiterAbi.abi,
+  name: 'decodeDemandData'
+});
+const trustedOracleArbiterDecodeDemandFunction = getAbiItem({
+  abi: trustedOracleArbiterAbi.abi,
+  name: 'decodeDemandData'
+});
 
 // Extract the DemandData struct types from the function outputs
-const intrinsicsArbiter2DemandDataType = intrinsicsArbiter2DecodeDemandFunction?.outputs?.[0];
-const trustedPartyArbiterDemandDataType = trustedPartyArbiterDecodeDemandFunction?.outputs?.[0];
-const specificAttestationArbiterDemandDataType = specificAttestationArbiterDecodeDemandFunction?.outputs?.[0];
-const trustedOracleArbiterDemandDataType = trustedOracleArbiterDecodeDemandFunction?.outputs?.[0];
-
-// Ensure ABI extraction succeeded - fail fast if contract JSONs are malformed
-if (!intrinsicsArbiter2DemandDataType) {
-  throw new Error('Failed to extract ABI type from IntrinsicsArbiter2 contract JSON. The contract definition may be missing or malformed.');
-}
-
-if (!trustedPartyArbiterDemandDataType) {
-  throw new Error('Failed to extract ABI type from TrustedPartyArbiter contract JSON. The contract definition may be missing or malformed.');
-}
-
-if (!specificAttestationArbiterDemandDataType) {
-  throw new Error('Failed to extract ABI type from SpecificAttestationArbiter contract JSON. The contract definition may be missing or malformed.');
-}
-
-if (!trustedOracleArbiterDemandDataType) {
-  throw new Error('Failed to extract ABI type from TrustedOracleArbiter contract JSON. The contract definition may be missing or malformed.');
-}
+const intrinsicsArbiter2DemandDataType = intrinsicsArbiter2DecodeDemandFunction.outputs[0];
+const trustedPartyArbiterDemandDataType = trustedPartyArbiterDecodeDemandFunction.outputs[0];
+const specificAttestationArbiterDemandDataType = specificAttestationArbiterDecodeDemandFunction.outputs[0];
+const trustedOracleArbiterDemandDataType = trustedOracleArbiterDecodeDemandFunction.outputs[0];
 
 /**
  * General Arbiters Client
