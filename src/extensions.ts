@@ -7,19 +7,6 @@ import { makeStringObligationClient } from "./clients/stringObligation";
 import { makeTokenBundleClient } from "./clients/tokenBundle";
 import { makeOracleClient } from "./oracle/oracle";
 
-export function makeExtendableClient<T extends object>(base: T) {
-    return {
-        ...base,
-        extend<U extends object>(extender: (client: T) => U): T & U {
-            const extensions = extender(base);
-            return makeExtendableClient({
-                ...base,
-                ...extensions,
-            }) as T & U;
-        },
-    };
-}
-
 /**
  * Creates the default extension for the Alkahest client with all standard functionality
  * @param client - The base client to extend

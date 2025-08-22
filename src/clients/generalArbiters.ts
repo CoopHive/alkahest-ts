@@ -37,6 +37,7 @@ const trustedPartyArbiterDemandDataType = trustedPartyArbiterDecodeDemandFunctio
 const specificAttestationArbiterDemandDataType = specificAttestationArbiterDecodeDemandFunction.outputs[0];
 const trustedOracleArbiterDemandDataType = trustedOracleArbiterDecodeDemandFunction.outputs[0];
 
+
 /**
  * General Arbiters Client
  * 
@@ -57,7 +58,7 @@ export const makeGeneralArbitersClient = (
   const arbitrationMadeEvent = parseAbiItem(
     "event ArbitrationMade(bytes32 indexed obligation, address indexed oracle, bool decision)",
   );
-  
+
   const arbitrationRequestedEvent = parseAbiItem(
     "event ArbitrationRequested(bytes32 indexed obligation, address indexed oracle)",
   );
@@ -301,6 +302,7 @@ export const makeGeneralArbitersClient = (
       });
     },
 
+
     /**
      * Listen for arbitration requests and only arbitrate on request
      * This function continuously listens for ArbitrationRequested events
@@ -330,7 +332,7 @@ export const makeGeneralArbitersClient = (
               try {
                 // Call the arbitration handler to get the decision
                 const decision = await arbitrationHandler(requestedObligation, requestedOracle);
-                
+
                 // Submit the arbitration
                 await viemClient.writeContract({
                   address: addresses.trustedOracleArbiter,

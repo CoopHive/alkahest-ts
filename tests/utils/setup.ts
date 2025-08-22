@@ -63,10 +63,13 @@ export type TestContext = {
   // User addresses and clients
   alice: `0x${string}`;
   bob: `0x${string}`;
+  charlie: `0x${string}`;
   aliceClient: ReturnType<typeof makeClient>;
   bobClient: ReturnType<typeof makeClient>;
+  charlieClient: ReturnType<typeof makeClient>;
   aliceClientWs: ReturnType<typeof makeClient>;
   bobClientWs: ReturnType<typeof makeClient>;
+  charlieClientWs: ReturnType<typeof makeClient>;
 
   // Contract addresses
   addresses: {
@@ -116,11 +119,23 @@ export type TestContext = {
   mockAddresses: {
     erc20A: `0x${string}`;
     erc20B: `0x${string}`;
+    erc20C: `0x${string}`;
     erc721A: `0x${string}`;
     erc721B: `0x${string}`;
+    erc721C: `0x${string}`;
     erc1155A: `0x${string}`;
     erc1155B: `0x${string}`;
+    erc1155C: `0x${string}`;
   };
+
+  // Helper functions
+  deployContract: <T extends { abi: any; bytecode: { object: string } }>(
+    contract: T,
+    args?: any[]
+  ) => Promise<`0x${string}`>;
+  deployObligation: <T extends { abi: any; bytecode: { object: string } }>(
+    contract: T
+  ) => Promise<`0x${string}`>;
 };
 
 /**
@@ -157,8 +172,12 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   const bobAccount = privateKeyToAccount(generatePrivateKey(), {
     nonceManager,
   });
+  const charlieAccount = privateKeyToAccount(generatePrivateKey(), {
+    nonceManager,
+  });
   const alice = aliceAccount.address;
   const bob = bobAccount.address;
+  const charlie = charlieAccount.address;
 
   // Create test client for deployment
   const testClient = createTestClient({
@@ -186,6 +205,10 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     address: bob,
     value: parseEther("10"),
   });
+  await testClient.setBalance({
+    address: charlie,
+    value: parseEther("10"),
+  });
 
   // Create wallet clients for accounts
   const aliceWalletClient = createWalletClient({
@@ -197,6 +220,13 @@ export async function setupTestEnvironment(): Promise<TestContext> {
 
   const bobWalletClient = createWalletClient({
     account: bobAccount,
+    chain,
+    transport,
+    pollingInterval: 1000,
+  }).extend(publicActions);
+
+  const charlieWalletClient = createWalletClient({
+    account: charlieAccount,
     chain,
     transport,
     pollingInterval: 1000,
@@ -242,10 +272,13 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   const mockAddresses: TestContext["mockAddresses"] = {
     erc20A: "" as `0x${string}`,
     erc20B: "" as `0x${string}`,
+    erc20C: "" as `0x${string}`,
     erc721A: "" as `0x${string}`,
     erc721B: "" as `0x${string}`,
+    erc721C: "" as `0x${string}`,
     erc1155A: "" as `0x${string}`,
     erc1155B: "" as `0x${string}`,
+    erc1155C: "" as `0x${string}`,
   };
 
   // Helper to deploy contracts
@@ -272,6 +305,7 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter, [
     addresses.eas,
   ]);
+
   addresses.specificAttestationArbiter = await deployContract(
     SpecificAttestationArbiter,
   );
@@ -395,10 +429,16 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     "Token B",
     "TKB",
   ]);
+  mockAddresses.erc20C = await deployContract(MockERC20Permit, [
+    "Token C",
+    "TKC",
+  ]);
   mockAddresses.erc721A = await deployContract(MockERC721);
   mockAddresses.erc721B = await deployContract(MockERC721);
+  mockAddresses.erc721C = await deployContract(MockERC721);
   mockAddresses.erc1155A = await deployContract(MockERC1155);
   mockAddresses.erc1155B = await deployContract(MockERC1155);
+  mockAddresses.erc1155C = await deployContract(MockERC1155);
 
   // Distribute tokens to test accounts
 
@@ -447,9 +487,32 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     args: [bob, 1n, 100n],
   });
 
+  // Mint ERC1155 tokens for Charlie
+  await testClient.writeContract({
+    address: mockAddresses.erc20C,
+    abi: MockERC20Permit.abi,
+    functionName: "transfer",
+    args: [charlie, parseEther("1000")],
+  });
+
+  await testClient.writeContract({
+    address: mockAddresses.erc721C,
+    abi: MockERC721.abi,
+    functionName: "mint",
+    args: [charlie],
+  });
+
+  await testClient.writeContract({
+    address: mockAddresses.erc1155C,
+    abi: MockERC1155.abi,
+    functionName: "mint",
+    args: [charlie, 1n, 100n],
+  });
+
   // Create Alkahest clients
   const aliceClient = makeClient(aliceWalletClient, addresses);
   const bobClient = makeClient(bobWalletClient, addresses);
+  const charlieClient = makeClient(charlieWalletClient, addresses);
 
   // Create WebSocket clients for real-time event watching
   const aliceWalletClientWs = createWalletClient({
@@ -466,8 +529,16 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     pollingInterval: 1000,
   }).extend(publicActions);
 
+  const charlieWalletClientWs = createWalletClient({
+    account: charlieAccount,
+    chain,
+    transport: webSocket(`ws://localhost:${anvil.port}`),
+    pollingInterval: 1000,
+  }).extend(publicActions);
+
   const aliceClientWs = makeClient(aliceWalletClientWs, addresses);
   const bobClientWs = makeClient(bobWalletClientWs, addresses);
+  const charlieClientWs = makeClient(charlieWalletClientWs, addresses);
 
   // Capture initial state for test resets
   const anvilInitState = await testClient.dumpState();
@@ -477,12 +548,18 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     testClient,
     anvilInitState,
 
+    deployContract,
+    deployObligation,
+
     alice,
     bob,
+    charlie,
     aliceClient,
     bobClient,
+    charlieClient,
     aliceClientWs,
     bobClientWs,
+    charlieClientWs,
 
     addresses,
     mockAddresses,
