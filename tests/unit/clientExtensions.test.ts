@@ -2,8 +2,6 @@ import { describe, expect, test, beforeAll } from "bun:test";
 import {
     makeClient,
     makeMinimalClient,
-    makeDefaultExtension,
-    makeExtendableClient
 } from "../../src";
 import {
     setupTestEnvironment,
@@ -78,7 +76,7 @@ describe("Client Extension Tests", () => {
     test("minimal client can be extended with custom functionality", () => {
         const minimalClient = makeMinimalClient(walletClient, testContext.addresses);
 
-        const customClient = minimalClient.extend((client) => ({
+        const customClient = minimalClient.extend((client: typeof minimalClient) => ({
             erc20: makeErc20Client(client.viemClient, testContext.addresses),
         }));
 
@@ -97,7 +95,7 @@ describe("Client Extension Tests", () => {
     test("can chain multiple extensions", () => {
         const minimalClient = makeMinimalClient(walletClient, testContext.addresses);
 
-        const firstExtension = minimalClient.extend((client) => ({
+        const firstExtension = minimalClient.extend((client: typeof minimalClient) => ({
             erc20: testContext.aliceClient.erc20,
             customProp1: "first",
         }));
@@ -116,5 +114,45 @@ describe("Client Extension Tests", () => {
         expect(secondExtension.combined()).toBe("first-second");
     });
 
+    test("makeClient can be extended with custom functionality", () => {
+        const client = makeClient(walletClient, testContext.addresses);
 
+        const extendedClient = client.extend((baseClient: typeof client) => ({
+            customMethod: () => "Custom Functionality",
+        }));
+
+        // Verify the custom method is added
+        expect(extendedClient.customMethod()).toBe("Custom Functionality");
+
+        // Verify the original properties are still accessible
+        expect(extendedClient.viemClient).toBeDefined();
+        expect(extendedClient.address).toBeDefined();
+        expect(extendedClient.contractAddresses).toBeDefined();
+    });
+
+    test("makeClient can chain multiple extensions", () => {
+        const client = makeClient(walletClient, testContext.addresses);
+
+        const firstExtension = client.extend((baseClient: typeof client) => ({
+            customMethod1: () => "First Extension",
+        }));
+
+        const secondExtension = firstExtension.extend((baseClient: typeof firstExtension) => ({
+            customMethod2: () => "Second Extension",
+        }));
+
+        const thirdExtension = secondExtension.extend((baseClient: typeof secondExtension) => ({
+            customMethod3: () => "Third Extension",
+        }));
+
+        // Verify all custom methods are added
+        expect(thirdExtension.customMethod1()).toBe("First Extension");
+        expect(thirdExtension.customMethod2()).toBe("Second Extension");
+        expect(thirdExtension.customMethod3()).toBe("Third Extension");
+
+        // Verify the original properties are still accessible
+        expect(thirdExtension.viemClient).toBeDefined();
+        expect(thirdExtension.address).toBeDefined();
+        expect(thirdExtension.contractAddresses).toBeDefined();
+    });
 });

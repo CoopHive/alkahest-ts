@@ -23,7 +23,7 @@ import type { ChainAddresses } from "./types";
 import { getAttestation, getOptimalPollingInterval } from "./utils";
 
 import { abi as easAbi } from "./contracts/IEAS";
-import { makeDefaultExtension, makeExtendableClient } from "./extensions";
+import { makeDefaultExtension } from "./extensions";
 /**
  * Creates an Alkahest client for interacting with the protocol
  * @param walletClient - Viem wallet client object
@@ -42,9 +42,9 @@ import { makeDefaultExtension, makeExtendableClient } from "./extensions";
 export const makeClient = (
   walletClient: WalletClient<Transport, Chain, Account>,
   contractAddresses?: Partial<ChainAddresses>,
-): any => {
+) => {
   const client = makeMinimalClient(walletClient, contractAddresses);
-  return makeExtendableClient(client.extend(makeDefaultExtension));
+  return client.extend(makeDefaultExtension);
 };
 
 
@@ -69,6 +69,9 @@ export const makeClient = (
  * }));
  * ```
  */
+
+
+
 export const makeMinimalClient = (
   walletClient: WalletClient<Transport, Chain, Account>,
   contractAddresses?: Partial<ChainAddresses>,
@@ -283,9 +286,24 @@ export const makeMinimalClient = (
       zeroAddress,
   };
 
+  function makeExtendableClient<T extends object>(base: T) {
+    return {
+      ...base,
+      extend<U extends object>(extender: (client: T) => U): T & U {
+        const extensions = extender(base);
+        return makeExtendableClient({
+          ...base,
+          ...extensions,
+        }) as T & U;
+      },
+    };
+  }
+
   const client = {
     /** The underlying Viem client */
     viemClient,
+
+    makeExtendableClient,
 
     /** Address of the account used to create this client */
     address: viemClient.account.address,
