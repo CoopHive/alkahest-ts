@@ -202,14 +202,18 @@ export interface PerformanceFilters {
   skipValidation?: boolean;
 }
 
-export interface EnhancedArbitrateFilters extends
-  TimeFilters,
-  AttestationFilters,
-  BlockFilters,
-  BatchFilters,
-  PerformanceFilters {
+export interface EnhancedArbitrateFilters
+  extends TimeFilters,
+    AttestationFilters,
+    BlockFilters,
+    BatchFilters,
+    PerformanceFilters {}
+
+export interface ArbitrateOptions {
   /** Only arbitrate if escrow demands current oracle */
-  onlyIfEscrowDemandsCurrentOracle?: boolean;
+  requireOracle?: boolean;
   /** Skip obligations that have already been arbitrated */
-  skipAlreadyArbitrated?: boolean;
+  skipArbitrated?: boolean;
+  /** Only arbitrate for new fulfillments */
+  onlyNew?: boolean;
 }
