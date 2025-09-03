@@ -579,7 +579,6 @@ export const makeOracleClient = (
                   )
                 )
                   return;
-
                 if (
                   params.options?.requireOracle &&
                   attestation.refUID // Check if there's a referenced escrow
@@ -592,10 +591,16 @@ export const makeOracleClient = (
                   if (!escrowAttestation) return;
 
                   try {
-                    const trustedOracleDemand = decodeAbiParameters(
-                      trustedOracleDemandAbi,
+                    const obligation = decodeAbiParameters(
+                      arbiterDemandAbi,
                       escrowAttestation.data
                     )[0];
+
+                    const trustedOracleDemand = decodeAbiParameters(
+                      trustedOracleDemandAbi,
+                      obligation.demand
+                    )[0];
+
                     if (
                       trustedOracleDemand.oracle.toLowerCase() !==
                       viemClient.account.address.toLowerCase()
@@ -605,7 +610,6 @@ export const makeOracleClient = (
                     return; // Skip if decoding fails
                   }
                 }
-
                 // Check if arbitration already exists if skipAlreadyArbitrated is enabled
                 if (params.options?.skipArbitrated) {
                   const existingLogs = await viemClient.getLogs({

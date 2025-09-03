@@ -840,7 +840,7 @@ test("listenAndArbitrateNewFulfillmentsForEscrow with skipAlreadyArbitrated", as
   unwatch();
 });
 
-test("listenAndArbitrate with onlyIfEscrowDemandsCurrentOracle", async () => {
+test("listenAndArbitrateNewFulfillments with onlyIfEscrowDemandsCurrentOracle", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
 
   // Create demand for Bob (current oracle)
@@ -851,7 +851,6 @@ test("listenAndArbitrate with onlyIfEscrowDemandsCurrentOracle", async () => {
         { mockDemand: "for-bob" },
       ]),
     });
-
   let arbitrationsProcessed = 0;
   let processedFulfillments: string[] = [];
 
