@@ -8,14 +8,19 @@ import {
   type BlockNumber,
   type BlockTag,
 } from "viem";
-import type { 
-  Attestation, 
-  ChainAddresses, 
+import type {
+  Attestation,
+  ChainAddresses,
   EnhancedArbitrateFilters,
   TimeFilters,
   AttestationFilters,
+  ArbitrateOptions,
 } from "../types";
-import { getAttestation, getOptimalPollingInterval, type ViemClient } from "../utils";
+import {
+  getAttestation,
+  getOptimalPollingInterval,
+  type ViemClient,
+} from "../utils";
 
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
 
@@ -29,13 +34,14 @@ type ArbitrateParams<ObligationData extends readonly AbiParameter[]> = {
     refUID?: `0x${string}` | `0x${string}`[];
   };
   arbitrate: (
-    obligation: DecodeAbiParametersReturnType<ObligationData>,
+    obligation: DecodeAbiParametersReturnType<ObligationData>
   ) => Promise<boolean | null>;
+  options?: ArbitrateOptions;
 };
 
 type ArbitrateEscrowParams<
   ObligationData extends readonly AbiParameter[],
-  DemandData extends readonly AbiParameter[],
+  DemandData extends readonly AbiParameter[]
 > = {
   escrow: {
     demandAbi: DemandData;
@@ -55,15 +61,16 @@ type ArbitrateEscrowParams<
   };
   arbitrate: (
     obligation: DecodeAbiParametersReturnType<ObligationData>,
-    demand: DecodeAbiParametersReturnType<DemandData>,
+    demand: DecodeAbiParametersReturnType<DemandData>
   ) => Promise<boolean | null>;
+  options?: ArbitrateOptions;
 };
 
 const validateAttestationIntrinsics = (
   attestation: Attestation,
   params: {
     refUID?: `0x${string}` | `0x${string}`[];
-  },
+  }
 ) => {
   if (
     params.refUID &&
@@ -91,19 +98,19 @@ const validateAttestationIntrinsics = (
 
 export const makeOracleClient = (
   viemClient: ViemClient,
-  addresses: ChainAddresses,
+  addresses: ChainAddresses
 ) => {
   const attestedEvent = parseAbiItem(
-    "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)",
+    "event Attested(address indexed recipient, address indexed attester, bytes32 uid, bytes32 indexed schemaUID)"
   );
   const arbitrationMadeEvent = parseAbiItem(
-    "event ArbitrationMade(bytes32 indexed obligation, address indexed oracle, bool decision)",
+    "event ArbitrationMade(bytes32 indexed obligation, address indexed oracle, bool decision)"
   );
   const arbiterDemandAbi = parseAbiParameters(
-    "(address arbiter, bytes demand)",
+    "(address arbiter, bytes demand)"
   );
   const trustedOracleDemandAbi = parseAbiParameters(
-    "(address oracle, bytes data)",
+    "(address oracle, bytes data)"
   );
 
   const getObligations = async <ObligationData extends readonly AbiParameter[]>(
@@ -118,7 +125,7 @@ export const makeOracleClient = (
     blockRange?: {
       fromBlock?: BlockNumber | BlockTag;
       toBlock?: BlockNumber | BlockTag;
-    },
+    }
   ) => {
     const logs = (
       await viemClient.getLogs({
@@ -138,13 +145,13 @@ export const makeOracleClient = (
       await Promise.all(
         logs.map(
           async (log) =>
-            await getAttestation(viemClient, log.args.uid!, addresses),
-        ),
+            await getAttestation(viemClient, log.args.uid!, addresses)
+        )
       )
     ).filter(($) => validateAttestationIntrinsics($, filterArgs));
 
     const obligations = attestations.map(($) =>
-      decodeAbiParameters(obligationAbi, $.data),
+      decodeAbiParameters(obligationAbi, $.data)
     );
 
     return logs.map((log, i) => ({
@@ -156,7 +163,7 @@ export const makeOracleClient = (
 
   const arbitrateOnchain = async (
     obligationUid: `0x${string}`,
-    decision: boolean,
+    decision: boolean
   ) =>
     await viemClient.writeContract({
       address: addresses.trustedOracleArbiter,
@@ -168,7 +175,7 @@ export const makeOracleClient = (
     });
 
   const arbitratePast = async <T extends readonly AbiParameter[]>(
-    params: ArbitrateParams<T> & EnhancedArbitrateFilters,
+    params: ArbitrateParams<T> & EnhancedArbitrateFilters
   ) => {
     // Get obligations with block range filtering
     const blockRange = {
@@ -179,7 +186,7 @@ export const makeOracleClient = (
     const obligations = await getObligations(
       params.fulfillment,
       params.fulfillment.obligationAbi,
-      blockRange,
+      blockRange
     );
 
     // Apply batch size limiting and prioritization
@@ -187,7 +194,7 @@ export const makeOracleClient = (
 
     if (params.prioritizeRecent) {
       filteredObligations = filteredObligations.sort((a, b) =>
-        Number(b.attestation.time - a.attestation.time),
+        Number(b.attestation.time - a.attestation.time)
       );
     }
 
@@ -209,22 +216,22 @@ export const makeOracleClient = (
           }
 
           // Early return if escrow doesn't demand current oracle
-          if (params.onlyIfEscrowDemandsCurrentOracle && !attestation.refUID) {
+          if (params.options?.requireOracle && !attestation.refUID) {
             return null;
           }
 
-          if (params.onlyIfEscrowDemandsCurrentOracle) {
+          if (params.options?.requireOracle) {
             const escrowAttestation = await getAttestation(
               viemClient,
               attestation.refUID,
-              addresses,
+              addresses
             );
             if (!escrowAttestation) return null;
 
             try {
               const trustedOracleDemand = decodeAbiParameters(
                 trustedOracleDemandAbi,
-                escrowAttestation.data,
+                escrowAttestation.data
               )[0];
               if (
                 trustedOracleDemand.oracle.toLowerCase() !==
@@ -237,7 +244,7 @@ export const makeOracleClient = (
             }
           }
 
-          if (params.skipAlreadyArbitrated) {
+          if (params.options?.skipArbitrated) {
             const existingLogs = await viemClient.getLogs({
               address: addresses.trustedOracleArbiter,
               event: arbitrationMadeEvent,
@@ -258,7 +265,7 @@ export const makeOracleClient = (
           if (params.dryRun) {
             const decision = await params.arbitrate(obligation);
             let estimatedGas: bigint | null = null;
-            
+
             // Estimate gas for the transaction if decision is not null
             if (decision !== null) {
               try {
@@ -274,7 +281,7 @@ export const makeOracleClient = (
                 estimatedGas = null;
               }
             }
-            
+
             return {
               simulated: true,
               attestation,
@@ -309,7 +316,7 @@ export const makeOracleClient = (
 
           const hash = await arbitrateOnchain(attestation.uid, decision);
           return { hash, attestation, obligation, decision };
-        }),
+        })
       )
     ).filter(($) => $ !== null);
 
@@ -318,9 +325,10 @@ export const makeOracleClient = (
 
   const arbitratePastForEscrow = async <
     ObligationData extends readonly AbiParameter[],
-    DemandData extends readonly AbiParameter[],
+    DemandData extends readonly AbiParameter[]
   >(
-    params: ArbitrateEscrowParams<ObligationData, DemandData> & EnhancedArbitrateFilters,
+    params: ArbitrateEscrowParams<ObligationData, DemandData> &
+      EnhancedArbitrateFilters
   ) => {
     // Get obligations with block range filtering
     const blockRange = {
@@ -335,7 +343,7 @@ export const makeOracleClient = (
             .filter(
               ($) =>
                 $.obligation[0].arbiter.toLowerCase() ===
-                addresses.trustedOracleArbiter.toLowerCase(),
+                addresses.trustedOracleArbiter.toLowerCase()
             )
             .map(async ({ log, attestation, obligation }) => {
               // Apply time-based filters to escrow attestations
@@ -350,7 +358,7 @@ export const makeOracleClient = (
 
               const trustedOracleDemand = decodeAbiParameters(
                 trustedOracleDemandAbi,
-                obligation[0].demand,
+                obligation[0].demand
               )[0];
 
               if (
@@ -361,7 +369,7 @@ export const makeOracleClient = (
 
               const demand = decodeAbiParameters(
                 params.escrow.demandAbi,
-                trustedOracleDemand.data,
+                trustedOracleDemand.data
               );
 
               return {
@@ -370,15 +378,15 @@ export const makeOracleClient = (
                 obligation,
                 demand,
               };
-            }),
-        ),
+            })
+        )
       )
       .then(($) => $.filter(($) => $ !== null));
 
     const fulfillmentsP = getObligations(
       params.fulfillment,
       params.fulfillment.obligationAbi,
-      blockRange,
+      blockRange
     );
 
     const [escrows, fulfillments] = await Promise.all([
@@ -391,12 +399,15 @@ export const makeOracleClient = (
 
     if (params.prioritizeRecent) {
       filteredFulfillments = filteredFulfillments.sort((a, b) =>
-        Number(b.attestation.time - a.attestation.time),
+        Number(b.attestation.time - a.attestation.time)
       );
     }
 
     if (params.maxObligations) {
-      filteredFulfillments = filteredFulfillments.slice(0, params.maxObligations);
+      filteredFulfillments = filteredFulfillments.slice(
+        0,
+        params.maxObligations
+      );
     }
 
     const escrowsMap = new Map<`0x${string}`, (typeof escrows)[0]>();
@@ -419,7 +430,7 @@ export const makeOracleClient = (
         const escrow = escrowsMap.get($.attestation.refUID)!;
 
         // Early return if already arbitrated
-        if (params.skipAlreadyArbitrated) {
+        if (params.options?.skipArbitrated) {
           const existingLogs = await viemClient.getLogs({
             address: addresses.trustedOracleArbiter,
             event: arbitrationMadeEvent,
@@ -440,7 +451,7 @@ export const makeOracleClient = (
         if (params.dryRun) {
           const decision = await params.arbitrate($.obligation, escrow.demand);
           let estimatedGas: bigint | null = null;
-          
+
           // Estimate gas for the transaction if decision is not null
           if (decision !== null) {
             try {
@@ -456,7 +467,7 @@ export const makeOracleClient = (
               estimatedGas = null;
             }
           }
-          
+
           return {
             simulated: true,
             attestation: $.attestation,
@@ -500,18 +511,20 @@ export const makeOracleClient = (
           escrowAttestation: escrow.attestation,
           decision,
         };
-      }),
+      })
     );
 
-    return { decisions: decisions.filter(($) => $ !== null), escrows, fulfillments };
+    return {
+      decisions: decisions.filter(($) => $ !== null),
+      escrows,
+      fulfillments,
+    };
   };
 
   return {
     arbitratePast,
     listenAndArbitrate: async <ObligationData extends readonly AbiParameter[]>(
       params: ArbitrateParams<ObligationData> & {
-        onlyIfEscrowDemandsCurrentOracle?: boolean;
-        skipAlreadyArbitrated?: boolean;
         onAfterArbitrate?: (decision: {
           hash: `0x${string}`;
           attestation: Attestation;
@@ -519,12 +532,16 @@ export const makeOracleClient = (
           decision: boolean | null;
         }) => Promise<void>;
         pollingInterval?: number;
-      },
+      }
     ) => {
-      const decisions = await arbitratePast(params);
-
+      const decisions = params.options?.onlyNew
+        ? []
+        : await arbitratePast(params);
       // Use optimal polling interval based on transport type
-      const optimalInterval = getOptimalPollingInterval(viemClient, params.pollingInterval);
+      const optimalInterval = getOptimalPollingInterval(
+        viemClient,
+        params.pollingInterval
+      );
 
       const unwatch = viemClient.watchEvent({
         address: addresses.eas,
@@ -540,7 +557,7 @@ export const makeOracleClient = (
               .filter(
                 ($) =>
                   !params.fulfillment.uid ||
-                  $.args.uid === params.fulfillment.uid,
+                  $.args.uid === params.fulfillment.uid
               )
               .map(async (log) => {
                 if (
@@ -552,33 +569,38 @@ export const makeOracleClient = (
                 const attestation = await getAttestation(
                   viemClient,
                   log.args.uid!,
-                  addresses,
+                  addresses
                 );
 
                 if (
                   !validateAttestationIntrinsics(
                     attestation,
-                    params.fulfillment,
+                    params.fulfillment
                   )
                 )
                   return;
-
                 if (
-                  params.onlyIfEscrowDemandsCurrentOracle &&
+                  params.options?.requireOracle &&
                   attestation.refUID // Check if there's a referenced escrow
                 ) {
                   const escrowAttestation = await getAttestation(
                     viemClient,
                     attestation.refUID,
-                    addresses,
+                    addresses
                   );
                   if (!escrowAttestation) return;
 
                   try {
+                    const obligation = decodeAbiParameters(
+                      arbiterDemandAbi,
+                      escrowAttestation.data
+                    )[0];
+
                     const trustedOracleDemand = decodeAbiParameters(
                       trustedOracleDemandAbi,
-                      escrowAttestation.data,
+                      obligation.demand
                     )[0];
+
                     if (
                       trustedOracleDemand.oracle.toLowerCase() !==
                       viemClient.account.address.toLowerCase()
@@ -588,20 +610,19 @@ export const makeOracleClient = (
                     return; // Skip if decoding fails
                   }
                 }
-
                 // Check if arbitration already exists if skipAlreadyArbitrated is enabled
-                if (params.skipAlreadyArbitrated) {
+                if (params.options?.skipArbitrated) {
                   const existingLogs = await viemClient.getLogs({
                     address: addresses.trustedOracleArbiter,
                     event: arbitrationMadeEvent,
-                    args: { 
-                      obligation: attestation.uid, 
-                      oracle: viemClient.account.address 
+                    args: {
+                      obligation: attestation.uid,
+                      oracle: viemClient.account.address,
                     },
                     fromBlock: "earliest",
                     toBlock: "latest",
                   });
-                  
+
                   if (existingLogs.length > 0) {
                     return; // Skip if already arbitrated
                   }
@@ -609,7 +630,7 @@ export const makeOracleClient = (
 
                 const obligation = decodeAbiParameters(
                   params.fulfillment.obligationAbi,
-                  attestation.data,
+                  attestation.data
                 );
 
                 const _decision = await params.arbitrate(obligation);
@@ -631,161 +652,21 @@ export const makeOracleClient = (
                       attestation: Attestation;
                       obligation: DecodeAbiParametersReturnType<ObligationData>;
                       decision: boolean | null;
-                    },
+                    }
                   );
-              }),
+              })
           ),
         pollingInterval: optimalInterval,
       });
 
       return { decisions, unwatch };
-    },
-    listenAndArbitrateNewFulfillments: async <ObligationData extends readonly AbiParameter[]>(
-      params: ArbitrateParams<ObligationData> & {
-        onlyIfEscrowDemandsCurrentOracle?: boolean;
-        skipAlreadyArbitrated?: boolean;
-        onAfterArbitrate?: (decision: {
-          hash: `0x${string}`;
-          attestation: Attestation;
-          obligation: DecodeAbiParametersReturnType<ObligationData>;
-          decision: boolean | null;
-        }) => Promise<void>;
-        pollingInterval?: number;
-      },
-    ) => {
-      // Use optimal polling interval based on transport type
-      const optimalInterval = getOptimalPollingInterval(viemClient, params.pollingInterval);
-
-      const unwatch = viemClient.watchEvent({
-        address: addresses.eas,
-        event: attestedEvent,
-        args: {
-          recipient: params.fulfillment.recipient,
-          attester: params.fulfillment.attester,
-          schemaUID: params.fulfillment.schemaUID,
-        },
-        onLogs: async (logs) =>
-          await Promise.all(
-            logs
-              .filter(
-                ($) =>
-                  !params.fulfillment.uid ||
-                  $.args.uid === params.fulfillment.uid,
-              )
-              .map(async (log) => {
-                if (
-                  params.fulfillment.uid &&
-                  log.args.uid !== params.fulfillment.uid
-                )
-                  return;
-
-                const attestation = await getAttestation(
-                  viemClient,
-                  log.args.uid!,
-                  addresses,
-                );
-
-                if (
-                  !validateAttestationIntrinsics(
-                    attestation,
-                    params.fulfillment,
-                  )
-                )
-                  return;
-
-                if (params.onlyIfEscrowDemandsCurrentOracle) {
-                  if (!attestation.refUID) {
-                    return; // Skip if no escrow reference when this option is enabled
-                  }
-
-                  const escrowAttestation = await getAttestation(
-                    viemClient,
-                    attestation.refUID,
-                    addresses,
-                  );
-                  if (!escrowAttestation) return;
-
-                  try {
-                    // First decode the escrow as arbiter demand
-                    const arbiterDemand = decodeAbiParameters(
-                      arbiterDemandAbi,
-                      escrowAttestation.data,
-                    )[0];
-                    
-                    // Then decode the demand as trusted oracle demand
-                    const trustedOracleDemand = decodeAbiParameters(
-                      trustedOracleDemandAbi,
-                      arbiterDemand.demand,
-                    )[0];
-                    
-                    if (
-                      trustedOracleDemand.oracle.toLowerCase() !==
-                      viemClient.account.address.toLowerCase()
-                    )
-                      return; // Skip if the oracle doesn't match
-                  } catch {
-                    return; // Skip if decoding fails
-                  }
-                }
-
-                // Check if arbitration already exists if skipAlreadyArbitrated is enabled
-                if (params.skipAlreadyArbitrated) {
-                  const existingLogs = await viemClient.getLogs({
-                    address: addresses.trustedOracleArbiter,
-                    event: arbitrationMadeEvent,
-                    args: { 
-                      obligation: attestation.uid, 
-                      oracle: viemClient.account.address 
-                    },
-                    fromBlock: "earliest",
-                    toBlock: "latest",
-                  });
-                  
-                  if (existingLogs.length > 0) {
-                    return; // Skip if already arbitrated
-                  }
-                }
-
-                const obligation = decodeAbiParameters(
-                  params.fulfillment.obligationAbi,
-                  attestation.data,
-                );
-
-                const _decision = await params.arbitrate(obligation);
-                if (_decision === null) return null;
-                const hash = await arbitrateOnchain(attestation.uid, _decision);
-
-                const decision = {
-                  hash,
-                  attestation,
-                  obligation,
-                  decision: _decision,
-                };
-
-                _decision !== null &&
-                  params.onAfterArbitrate &&
-                  params.onAfterArbitrate(
-                    decision as {
-                      hash: `0x${string}`;
-                      attestation: Attestation;
-                      obligation: DecodeAbiParametersReturnType<ObligationData>;
-                      decision: boolean | null;
-                    },
-                  );
-              }),
-          ),
-        pollingInterval: optimalInterval,
-      });
-
-      return { unwatch };
     },
     arbitratePastForEscrow,
     listenAndArbitrateForEscrow: async <
       ObligationData extends readonly AbiParameter[],
-      DemandData extends readonly AbiParameter[],
+      DemandData extends readonly AbiParameter[]
     >(
       params: ArbitrateEscrowParams<ObligationData, DemandData> & {
-        skipAlreadyArbitrated?: boolean;
         onAfterArbitrate?: (decision: {
           hash: `0x${string}`;
           attestation: Attestation;
@@ -795,17 +676,68 @@ export const makeOracleClient = (
           decision: boolean | null;
         }) => Promise<void>;
         pollingInterval?: number;
-      },
+      }
     ) => {
-      const decisions = await arbitratePastForEscrow(params);
-      const escrowsMap = new Map<
-        `0x${string}`,
-        (typeof decisions)["escrows"][0]
-      >();
-      decisions.escrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
+      let decisions, escrowsMap: any;
+      if (params.options?.onlyNew) {
+        const pastEscrows = await getObligations(
+          params.escrow,
+          arbiterDemandAbi,
+          {
+            fromBlock: "earliest",
+            toBlock: "latest",
+          }
+        )
+          .then((obligations) =>
+            Promise.all(
+              obligations
+                .filter(
+                  ($) =>
+                    $.obligation[0].arbiter.toLowerCase() ===
+                    addresses.trustedOracleArbiter.toLowerCase()
+                )
+                .map(async ({ log, attestation, obligation }) => {
+                  const trustedOracleDemand = decodeAbiParameters(
+                    trustedOracleDemandAbi,
+                    obligation[0].demand
+                  )[0];
+
+                  if (
+                    trustedOracleDemand.oracle.toLowerCase() !==
+                    viemClient.account.address.toLowerCase()
+                  )
+                    return null;
+
+                  const demand = decodeAbiParameters(
+                    params.escrow.demandAbi,
+                    trustedOracleDemand.data
+                  );
+
+                  return {
+                    log,
+                    attestation,
+                    obligation,
+                    demand,
+                  };
+                })
+            )
+          )
+          .then(($) => $.filter(($) => $ !== null));
+
+        // Create a map that includes past escrows and will be updated with new ones
+        escrowsMap = new Map<`0x${string}`, (typeof pastEscrows)[0]>();
+        pastEscrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
+      } else {
+        decisions = await arbitratePastForEscrow(params);
+        escrowsMap = new Map<`0x${string}`, (typeof decisions)["escrows"][0]>();
+        decisions.escrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
+      }
 
       // Use optimal polling interval based on transport type
-      const optimalInterval = getOptimalPollingInterval(viemClient, params.pollingInterval);
+      const optimalInterval = getOptimalPollingInterval(
+        viemClient,
+        params.pollingInterval
+      );
 
       const unwatchEscrows = viemClient.watchEvent({
         address: addresses.eas,
@@ -825,16 +757,19 @@ export const makeOracleClient = (
               const attestation = await getAttestation(
                 viemClient,
                 log.args.uid!,
-                addresses,
+                addresses
               );
 
               if (!validateAttestationIntrinsics(attestation, params.escrow))
                 return;
 
-              const obligation = decodeAbiParameters(arbiterDemandAbi, attestation.data);
+              const obligation = decodeAbiParameters(
+                arbiterDemandAbi,
+                attestation.data
+              );
               const trustedOracleDemand = decodeAbiParameters(
                 trustedOracleDemandAbi,
-                obligation[0].demand,
+                obligation[0].demand
               )[0];
               if (
                 trustedOracleDemand.oracle.toLowerCase() !==
@@ -844,7 +779,7 @@ export const makeOracleClient = (
 
               const demand = decodeAbiParameters(
                 params.escrow.demandAbi,
-                trustedOracleDemand.data,
+                trustedOracleDemand.data
               );
 
               const escrow = {
@@ -854,7 +789,7 @@ export const makeOracleClient = (
                 demand,
               };
               escrowsMap.set(attestation.uid, escrow);
-            }),
+            })
           );
         },
         pollingInterval: optimalInterval,
@@ -881,7 +816,7 @@ export const makeOracleClient = (
               const attestation = await getAttestation(
                 viemClient,
                 log.args.uid!,
-                addresses,
+                addresses
               );
 
               if (!validateAttestationIntrinsics(attestation, {})) return;
@@ -890,18 +825,18 @@ export const makeOracleClient = (
               const escrow = escrowsMap.get(attestation.refUID)!;
 
               // Check if arbitration already exists if skipAlreadyArbitrated is enabled
-              if (params.skipAlreadyArbitrated) {
+              if (params.options?.skipArbitrated) {
                 const existingLogs = await viemClient.getLogs({
                   address: addresses.trustedOracleArbiter,
                   event: arbitrationMadeEvent,
-                  args: { 
-                    obligation: attestation.uid, 
-                    oracle: viemClient.account.address 
+                  args: {
+                    obligation: attestation.uid,
+                    oracle: viemClient.account.address,
                   },
                   fromBlock: "earliest",
                   toBlock: "latest",
                 });
-                
+
                 if (existingLogs.length > 0) {
                   return; // Skip if already arbitrated
                 }
@@ -909,12 +844,12 @@ export const makeOracleClient = (
 
               const obligation = decodeAbiParameters(
                 params.fulfillment.obligationAbi,
-                attestation.data,
+                attestation.data
               );
 
               const _decision = await params.arbitrate(
                 obligation,
-                escrow.demand,
+                escrow.demand
               );
               if (_decision === null) return;
               const hash = await arbitrateOnchain(attestation.uid, _decision);
@@ -938,9 +873,9 @@ export const makeOracleClient = (
                     demand: DecodeAbiParametersReturnType<DemandData>;
                     escrowAttestation: Attestation;
                     decision: boolean | null;
-                  },
+                  }
                 );
-            }),
+            })
           );
         },
         pollingInterval: optimalInterval,
@@ -952,223 +887,6 @@ export const makeOracleClient = (
       };
 
       return { decisions, unwatch };
-    },
-    listenAndArbitrateNewFulfillmentsForEscrow: async <
-      ObligationData extends readonly AbiParameter[],
-      DemandData extends readonly AbiParameter[],
-    >(
-      params: ArbitrateEscrowParams<ObligationData, DemandData> & {
-        skipAlreadyArbitrated?: boolean;
-        onAfterArbitrate?: (decision: {
-          hash: `0x${string}`;
-          attestation: Attestation;
-          obligation: DecodeAbiParametersReturnType<ObligationData>;
-          demand: DecodeAbiParametersReturnType<DemandData>;
-          escrowAttestation: Attestation;
-          decision: boolean | null;
-        }) => Promise<void>;
-        pollingInterval?: number;
-      },
-    ) => {
-      // First, get all past escrows to initialize the map
-      // We need past escrows so new fulfillments can match against them
-      const pastEscrows = await getObligations(params.escrow, arbiterDemandAbi, {
-        fromBlock: "earliest",
-        toBlock: "latest",
-      })
-        .then((obligations) =>
-          Promise.all(
-            obligations
-              .filter(
-                ($) =>
-                  $.obligation[0].arbiter.toLowerCase() ===
-                  addresses.trustedOracleArbiter.toLowerCase(),
-              )
-              .map(async ({ log, attestation, obligation }) => {
-                const trustedOracleDemand = decodeAbiParameters(
-                  trustedOracleDemandAbi,
-                  obligation[0].demand,
-                )[0];
-
-                if (
-                  trustedOracleDemand.oracle.toLowerCase() !==
-                  viemClient.account.address.toLowerCase()
-                )
-                  return null;
-
-                const demand = decodeAbiParameters(
-                  params.escrow.demandAbi,
-                  trustedOracleDemand.data,
-                );
-
-                return {
-                  log,
-                  attestation,
-                  obligation,
-                  demand,
-                };
-              }),
-          ),
-        )
-        .then(($) => $.filter(($) => $ !== null));
-
-      // Create a map that includes past escrows and will be updated with new ones
-      const escrowsMap = new Map<`0x${string}`, (typeof pastEscrows)[0]>();
-      pastEscrows.forEach(($) => escrowsMap.set($.attestation.uid, $));
-
-      // Use optimal polling interval based on transport type
-      const optimalInterval = getOptimalPollingInterval(viemClient, params.pollingInterval);
-
-      // Listen for new escrows to add to the map
-      const unwatchEscrows = viemClient.watchEvent({
-        address: addresses.eas,
-        event: attestedEvent,
-        args: {
-          recipient: params.escrow.recipient,
-          attester: params.escrow.attester,
-          schemaUID: params.escrow.schemaUID,
-        },
-        onLogs: async (logs) => {
-          await Promise.all(
-            logs.map(async (log) => {
-              if (!log.args.uid) return;
-              if (params.escrow.uid && log.args.uid !== params.escrow.uid)
-                return;
-
-              const attestation = await getAttestation(
-                viemClient,
-                log.args.uid!,
-                addresses,
-              );
-
-              if (!validateAttestationIntrinsics(attestation, params.escrow))
-                return;
-
-              const obligation = decodeAbiParameters(arbiterDemandAbi, attestation.data);
-              const trustedOracleDemand = decodeAbiParameters(
-                trustedOracleDemandAbi,
-                obligation[0].demand,
-              )[0];
-              if (
-                trustedOracleDemand.oracle.toLowerCase() !==
-                viemClient.account.address.toLowerCase()
-              )
-                return;
-
-              const demand = decodeAbiParameters(
-                params.escrow.demandAbi,
-                trustedOracleDemand.data,
-              );
-
-              const escrow = {
-                log,
-                attestation,
-                obligation,
-                demand,
-              };
-              escrowsMap.set(attestation.uid, escrow);
-            }),
-          );
-        },
-        pollingInterval: optimalInterval,
-      });
-
-      // Listen for new fulfillments that match any escrow (past or new)
-      const unwatchFulfillments = viemClient.watchEvent({
-        address: addresses.eas,
-        event: attestedEvent,
-        args: {
-          recipient: params.fulfillment.recipient,
-          attester: params.fulfillment.attester,
-          schemaUID: params.fulfillment.schemaUID,
-        },
-        onLogs: async (logs) => {
-          await Promise.all(
-            logs.map(async (log) => {
-              if (!log.args.uid) return;
-              if (
-                params.fulfillment.uid &&
-                log.args.uid !== params.fulfillment.uid
-              )
-                return;
-
-              const attestation = await getAttestation(
-                viemClient,
-                log.args.uid!,
-                addresses,
-              );
-
-              if (!validateAttestationIntrinsics(attestation, {})) return;
-              if (!escrowsMap.has(attestation.refUID)) return;
-
-              const escrow = escrowsMap.get(attestation.refUID)!;
-
-              // Check if arbitration already exists if skipAlreadyArbitrated is enabled
-              if (params.skipAlreadyArbitrated) {
-                const existingLogs = await viemClient.getLogs({
-                  address: addresses.trustedOracleArbiter,
-                  event: arbitrationMadeEvent,
-                  args: { 
-                    obligation: attestation.uid, 
-                    oracle: viemClient.account.address 
-                  },
-                  fromBlock: "earliest",
-                  toBlock: "latest",
-                });
-                
-                if (existingLogs.length > 0) {
-                  return; // Skip if already arbitrated
-                }
-              }
-
-              const obligation = decodeAbiParameters(
-                params.fulfillment.obligationAbi,
-                attestation.data,
-              );
-
-              const _decision = await params.arbitrate(
-                obligation,
-                escrow.demand,
-              );
-              if (_decision === null) return;
-              const hash = await arbitrateOnchain(attestation.uid, _decision);
-
-              const decision = {
-                hash,
-                attestation,
-                obligation,
-                demand: escrow.demand,
-                escrowAttestation: escrow.attestation,
-                decision: _decision,
-              };
-
-              _decision !== null &&
-                params.onAfterArbitrate &&
-                params.onAfterArbitrate(
-                  decision as {
-                    hash: `0x${string}`;
-                    attestation: Attestation;
-                    obligation: DecodeAbiParametersReturnType<ObligationData>;
-                    demand: DecodeAbiParametersReturnType<DemandData>;
-                    escrowAttestation: Attestation;
-                    decision: boolean | null;
-                  },
-                );
-            }),
-          );
-        },
-        pollingInterval: optimalInterval,
-      });
-
-      const unwatch = () => {
-        unwatchEscrows();
-        unwatchFulfillments();
-      };
-
-      return { 
-        pastEscrows,
-        unwatch
-      };
     },
   };
 };
@@ -1188,35 +906,53 @@ const passesTimeFilters = (attestation: any, filters: TimeFilters): boolean => {
     return false;
   }
 
-  if (filters.minAge && (currentTime - attestation.time) < filters.minAge)
+  if (filters.minAge && currentTime - attestation.time < filters.minAge)
     return false;
-  if (filters.maxAge && (currentTime - attestation.time) > filters.maxAge)
+  if (filters.maxAge && currentTime - attestation.time > filters.maxAge)
     return false;
 
   return true;
 };
 
 // Helper function to check if attestation passes property filters
-const passesAttestationFilters = (attestation: any, filters: AttestationFilters): boolean => {
-  if (filters.specificAttester && attestation.attester.toLowerCase() !== filters.specificAttester.toLowerCase()) {
+const passesAttestationFilters = (
+  attestation: any,
+  filters: AttestationFilters
+): boolean => {
+  if (
+    filters.specificAttester &&
+    attestation.attester.toLowerCase() !==
+      filters.specificAttester.toLowerCase()
+  ) {
     return false;
   }
 
-  if (filters.excludeAttesters?.some(attester => 
-    attestation.attester.toLowerCase() === attester.toLowerCase()
-  )) {
+  if (
+    filters.excludeAttesters?.some(
+      (attester) =>
+        attestation.attester.toLowerCase() === attester.toLowerCase()
+    )
+  ) {
     return false;
   }
 
-  if (filters.specificRecipient && attestation.recipient.toLowerCase() !== filters.specificRecipient.toLowerCase()) {
+  if (
+    filters.specificRecipient &&
+    attestation.recipient.toLowerCase() !==
+      filters.specificRecipient.toLowerCase()
+  ) {
     return false;
   }
 
-  if (filters.excludeRevoked && attestation.revocationTime > BigInt(0)) return false;
+  if (filters.excludeRevoked && attestation.revocationTime > BigInt(0))
+    return false;
 
   if (filters.requireRefUID && !attestation.refUID) return false;
 
-  if (filters.specificSchema && attestation.schema.toLowerCase() !== filters.specificSchema.toLowerCase()) {
+  if (
+    filters.specificSchema &&
+    attestation.schema.toLowerCase() !== filters.specificSchema.toLowerCase()
+  ) {
     return false;
   }
 
