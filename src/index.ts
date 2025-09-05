@@ -283,24 +283,23 @@ export const makeMinimalClient = (
       zeroAddress,
   };
 
-  function makeExtendableClient<T extends object>(base: T) {
-    return {
+  const createExtendableClient = <T extends object>(base: T) => {
+    const extendableBase = {
       ...base,
-      extend<U extends object>(extender: (client: T) => U): T & U {
+      extend: <U extends object>(extender: (client: T) => U) => {
         const extensions = extender(base);
-        return makeExtendableClient({
+        return createExtendableClient({
           ...base,
           ...extensions,
-        }) as T & U;
+        });
       },
     };
-  }
+    return extendableBase;
+  };
 
   const client = {
     /** The underlying Viem client */
     viemClient,
-
-    makeExtendableClient,
 
     /** Address of the account used to create this client */
     address: viemClient.account.address,
@@ -398,7 +397,7 @@ export const makeMinimalClient = (
     },
   };
 
-  return makeExtendableClient(client);
+  return createExtendableClient(client);
 };
 
 export * from "./config";
