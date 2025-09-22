@@ -342,6 +342,9 @@ export const makeOracleClient = (
           obligations
             .filter(
               ($) =>
+                $ && 
+                $.obligation && 
+                $.obligation[0] &&
                 $.obligation[0].arbiter.toLowerCase() ===
                 addresses.trustedOracleArbiter.toLowerCase()
             )
