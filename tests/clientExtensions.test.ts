@@ -1,11 +1,12 @@
+import { describe, expect, it } from "bun:test";
 import { makeMinimalClient } from "../src";
-import { WalletClient, Transport, Chain, Account } from "viem";
+import type { WalletClient, Transport, Chain, Account } from "viem";
 
 describe("Client Extension Tests", () => {
   it("can chain multiple extensions", () => {
     // Mock wallet client
     const mockWalletClient = {
-      extend: jest.fn(() => mockWalletClient),
+      extend: () => mockWalletClient,
       account: { address: "0xMockAddress" },
       chain: { name: "MockChain" },
     } as unknown as WalletClient<Transport, Chain, Account>;
@@ -13,17 +14,17 @@ describe("Client Extension Tests", () => {
     // Create minimal client
     const client = makeMinimalClient(mockWalletClient);
 
-    // Define extensions
-    const extensionA = (baseClient: any) => ({
+    const extensionA = (_baseClient: unknown) => ({
       methodA: () => "Extension A",
     });
 
-    const extensionB = (baseClient: any) => ({
+    const firstExtension = client.extend(extensionA);
+
+    const extensionB = (_baseClient: unknown) => ({
       methodB: () => "Extension B",
     });
 
-    // Apply extensions
-    const extendedClient = client.extend(extensionA).extend(extensionB);
+    const extendedClient = firstExtension.extend(extensionB);
 
     // Verify extensions
     expect(extendedClient.methodA()).toBe("Extension A");

@@ -76,7 +76,7 @@ describe("Client Extension Tests", () => {
     test("minimal client can be extended with custom functionality", () => {
         const minimalClient = makeMinimalClient(walletClient, testContext.addresses);
 
-        const customClient = minimalClient.extend((client: typeof minimalClient) => ({
+        const customClient = minimalClient.extend((client) => ({
             erc20: makeErc20Client(client.viemClient, testContext.addresses),
         }));
 
@@ -95,12 +95,12 @@ describe("Client Extension Tests", () => {
     test("can chain multiple extensions", () => {
         const minimalClient = makeMinimalClient(walletClient, testContext.addresses);
 
-        const firstExtension = minimalClient.extend((client: typeof minimalClient) => ({
+        const firstExtension = minimalClient.extend((client) => ({
             erc20: testContext.aliceClient.erc20,
             customProp1: "first",
         }));
 
-        const secondExtension = (firstExtension as any).extend((client: any) => ({
+        const secondExtension = firstExtension.extend((client) => ({
             erc721: testContext.aliceClient.erc721,
             customProp2: "second",
             // Fix: access the extended client properties correctly
@@ -117,7 +117,7 @@ describe("Client Extension Tests", () => {
     test("makeClient can be extended with custom functionality", () => {
         const client = makeClient(walletClient, testContext.addresses);
 
-        const extendedClient = client.extend((baseClient: typeof client) => ({
+        const extendedClient = client.extend((_baseClient: unknown) => ({
             customMethod: () => "Custom Functionality",
         }));
 
@@ -133,15 +133,15 @@ describe("Client Extension Tests", () => {
     test("makeClient can chain multiple extensions", () => {
         const client = makeClient(walletClient, testContext.addresses);
 
-        const firstExtension = client.extend((baseClient: typeof client) => ({
+        const firstExtension = client.extend((_baseClient: unknown) => ({
             customMethod1: () => "First Extension",
         }));
 
-        const secondExtension = firstExtension.extend((baseClient: typeof firstExtension) => ({
+        const secondExtension = firstExtension.extend((_baseClient: unknown) => ({
             customMethod2: () => "Second Extension",
         }));
 
-        const thirdExtension = secondExtension.extend((baseClient: typeof secondExtension) => ({
+        const thirdExtension = secondExtension.extend((_baseClient: unknown) => ({
             customMethod3: () => "Third Extension",
         }));
 

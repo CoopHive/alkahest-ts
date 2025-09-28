@@ -283,15 +283,19 @@ export const makeMinimalClient = (
 			zeroAddress,
 	};
 
-	function makeExtendableClient<T extends object>(base: T) {
+	type ExtendableClient<T extends object> = T & {
+		extend<U extends object>(extender: (client: T) => U): ExtendableClient<T & U>;
+	};
+
+	function makeExtendableClient<T extends object>(base: T): ExtendableClient<T> {
 		return {
 			...base,
-			extend<U extends object>(extender: (client: T) => U): T & U {
+			extend<U extends object>(extender: (client: T) => U): ExtendableClient<T & U> {
 				const extensions = extender(base);
 				return makeExtendableClient({
 					...base,
 					...extensions,
-				}) as T & U;
+				});
 			},
 		};
 	}

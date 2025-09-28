@@ -245,15 +245,15 @@ test("tradeErc20ForCustom", async () => {
   //     string result;
   // }
   //
-  // JobResultObligation.doObligation
-  // function doObligation(
+  // JobResultObligation.makeStatement
+  // function makeStatement(
   //     StatementData calldata data,
   //     bytes32 refUID
   // ) public returns (bytes32)
   const resultHash = await clientSeller.viemClient.writeContract({
     address: "0x823a06994B4e817a5127c042dBd2742CcFdF2076", // JobResultObligation custom deployment
     abi: jobResultObligationAbi.abi,
-    functionName: "doObligation",
+    functionName: "makeStatement",
     args: [
       { result },
       "0x0000000000000000000000000000000000000000000000000000000000000000", // bytes32 0

@@ -27,6 +27,7 @@ import { abi as erc20EscrowAbi } from "../contracts/ERC20EscrowObligation";
 import { abi as erc20PaymentAbi } from "../contracts/ERC20PaymentObligation";
 import { abi as erc20Abi } from "../contracts/ERC20Permit";
 import { abi as erc721EscrowAbi } from "../contracts/ERC721EscrowObligation";
+import { abi as tokenBundleEscrowAbi } from "../contracts/TokenBundleEscrowObligation";
 import { abi as tokenBundlePaymentAbi } from "../contracts/TokenBundlePaymentObligation";
 import { abi as easAbi } from "../contracts/IEAS";
 import type { ApprovalPurpose } from "../types";
@@ -44,6 +45,10 @@ const erc721EscrowDoObligationFunction = getAbiItem({
   abi: erc721EscrowAbi.abi,
   name: 'doObligation'
 });
+const tokenBundleEscrowDecodeFunction = getAbiItem({
+  abi: tokenBundleEscrowAbi.abi,
+  name: 'decodeObligationData'
+});
 const tokenBundlePaymentDecodeFunction = getAbiItem({
   abi: tokenBundlePaymentAbi.abi,
   name: 'decodeObligationData'
@@ -53,6 +58,7 @@ const tokenBundlePaymentDecodeFunction = getAbiItem({
 const erc20EscrowObligationDataType = erc20EscrowDoObligationFunction.inputs[0];
 const erc20PaymentObligationDataType = erc20PaymentDoObligationFunction.inputs[0];
 const erc721EscrowObligationDataType = erc721EscrowDoObligationFunction.inputs[0];
+const tokenBundleEscrowObligationDataType = tokenBundleEscrowDecodeFunction.outputs[0];
 const tokenBundlePaymentObligationDataType = tokenBundlePaymentDecodeFunction.outputs[0];
 
 export const makeErc20Client = (
@@ -1141,7 +1147,7 @@ export const makeErc20Client = (
         args: [buyAttestation],
       });
       const buyAttestationObligationData = decodeAbiParameters(
-        [tokenBundlePaymentObligationDataType],
+        [tokenBundleEscrowObligationDataType],
         buyAttestationData.data,
       )[0];
       const demandData = decodeAbiParameters(
