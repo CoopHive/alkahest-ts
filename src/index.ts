@@ -1,9 +1,13 @@
 import {
+	decodeAbiParameters,
 	parseAbiItem,
+	parseAbiParameters,
 	parseEventLogs,
 	publicActions,
+	type AbiParameter,
 	type Account,
 	type Chain,
+	type DecodeAbiParametersReturnType,
 	type Transport,
 	type WalletClient,
 } from "viem";
@@ -399,6 +403,113 @@ export const makeMinimalClient = (
 					pollingInterval: optimalInterval,
 				});
 			});
+		},
+
+		/**
+		 * Extract obligation data from a fulfillment attestation
+		 * @param obligationAbi - ABI parameters for the obligation data
+		 * @param attestation - The attestation containing the obligation data
+		 * @returns Decoded obligation data
+		 *
+		 * @example
+		 * ```ts
+		 * import { parseAbiParameters } from "viem";
+		 *
+		 * const obligationAbi = parseAbiParameters("(string item)");
+		 * const obligation = client.extractObligationData(obligationAbi, attestation);
+		 * ```
+		 */
+		extractObligationData: <ObligationData extends readonly AbiParameter[]>(
+			obligationAbi: ObligationData,
+			attestation: { data: `0x${string}` },
+		): DecodeAbiParametersReturnType<ObligationData> => {
+			return decodeAbiParameters(obligationAbi, attestation.data);
+		},
+
+		/**
+		 * Get the escrow attestation that this fulfillment references via refUID
+		 * @param fulfillment - The fulfillment attestation
+		 * @returns The escrow attestation
+		 *
+		 * @example
+		 * ```ts
+		 * const escrowAttestation = await client.getEscrowAttestation(fulfillmentAttestation);
+		 * ```
+		 */
+		getEscrowAttestation: async (fulfillment: { refUID: `0x${string}` }) => {
+			return await getAttestation(viemClient, fulfillment.refUID, addresses);
+		},
+
+		/**
+		 * Extract demand data from an escrow attestation
+		 * @param demandAbi - ABI parameters for the demand data
+		 * @param escrowAttestation - The escrow attestation
+		 * @returns Decoded demand data
+		 *
+		 * @example
+		 * ```ts
+		 * import { parseAbiParameters } from "viem";
+		 *
+		 * const demandAbi = parseAbiParameters("(address oracle, bytes data)");
+		 * const demand = client.extractDemandData(demandAbi, escrowAttestation);
+		 * ```
+		 */
+		extractDemandData: <DemandData extends readonly AbiParameter[]>(
+			demandAbi: DemandData,
+			escrowAttestation: { data: `0x${string}` },
+		): DecodeAbiParametersReturnType<DemandData> => {
+			const arbiterDemandAbi = parseAbiParameters("(address arbiter, bytes demand)");
+			const arbiterDemand = decodeAbiParameters(
+				arbiterDemandAbi,
+				escrowAttestation.data,
+			)[0];
+
+			const trustedOracleDemandAbi = parseAbiParameters("(address oracle, bytes data)");
+			const trustedOracleDemand = decodeAbiParameters(
+				trustedOracleDemandAbi,
+				arbiterDemand.demand,
+			)[0];
+
+			return decodeAbiParameters(demandAbi, trustedOracleDemand.data);
+		},
+
+		/**
+		 * Get escrow attestation and extract demand data in one call
+		 * @param demandAbi - ABI parameters for the demand data
+		 * @param fulfillment - The fulfillment attestation
+		 * @returns Tuple of [escrow attestation, decoded demand data]
+		 *
+		 * @example
+		 * ```ts
+		 * import { parseAbiParameters } from "viem";
+		 *
+		 * const demandAbi = parseAbiParameters("(address oracle, bytes data)");
+		 * const [escrow, demand] = await client.getEscrowAndDemand(demandAbi, fulfillment);
+		 * ```
+		 */
+		getEscrowAndDemand: async <DemandData extends readonly AbiParameter[]>(
+			demandAbi: DemandData,
+			fulfillment: { refUID: `0x${string}` },
+		): Promise<
+			[
+				Awaited<ReturnType<typeof getAttestation>>,
+				DecodeAbiParametersReturnType<DemandData>,
+			]
+		> => {
+			const escrow = await getAttestation(viemClient, fulfillment.refUID, addresses);
+
+			const arbiterDemandAbi = parseAbiParameters("(address arbiter, bytes demand)");
+			const arbiterDemand = decodeAbiParameters(arbiterDemandAbi, escrow.data)[0];
+
+			const trustedOracleDemandAbi = parseAbiParameters("(address oracle, bytes data)");
+			const trustedOracleDemand = decodeAbiParameters(
+				trustedOracleDemandAbi,
+				arbiterDemand.demand,
+			)[0];
+
+			const demand = decodeAbiParameters(demandAbi, trustedOracleDemand.data);
+
+			return [escrow, demand];
 		},
 	};
 
