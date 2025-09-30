@@ -1,7 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, test } from "bun:test";
 import {
   parseAbiParameters,
-  type DecodeAbiParametersReturnType,
   recoverMessageAddress,
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
@@ -17,8 +16,6 @@ let testContext: TestContext;
 
 const identityRegistry = new Map<`0x${string}`, number>();
 const identityChallenge = "proof-of-identity";
-
-type IdentityObligation = DecodeAbiParametersReturnType<typeof stringObligationAbi>;
 
 type IdentityFulfillment = {
   pubkey: `0x${string}`;
@@ -45,41 +42,6 @@ afterAll(async () => {
   await teardownTestEnvironment(testContext);
 });
 
-async function verifyIdentity(obligation: IdentityObligation) {
-  const payload = obligation[0]?.item;
-  if (!payload) return false;
-
-  let parsed: IdentityFulfillment;
-  try {
-    parsed = JSON.parse(payload) as IdentityFulfillment;
-  } catch {
-    return false;
-  }
-
-  const currentNonce = identityRegistry.get(parsed.pubkey);
-  if (currentNonce === undefined) return false;
-  if (parsed.nonce <= currentNonce) return false;
-
-  if (typeof parsed.signature !== "string" || parsed.signature.length !== 132) {
-    return false;
-  }
-
-  const message = `${parsed.data}:${parsed.nonce}`;
-  let recovered: `0x${string}`;
-  try {
-    recovered = await recoverMessageAddress({ message, signature: parsed.signature });
-  } catch {
-    return false;
-  }
-
-  if (recovered.toLowerCase() !== parsed.pubkey.toLowerCase()) {
-    return false;
-  }
-
-  identityRegistry.set(parsed.pubkey, parsed.nonce);
-  return true;
-}
-
 function createIdentityPayloadFactory(address: `0x${string}`, signer: ReturnType<typeof privateKeyToAccount>) {
   return async (nonce: number) => {
     const message = `${identityChallenge}:${nonce}`;
@@ -100,15 +62,49 @@ test("contextless offchain identity oracle flow", async () => {
   const identityAccount = privateKeyToAccount(generatePrivateKey());
   identityRegistry.set(identityAccount.address, 0);
 
-  const listener = await testContext.charlieClient.oracle.listenAndArbitrate({
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      recipient: testContext.bob,
-      obligationAbi: stringObligationAbi,
+  const listener = await testContext.charlieClient.oracle.listenAndArbitrate(
+    async (attestation) => {
+      // Extract obligation data
+      const obligation = testContext.charlieClient.extractObligationData(
+        stringObligationAbi,
+        attestation,
+      );
+
+      const payload = obligation[0]?.item;
+      if (!payload) return false;
+
+      let parsed: IdentityFulfillment;
+      try {
+        parsed = JSON.parse(payload) as IdentityFulfillment;
+      } catch {
+        return false;
+      }
+
+      const currentNonce = identityRegistry.get(parsed.pubkey);
+      if (currentNonce === undefined) return false;
+      if (parsed.nonce <= currentNonce) return false;
+
+      if (typeof parsed.signature !== "string" || parsed.signature.length !== 132) {
+        return false;
+      }
+
+      const message = `${parsed.data}:${parsed.nonce}`;
+      let recovered: `0x${string}`;
+      try {
+        recovered = await recoverMessageAddress({ message, signature: parsed.signature });
+      } catch {
+        return false;
+      }
+
+      if (recovered.toLowerCase() !== parsed.pubkey.toLowerCase()) {
+        return false;
+      }
+
+      identityRegistry.set(parsed.pubkey, parsed.nonce);
+      return true;
     },
-    skipAlreadyArbitrated: true,
-    arbitrate: verifyIdentity,
-  });
+    { skipAlreadyArbitrated: true },
+  );
 
   const createPayload = createIdentityPayloadFactory(
     identityAccount.address,
@@ -119,7 +115,7 @@ test("contextless offchain identity oracle flow", async () => {
   const { attested: goodFulfillment } =
     await testContext.bobClient.stringObligation.doObligation(goodPayload);
 
-  await testContext.bobClient.arbiters.requestArbitrationFromTrustedOracle(
+  await testContext.bobClient.oracle.requestArbitration(
     goodFulfillment.uid,
     testContext.charlie,
   );
@@ -136,7 +132,7 @@ test("contextless offchain identity oracle flow", async () => {
   const { attested: badFulfillment } =
     await testContext.bobClient.stringObligation.doObligation(badPayload);
 
-  await testContext.bobClient.arbiters.requestArbitrationFromTrustedOracle(
+  await testContext.bobClient.oracle.requestArbitration(
     badFulfillment.uid,
     testContext.charlie,
   );

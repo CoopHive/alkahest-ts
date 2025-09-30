@@ -196,30 +196,31 @@ test("asynchronous offchain oracle uptime flow", async () => {
 
   const worker = startSchedulerWorker(scheduler, testContext.charlieClient.arbiters);
 
-  const listener = await testContext.charlieClient.oracle.listenAndArbitrateForEscrow({
-    escrow: {
-      attester: testContext.addresses.erc20EscrowObligation,
-      recipient: testContext.alice,
-      uid: escrow.uid,
-      demandAbi: uptimeDemandAbi,
-    },
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      recipient: testContext.bob,
-      refUID: escrow.uid,
-      obligationAbi: stringObligationAbi,
-    },
-    skipAlreadyArbitrated: true,
-    arbitrate: async (obligation, demandData) => {
+  const listener = await testContext.charlieClient.oracle.listenAndArbitrate(
+    async (attestation) => {
       const ctx = getScheduler();
       if (!ctx) return null;
 
+      // Extract obligation data
+      const obligation = testContext.charlieClient.extractObligationData(
+        stringObligationAbi,
+        attestation,
+      );
+
       const statement = obligation[0];
-      const payloadHex = demandData[0]?.payload;
-      if (!statement?.item || !payloadHex) return null;
+      if (!statement?.item) return null;
 
       const fulfillmentUid = ctx.urlIndex.get(statement.item);
       if (!fulfillmentUid || ctx.jobDb.has(fulfillmentUid)) return null;
+
+      // Get escrow and extract demand data
+      const [, demandData] = await testContext.charlieClient.getEscrowAndDemand(
+        uptimeDemandAbi,
+        attestation,
+      );
+
+      const payloadHex = demandData[0]?.payload;
+      if (!payloadHex) return null;
 
       let parsed: UptimeDemand;
       try {
@@ -244,9 +245,10 @@ test("asynchronous offchain oracle uptime flow", async () => {
       notifyScheduler(ctx);
       return null;
     },
-  });
+    { skipAlreadyArbitrated: true },
+  );
 
-  await testContext.bobClient.arbiters.requestArbitrationFromTrustedOracle(
+  await testContext.bobClient.oracle.requestArbitration(
     fulfillment.uid,
     testContext.charlie,
   );

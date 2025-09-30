@@ -71,12 +71,9 @@ describe("WebSocket Transport Support", () => {
       // Both clients should have the same methods
       expect(typeof httpClient.waitForFulfillment).toBe("function");
       expect(typeof wsClient.waitForFulfillment).toBe("function");
-      
+
       expect(typeof httpClient.oracle.listenAndArbitrate).toBe("function");
       expect(typeof wsClient.oracle.listenAndArbitrate).toBe("function");
-      
-      expect(typeof httpClient.oracle.listenAndArbitrateForEscrow).toBe("function");
-      expect(typeof wsClient.oracle.listenAndArbitrateForEscrow).toBe("function");
     });
 
     test("transport types should be correctly identified", () => {

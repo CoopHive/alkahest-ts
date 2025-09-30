@@ -84,28 +84,29 @@ test("synchronous offchain oracle capitalization flow", async () => {
 			escrow.uid,
 		);
 
-	await testContext.bobClient.arbiters.requestArbitrationFromTrustedOracle(
+	// Request arbitration
+	await testContext.bobClient.oracle.requestArbitration(
 		fulfillment.uid,
 		testContext.charlie,
 	);
 
 	const { decisions, unwatch } =
-		await testContext.charlieClient.oracle.listenAndArbitrateForEscrow({
-			escrow: {
-				attester: testContext.addresses.erc20EscrowObligation,
-				recipient: testContext.alice,
-				uid: escrow.uid,
-				demandAbi: shellDemandAbi,
-			},
-			fulfillment: {
-				attester: testContext.addresses.stringObligation,
-				recipient: testContext.bob,
-				obligationAbi: stringObligationAbi,
-			},
-			skipAlreadyArbitrated: true,
-			arbitrate: async (obligation, demandData) => {
+		await testContext.charlieClient.oracle.listenAndArbitrate(
+			async (attestation) => {
+				// Extract obligation data
+				const obligation = testContext.charlieClient.extractObligationData(
+					stringObligationAbi,
+					attestation,
+				);
+
 				const statement = obligation[0]?.item;
 				if (!statement) return false;
+
+				// Get escrow and extract demand data
+				const [, demandData] = await testContext.charlieClient.getEscrowAndDemand(
+					shellDemandAbi,
+					attestation,
+				);
 
 				const payloadHex = demandData[0]?.payload;
 				if (!payloadHex) return false;
@@ -140,11 +141,12 @@ test("synchronous offchain oracle capitalization flow", async () => {
 
 				return true;
 			},
-		});
+			{ skipAlreadyArbitrated: true },
+		);
 
 	unwatch();
 
-	decisions.decisions.forEach((decision) => {
+	decisions.forEach((decision) => {
 		expect(decision?.decision).toBe(true);
 	});
 
