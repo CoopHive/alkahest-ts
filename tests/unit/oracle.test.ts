@@ -444,3 +444,143 @@ test("arbitratePast with escrow demand extraction", async () => {
 
   expect(collectionHash).toBeTruthy();
 });
+
+test("waitForArbitration - wait for oracle decision", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
+  });
+
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  const { attested: fulfillment } =
+    await testContext.bobClient.stringObligation.doObligation(
+      "foo",
+      escrow.uid,
+    );
+
+  // Request arbitration
+  const requestHash = await testContext.bobClient.oracle.requestArbitration(
+    fulfillment.uid,
+    testContext.bob,
+  );
+
+  // Wait for arbitration request to be confirmed
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: requestHash,
+  });
+
+  // Start waiting for arbitration in parallel
+  const waitPromise = testContext.bobClient.oracle.waitForArbitration(
+    fulfillment.uid,
+    testContext.bob,
+  );
+
+  // Arbitrate the fulfillment
+  const obligationAbi = parseAbiParameters("(string item)");
+  const decisions = await testContext.bobClient.oracle.arbitratePast(
+    async (attestation) => {
+      const obligation = testContext.bobClient.extractObligationData(
+        obligationAbi,
+        attestation,
+      );
+      return obligation[0].item === "foo";
+    },
+  );
+
+  expect(decisions.length).toBe(1);
+  expect(decisions[0].decision).toBe(true);
+
+  // Wait for the arbitration result
+  const arbitrationResult = await waitPromise;
+
+  expect(arbitrationResult.obligation).toBe(fulfillment.uid);
+  expect(arbitrationResult.oracle?.toLowerCase()).toBe(testContext.bob.toLowerCase());
+  expect(arbitrationResult.decision).toBe(true);
+
+  // Now we can collect the escrow
+  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
+    escrow.uid,
+    fulfillment.uid,
+  );
+
+  expect(collectionHash).toBeTruthy();
+});
+
+test("waitForArbitration - already arbitrated", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
+      { mockDemand: "foo" },
+    ]),
+  });
+
+  const { attested: escrow } =
+    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+      {
+        address: testContext.mockAddresses.erc20A,
+        value: 10n,
+      },
+      { arbiter, demand },
+      0n,
+    );
+
+  const { attested: fulfillment } =
+    await testContext.bobClient.stringObligation.doObligation(
+      "foo",
+      escrow.uid,
+    );
+
+  // Request arbitration
+  const requestHash = await testContext.bobClient.oracle.requestArbitration(
+    fulfillment.uid,
+    testContext.bob,
+  );
+
+  // Wait for arbitration request to be confirmed
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: requestHash,
+  });
+
+  // Arbitrate first
+  const obligationAbi = parseAbiParameters("(string item)");
+  const decisions = await testContext.bobClient.oracle.arbitratePast(
+    async (attestation) => {
+      const obligation = testContext.bobClient.extractObligationData(
+        obligationAbi,
+        attestation,
+      );
+      return obligation[0].item === "foo";
+    },
+  );
+
+  expect(decisions.length).toBe(1);
+  expect(decisions[0].decision).toBe(true);
+
+  // Wait for arbitration transaction to be confirmed
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: decisions[0].hash,
+  });
+
+  // Now call waitForArbitration - should return immediately with existing result
+  const arbitrationResult = await testContext.bobClient.oracle.waitForArbitration(
+    fulfillment.uid,
+    testContext.bob,
+  );
+
+  expect(arbitrationResult.obligation).toBe(fulfillment.uid);
+  expect(arbitrationResult.oracle?.toLowerCase()).toBe(testContext.bob.toLowerCase());
+  expect(arbitrationResult.decision).toBe(true);
+});
