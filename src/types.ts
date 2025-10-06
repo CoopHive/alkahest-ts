@@ -8,6 +8,8 @@ export type ChainAddresses = {
   erc20PaymentObligation: `0x${string}`;
   erc20BarterUtils: `0x${string}`;
 
+  ethPaymentObligation: `0x${string}`;
+
   erc721EscrowObligation: `0x${string}`;
   erc721PaymentObligation: `0x${string}`;
   erc721BarterUtils: `0x${string}`;
@@ -212,4 +214,146 @@ export interface EnhancedArbitrateFilters extends
   onlyIfEscrowDemandsCurrentOracle?: boolean;
   /** Skip obligations that have already been arbitrated */
   skipAlreadyArbitrated?: boolean;
+}
+
+// =====================================
+// ETH Arbitration Types
+// =====================================
+
+/**
+ * Basic ETH transfer arbitration request
+ * Oracles can verify if an ETH transfer occurred with specific criteria
+ */
+export interface EthTransferArbitrationRequest {
+  type: 'eth_transfer';
+  /** Minimum ETH amount that must be transferred (in wei) */
+  minAmount: bigint;
+  /** Address that should receive the ETH */
+  recipient: `0x${string}`;
+  /** Address that should send the ETH (optional) */
+  sender?: `0x${string}`;
+  /** Block number after which the transfer should occur (optional) */
+  afterBlock?: bigint;
+  /** Block number before which the transfer should occur (optional) */
+  beforeBlock?: bigint;
+  /** Specific transaction hash to verify (optional) */
+  txHash?: `0x${string}`;
+}
+
+/**
+ * ETH balance arbitration request
+ * Oracles can verify if an address has a minimum ETH balance
+ */
+export interface EthBalanceArbitrationRequest {
+  type: 'eth_balance';
+  /** Address to check balance for */
+  address: `0x${string}`;
+  /** Minimum balance required (in wei) */
+  minBalance: bigint;
+  /** Block number at which to check balance (optional, defaults to latest) */
+  atBlock?: bigint;
+}
+
+/**
+ * ETH payment verification request
+ * Oracles can verify specific ETH payments between parties
+ */
+export interface EthPaymentArbitrationRequest {
+  type: 'eth_payment';
+  /** Exact amount that should be paid (in wei) */
+  amount: bigint;
+  /** Address that should pay */
+  payer: `0x${string}`;
+  /** Address that should receive payment */
+  payee: `0x${string}`;
+  /** Specific transaction hash to verify (optional) */
+  paymentTx?: `0x${string}`;
+  /** Block range for payment verification (optional) */
+  blockRange?: {
+    fromBlock: bigint;
+    toBlock: bigint;
+  };
+}
+
+/**
+ * ETH escrow arbitration request
+ * Oracles can arbitrate multi-party ETH escrow scenarios
+ */
+export interface EthEscrowArbitrationRequest {
+  type: 'eth_escrow';
+  /** Total amount in escrow (in wei) */
+  totalAmount: bigint;
+  /** Parties involved in the escrow */
+  parties: Array<{
+    address: `0x${string}`;
+    amount: bigint;
+    role: 'depositor' | 'beneficiary' | 'arbiter';
+  }>;
+  /** Escrow conditions */
+  conditions: {
+    /** Whether all deposits must be made before release */
+    requireAllDeposits: boolean;
+    /** Minimum number of depositors required */
+    minDepositors: number;
+    /** Deadline for deposits (optional) */
+    depositDeadline?: bigint;
+    /** Deadline for claims (optional) */
+    claimDeadline?: bigint;
+  };
+}
+
+/**
+ * Union type for all ETH arbitration request types
+ */
+export type EthArbitrationRequest = 
+  | EthTransferArbitrationRequest
+  | EthBalanceArbitrationRequest
+  | EthPaymentArbitrationRequest
+  | EthEscrowArbitrationRequest;
+
+/**
+ * Result of ETH arbitration processing
+ */
+export interface EthArbitrationResult {
+  /** The original request that was processed */
+  request: EthArbitrationRequest;
+  /** Whether the arbitration conditions are satisfied */
+  decision: boolean;
+  /** Oracle that made the decision */
+  oracle: `0x${string}`;
+  /** Block number when decision was made */
+  blockNumber: bigint;
+  /** Timestamp when decision was made */
+  timestamp: bigint;
+  /** Additional evidence or reasoning */
+  evidence?: {
+    /** Transaction hashes related to the decision */
+    transactionHashes?: `0x${string}`[];
+    /** Balances checked during arbitration */
+    balances?: Record<`0x${string}`, bigint>;
+    /** Block numbers relevant to the decision */
+    relevantBlocks?: bigint[];
+    /** Human-readable reasoning */
+    reasoning?: string;
+    /** Any additional metadata */
+    metadata?: Record<string, any>;
+  };
+}
+
+/**
+ * Context for tracking ETH arbitration requests
+ */
+export interface EthArbitrationContext {
+  /** The arbitration request */
+  request: EthArbitrationRequest;
+  /** Address that submitted the request */
+  requester: `0x${string}`;
+  /** Timestamp when request was created */
+  createdAt: bigint;
+  /** Oracle assigned to handle the request (optional) */
+  assignedOracle?: `0x${string}`;
+  /** Status of the request */
+  status: 'pending' | 'in_progress' | 'completed' | 'rejected';
+  /** Unique identifier for the request */
+  requestId: `0x${string}`;
 }

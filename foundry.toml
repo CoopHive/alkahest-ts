@@ -5,3 +5,14 @@ libs = ["lib"]
 solc = "0.8.20"
 optimizer = true
 optimizer_runs = 200
+auto_detect_solc = false
+
+# Enable via-ir for better optimization
+via_ir = true
+
+# Add remappings for dependencies
+remappings = [
+    "@eas/=lib/eas-contracts/contracts/",
+    "@openzeppelin/=lib/openzeppelin-contracts/contracts/",
+    "@forge-std/=lib/forge-std/src/"
+]

@@ -16,6 +16,7 @@ import { makeAttestationClient } from "./clients/attestation";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
+import { makeEthClient } from "./clients/eth";
 import { makeStringObligationClient } from "./clients/stringObligation";
 import { makeTokenBundleClient } from "./clients/tokenBundle";
 import {
@@ -114,6 +115,11 @@ export const makeMinimalClient = (
 		erc20BarterUtils:
 			contractAddresses?.erc20BarterUtils ||
 			baseAddresses?.erc20BarterUtils ||
+			zeroAddress,
+
+		ethPaymentObligation:
+			contractAddresses?.ethPaymentObligation ||
+			baseAddresses?.ethPaymentObligation ||
 			zeroAddress,
 
 		erc721EscrowObligation:
@@ -524,6 +530,14 @@ export * from "./extensions";
 export * from "./clients/generalArbiters";
 export * from "./clients/attestationPropertiesArbiters";
 export * from "./clients/logicalArbiters";
+
+// Payment obligation clients
+export * from "./clients/erc20";
+export * from "./clients/erc721";
+export * from "./clients/erc1155";
+export * from "./clients/eth";
+export * from "./clients/tokenBundle";
+
 
 // Deprecated - use specific clients above instead
 export * from "./clients/arbiters";
