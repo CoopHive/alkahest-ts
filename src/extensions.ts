@@ -1,5 +1,6 @@
 import { makeArbitersClient } from "./clients/arbiters";
 import { makeAttestationClient } from "./clients/attestation";
+import { makeDemandParserClient } from "./clients/demandParser";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
@@ -34,5 +35,9 @@ export const makeDefaultExtension = (client: any) => ({
     /** Utilities for StringObligation */
     stringObligation: makeStringObligationClient(client.viemClient, client.contractAddresses),
 
+    /** Oracle client for arbitration operations */
     oracle: makeOracleClient(client.viemClient, client.contractAddresses),
+
+    /** Demand parser utilities for composed arbiters */
+    demandParser: makeDemandParserClient(client.viemClient, client.contractAddresses),
 });

@@ -525,6 +525,10 @@ export * from "./oracle/oracle";
 export * from "./clients/generalArbiters";
 export * from "./clients/attestationPropertiesArbiters";
 export * from "./clients/logicalArbiters";
+export * from "./clients/demandParser";
+
+// Utility modules
+export * from "./utils/demandParser";
 
 // Deprecated - use specific clients above instead
 export * from "./clients/arbiters";
