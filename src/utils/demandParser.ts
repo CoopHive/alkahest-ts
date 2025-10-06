@@ -230,7 +230,7 @@ export function parseDemandRecursive(
   if (!decoder) {
     // Try to find a case-insensitive match
     for (const [addr, dec] of config.arbiterDecoders.entries()) {
-      if (addr.toLowerCase() === arbiter.toLowerCase()) {
+      if (typeof arbiter === 'string' && addr.toLowerCase() === arbiter.toLowerCase()) {
         decoder = dec;
         break;
       }
