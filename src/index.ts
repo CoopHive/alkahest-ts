@@ -519,11 +519,16 @@ export const makeMinimalClient = (
 export * from "./config";
 export * from "./types";
 export * from "./extensions";
+export * from "./oracle/oracle";
 
 // Main arbiter clients - use these for new development
 export * from "./clients/generalArbiters";
 export * from "./clients/attestationPropertiesArbiters";
 export * from "./clients/logicalArbiters";
+export * from "./clients/demandParser";
+
+// Utility modules
+export * from "./utils/demandParser";
 
 // Deprecated - use specific clients above instead
 export * from "./clients/arbiters";
