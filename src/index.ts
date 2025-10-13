@@ -16,7 +16,7 @@ import { makeAttestationClient } from "./clients/attestation";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
-import { makeEthClient } from "./clients/eth";
+import { makeNativeTokenClient } from "./clients/nativeToken";
 import { makeStringObligationClient } from "./clients/stringObligation";
 import { makeTokenBundleClient } from "./clients/tokenBundle";
 import {
@@ -47,7 +47,7 @@ import { makeDefaultExtension } from "./extensions";
 export const makeClient = (
 	walletClient: WalletClient<Transport, Chain, Account>,
 	contractAddresses?: Partial<ChainAddresses>,
-) => {
+): any => {
 	const client = makeMinimalClient(walletClient, contractAddresses);
 	return client.extend(makeDefaultExtension);
 };
@@ -77,7 +77,7 @@ export const makeClient = (
 export const makeMinimalClient = (
 	walletClient: WalletClient<Transport, Chain, Account>,
 	contractAddresses?: Partial<ChainAddresses>,
-) => {
+): any => {
 	const viemClient = walletClient.extend(publicActions);
 
 	// Determine base addresses to use
@@ -117,9 +117,13 @@ export const makeMinimalClient = (
 			baseAddresses?.erc20BarterUtils ||
 			zeroAddress,
 
-		ethPaymentObligation:
-			contractAddresses?.ethPaymentObligation ||
-			baseAddresses?.ethPaymentObligation ||
+		nativeTokenPaymentObligation:
+			contractAddresses?.nativeTokenPaymentObligation ||
+			baseAddresses?.nativeTokenPaymentObligation ||
+			zeroAddress,
+		nativeTokenEscrowObligation:
+			contractAddresses?.nativeTokenEscrowObligation ||
+			baseAddresses?.nativeTokenEscrowObligation ||
 			zeroAddress,
 
 		erc721EscrowObligation:
@@ -535,7 +539,7 @@ export * from "./clients/logicalArbiters";
 export * from "./clients/erc20";
 export * from "./clients/erc721";
 export * from "./clients/erc1155";
-export * from "./clients/eth";
+export * from "./clients/nativeToken";
 export * from "./clients/tokenBundle";
 
 

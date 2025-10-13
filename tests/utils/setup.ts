@@ -30,7 +30,8 @@ import ERC1155EscrowObligation from "@contracts/ERC1155EscrowObligation.json";
 import ERC1155PaymentObligation from "@contracts/ERC1155PaymentObligation.json";
 import TokenBundleEscrowObligation from "@contracts/TokenBundleEscrowObligation.json";
 import TokenBundlePaymentObligation from "@contracts/TokenBundlePaymentObligation.json";
-import ETHPaymentObligation from "@contracts/ETHPaymentObligation.json";
+import NativeTokenPaymentObligation from "@contracts/NativeTokenPaymentObligation.json";
+import NativeTokenEscrowObligation from "@contracts/NativeTokenEscrowObligation.json";
 import ERC20BarterCrossToken from "@contracts/ERC20BarterCrossToken.json";
 import ERC721BarterCrossToken from "@contracts/ERC721BarterCrossToken.json";
 import ERC1155BarterCrossToken from "@contracts/ERC1155BarterCrossToken.json";
@@ -115,8 +116,9 @@ export type TestContext = {
     // String obligation
     stringObligation: `0x${string}`;
 
-    // ETH payment
-    ethPaymentObligation: `0x${string}`;
+    // Native payment
+    nativeTokenPaymentObligation: `0x${string}`;
+    nativeTokenEscrowObligation: `0x${string}`;
   };
 
   // Mock token addresses
@@ -271,7 +273,8 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     attestationBarterUtils: "" as `0x${string}`,
 
     stringObligation: "" as `0x${string}`,
-    ethPaymentObligation: "" as `0x${string}`,
+    nativeTokenPaymentObligation: "" as `0x${string}`,
+    nativeTokenEscrowObligation: "" as `0x${string}`,
   };
 
   const mockAddresses: TestContext["mockAddresses"] = {
@@ -363,7 +366,8 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     AttestationEscrowObligation2,
   );
   addresses.stringObligation = await deployObligation(StringObligation);
-  addresses.ethPaymentObligation = await deployObligation(ETHPaymentObligation);
+  addresses.nativeTokenPaymentObligation = await deployObligation(NativeTokenPaymentObligation);
+  addresses.nativeTokenEscrowObligation = await deployObligation(NativeTokenEscrowObligation);
 
   // Deploy barter utils
 

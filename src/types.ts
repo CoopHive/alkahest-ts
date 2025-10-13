@@ -8,7 +8,8 @@ export type ChainAddresses = {
   erc20PaymentObligation: `0x${string}`;
   erc20BarterUtils: `0x${string}`;
 
-  ethPaymentObligation: `0x${string}`;
+  nativeTokenPaymentObligation: `0x${string}`;
+  nativeTokenEscrowObligation: `0x${string}`;
 
   erc721EscrowObligation: `0x${string}`;
   erc721PaymentObligation: `0x${string}`;
@@ -217,20 +218,20 @@ export interface EnhancedArbitrateFilters extends
 }
 
 // =====================================
-// ETH Arbitration Types
+// Native Token Arbitration Types
 // =====================================
 
 /**
- * Basic ETH transfer arbitration request
- * Oracles can verify if an ETH transfer occurred with specific criteria
+ * Basic native token transfer arbitration request
+ * Oracles can verify if a native token transfer occurred with specific criteria
  */
-export interface EthTransferArbitrationRequest {
-  type: 'eth_transfer';
-  /** Minimum ETH amount that must be transferred (in wei) */
+export interface NativeTokenTransferArbitrationRequest {
+  type: 'native_token_transfer';
+  /** Minimum native token amount that must be transferred (in wei) */
   minAmount: bigint;
-  /** Address that should receive the ETH */
+  /** Address that should receive the native token */
   recipient: `0x${string}`;
-  /** Address that should send the ETH (optional) */
+  /** Address that should send the native token (optional) */
   sender?: `0x${string}`;
   /** Block number after which the transfer should occur (optional) */
   afterBlock?: bigint;
@@ -241,11 +242,11 @@ export interface EthTransferArbitrationRequest {
 }
 
 /**
- * ETH balance arbitration request
- * Oracles can verify if an address has a minimum ETH balance
+ * Native token balance arbitration request
+ * Oracles can verify if an address has a minimum native token balance
  */
-export interface EthBalanceArbitrationRequest {
-  type: 'eth_balance';
+export interface NativeTokenBalanceArbitrationRequest {
+  type: 'native_token_balance';
   /** Address to check balance for */
   address: `0x${string}`;
   /** Minimum balance required (in wei) */
@@ -255,32 +256,32 @@ export interface EthBalanceArbitrationRequest {
 }
 
 /**
- * ETH payment verification request
- * Oracles can verify specific ETH payments between parties
+ * Native token payment arbitration request
+ * Oracles can verify if a payment was made from payer to payee
  */
-export interface EthPaymentArbitrationRequest {
-  type: 'eth_payment';
-  /** Exact amount that should be paid (in wei) */
+export interface NativeTokenPaymentArbitrationRequest {
+  type: 'native_token_payment';
+  /** Amount to be paid (in wei) */
   amount: bigint;
-  /** Address that should pay */
+  /** Address that should make the payment */
   payer: `0x${string}`;
-  /** Address that should receive payment */
+  /** Address that should receive the payment */
   payee: `0x${string}`;
-  /** Specific transaction hash to verify (optional) */
-  paymentTx?: `0x${string}`;
-  /** Block range for payment verification (optional) */
-  blockRange?: {
-    fromBlock: bigint;
-    toBlock: bigint;
+  /** Time window for the payment (optional) */
+  timeWindow?: {
+    afterBlock?: bigint;
+    beforeBlock?: bigint;
   };
+  /** Specific transaction hash to verify (optional) */
+  txHash?: `0x${string}`;
 }
 
 /**
- * ETH escrow arbitration request
- * Oracles can arbitrate multi-party ETH escrow scenarios
+ * Native token escrow arbitration request
+ * Oracles can verify escrow conditions are met
  */
-export interface EthEscrowArbitrationRequest {
-  type: 'eth_escrow';
+export interface NativeTokenEscrowArbitrationRequest {
+  type: 'native_token_escrow';
   /** Total amount in escrow (in wei) */
   totalAmount: bigint;
   /** Parties involved in the escrow */
@@ -291,32 +292,35 @@ export interface EthEscrowArbitrationRequest {
   }>;
   /** Escrow conditions */
   conditions: {
-    /** Whether all deposits must be made before release */
+    /** Whether all deposits are required */
     requireAllDeposits: boolean;
-    /** Minimum number of depositors required */
+    /** Minimum number of depositors */
     minDepositors: number;
-    /** Deadline for deposits (optional) */
-    depositDeadline?: bigint;
-    /** Deadline for claims (optional) */
-    claimDeadline?: bigint;
+    /** Release conditions */
+    releaseConditions?: string[];
+  };
+  /** Time window for escrow (optional) */
+  timeWindow?: {
+    afterBlock?: bigint;
+    beforeBlock?: bigint;
   };
 }
 
 /**
- * Union type for all ETH arbitration request types
+ * Union type for all native token arbitration request types
  */
-export type EthArbitrationRequest = 
-  | EthTransferArbitrationRequest
-  | EthBalanceArbitrationRequest
-  | EthPaymentArbitrationRequest
-  | EthEscrowArbitrationRequest;
+export type NativeTokenArbitrationRequest = 
+  | NativeTokenTransferArbitrationRequest
+  | NativeTokenBalanceArbitrationRequest
+  | NativeTokenPaymentArbitrationRequest
+  | NativeTokenEscrowArbitrationRequest;
 
 /**
- * Result of ETH arbitration processing
+ * Result of native token arbitration processing
  */
-export interface EthArbitrationResult {
+export interface NativeTokenArbitrationResult {
   /** The original request that was processed */
-  request: EthArbitrationRequest;
+  request: NativeTokenArbitrationRequest;
   /** Whether the arbitration conditions are satisfied */
   decision: boolean;
   /** Oracle that made the decision */
@@ -341,11 +345,11 @@ export interface EthArbitrationResult {
 }
 
 /**
- * Context for tracking ETH arbitration requests
+ * Context for tracking native token arbitration requests
  */
-export interface EthArbitrationContext {
+export interface NativeTokenArbitrationContext {
   /** The arbitration request */
-  request: EthArbitrationRequest;
+  request: NativeTokenArbitrationRequest;
   /** Address that submitted the request */
   requester: `0x${string}`;
   /** Timestamp when request was created */
@@ -357,3 +361,10 @@ export interface EthArbitrationContext {
   /** Unique identifier for the request */
   requestId: `0x${string}`;
 }
+
+// Type aliases for backward compatibility with ETH naming
+export type EthTransferArbitrationRequest = NativeTokenTransferArbitrationRequest;
+export type EthBalanceArbitrationRequest = NativeTokenBalanceArbitrationRequest;
+export type EthArbitrationRequest = NativeTokenArbitrationRequest;
+export type EthArbitrationResult = NativeTokenArbitrationResult;
+export type EthArbitrationContext = NativeTokenArbitrationContext;

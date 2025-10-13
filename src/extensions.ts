@@ -3,7 +3,7 @@ import { makeAttestationClient } from "./clients/attestation";
 import { makeErc1155Client } from "./clients/erc1155";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
-import { makeEthClient } from "./clients/eth";
+import { makeNativeTokenClient } from "./clients/nativeToken";
 import { makeStringObligationClient } from "./clients/stringObligation";
 import { makeTokenBundleClient } from "./clients/tokenBundle";
 import { makeOracleClient } from "./oracle/oracle";
@@ -20,8 +20,8 @@ export const makeDefaultExtension = (client: any) => ({
     /** Methods for interacting with ERC20 tokens */
     erc20: makeErc20Client(client.viemClient, client.contractAddresses),
 
-    /** Methods for interacting with native ETH payments */
-    eth: makeEthClient(client.viemClient, client.contractAddresses),
+    /** Methods for interacting with native tokens */
+    nativeToken: makeNativeTokenClient(client.viemClient, client.contractAddresses),
 
     /** Methods for interacting with ERC721 tokens */
     erc721: makeErc721Client(client.viemClient, client.contractAddresses),
