@@ -10,6 +10,7 @@ export type ChainAddresses = {
 
   nativeTokenPaymentObligation: `0x${string}`;
   nativeTokenEscrowObligation: `0x${string}`;
+  nativeTokenBarterUtils: `0x${string}`;
 
   erc721EscrowObligation: `0x${string}`;
   erc721PaymentObligation: `0x${string}`;

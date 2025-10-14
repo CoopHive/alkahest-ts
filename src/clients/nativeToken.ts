@@ -18,8 +18,8 @@ import {
   type PublicClient,
 } from "viem";
 
-import { nativeTokenPaymentAbi } from "../contracts/NativeTokenPaymentObligation";
-import NativeTokenEscrowObligation from "../contracts/NativeTokenEscrowObligation";
+import { abi as nativeTokenPaymentAbi } from "../contracts/NativeTokenPaymentObligation";
+import { abi as nativeTokenEscrowAbi } from "../contracts/NativeTokenEscrowObligation";
 import { abi as easAbi } from "../contracts/IEAS";
 
 // Extract ObligationData struct ABI from contract ABI at module initialization
@@ -40,7 +40,7 @@ if (!nativePaymentObligationDataAbi || nativePaymentObligationDataAbi.type !== '
 
 // Similar extraction for escrow obligation
 const nativeEscrowDoObligationFunction = getAbiItem({
-  abi: NativeTokenEscrowObligation.abi,
+  abi: nativeTokenEscrowAbi.abi,
   name: 'doObligation'
 });
 
@@ -58,16 +58,16 @@ type TupleAbiParameter = typeof nativePaymentObligationDataAbi & { components: r
 
 /**
  * Native Token Payment Obligation Data structure
+ * Matches the Solidity struct: struct ObligationData { uint256 amount; address payee; }
  */
 export type NativeTokenPaymentObligationData = {
-  arbiter: Address;
-  demand: `0x${string}`;
   amount: bigint;
   payee: Address;
 };
 
 /**
- * Native Token Escrow Obligation Data structure  
+ * Native Token Escrow Obligation Data structure
+ * Matches the Solidity struct: struct ObligationData { address arbiter; bytes demand; uint256 amount; }
  */
 export type NativeTokenEscrowObligationData = {
   arbiter: Address;
@@ -123,10 +123,12 @@ export const makeNativeTokenClient = (
     } catch (error) {
       throw new Error(`Failed to decode Native Token obligation data: ${error}`);
     }
-  };  /**
+  };
+  
+  /**
    * Encodes Native Token escrow obligation data
    */
-  const encodeNativeTokenEscrowObligationData = (data: {amount: bigint, payee: Address, escrowAgent?: Address, releaseCondition?: string}): `0x${string}` => {
+  const encodeNativeTokenEscrowObligationData = (data: NativeTokenEscrowObligationData): `0x${string}` => {
     return encodeAbiParameters(
       [nativeEscrowObligationDataAbi],
       [data]
@@ -196,14 +198,14 @@ export const makeNativeTokenClient = (
    * Executes a Native Token escrow obligation
    */
   const doNativeTokenEscrowObligation = async (
-    data: {amount: bigint, payee: Address, escrowAgent?: Address, releaseCondition?: string},
+    data: NativeTokenEscrowObligationData,
     expirationTime = 0n
   ): Promise<{hash: Hash}> => {
     const { request } = await viemClient.simulateContract({
       address: addresses.nativeTokenEscrowObligation,
-      abi: NativeTokenEscrowObligation.abi,
+      abi: nativeTokenEscrowAbi.abi,
       functionName: 'doObligation',
-      args: [data],
+      args: [data, expirationTime],
       value: data.amount,
     });
 
@@ -222,7 +224,7 @@ export const makeNativeTokenClient = (
   ): Promise<Hash> => {
     const { request } = await viemClient.simulateContract({
       address: addresses.nativeTokenEscrowObligation,
-      abi: NativeTokenEscrowObligation.abi,
+      abi: nativeTokenEscrowAbi.abi,
       functionName: 'doObligationFor',
       args: [data, expirationTime, payer, recipient],
       value: data.amount,
@@ -250,7 +252,7 @@ export const makeNativeTokenClient = (
   const getNativeTokenEscrowObligationData = async (uid: `0x${string}`): Promise<NativeTokenEscrowObligationData> => {
     const result = await viemClient.readContract({
       address: addresses.nativeTokenEscrowObligation,
-      abi: NativeTokenEscrowObligation.abi,
+      abi: nativeTokenEscrowAbi.abi,
       functionName: 'getObligationData',
       args: [uid],
     });
@@ -259,30 +261,42 @@ export const makeNativeTokenClient = (
 
   /**
    * Checks if a Native Token payment obligation can be fulfilled
+   * This implements the IArbiter interface - takes an attestation and demand
    */
   const checkNativeTokenPaymentObligation = async (
-    data: NativeTokenPaymentObligationData
+    obligationUid: `0x${string}`,
+    demand: `0x${string}`,
+    counteroffer: `0x${string}` = '0x0000000000000000000000000000000000000000000000000000000000000000'
   ): Promise<boolean> => {
+    // Get the attestation
+    const attestation = await getAttestation(viemClient, obligationUid);
+    
     const result = await viemClient.readContract({
       address: addresses.nativeTokenPaymentObligation,
       abi: nativeTokenPaymentAbi.abi,
       functionName: 'checkObligation',
-      args: [data],
+      args: [attestation, demand, counteroffer],
     });
     return result as boolean;
   };
 
   /**
    * Checks if a Native Token escrow obligation can be fulfilled
+   * This implements the IArbiter interface - takes an attestation and demand
    */
   const checkNativeTokenEscrowObligation = async (
-    data: NativeTokenEscrowObligationData
+    obligationUid: `0x${string}`,
+    demand: `0x${string}`,
+    counteroffer: `0x${string}` = '0x0000000000000000000000000000000000000000000000000000000000000000'
   ): Promise<boolean> => {
+    // Get the attestation
+    const attestation = await getAttestation(viemClient, obligationUid);
+    
     const result = await viemClient.readContract({
       address: addresses.nativeTokenEscrowObligation,
-      abi: NativeTokenEscrowObligation.abi,
+      abi: nativeTokenEscrowAbi.abi,
       functionName: 'checkObligation',
-      args: [data],
+      args: [attestation, demand, counteroffer],
     });
     return result as boolean;
   };
@@ -316,7 +330,7 @@ export const makeNativeTokenClient = (
   /**
    * Creates a Native Token escrow demand
    */
-  const createNativeTokenEscrowDemand = (data: {amount: bigint, payee: Address, escrowAgent?: Address, releaseCondition?: string}): Demand => {
+  const createNativeTokenEscrowDemand = (data: NativeTokenEscrowObligationData): Demand => {
     return {
       arbiter: addresses.nativeTokenEscrowObligation,
       demand: encodeNativeTokenEscrowObligationData(data),
@@ -363,7 +377,7 @@ export const makeNativeTokenClient = (
     
     // ABI for contract interactions
     paymentAbi: nativeTokenPaymentAbi.abi,
-    escrowAbi: NativeTokenEscrowObligation.abi,
+    escrowAbi: nativeTokenEscrowAbi.abi,
   };
 };
 

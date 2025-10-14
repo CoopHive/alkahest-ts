@@ -125,6 +125,10 @@ export const makeMinimalClient = (
 			contractAddresses?.nativeTokenEscrowObligation ||
 			baseAddresses?.nativeTokenEscrowObligation ||
 			zeroAddress,
+		nativeTokenBarterUtils:
+			contractAddresses?.nativeTokenBarterUtils ||
+			baseAddresses?.nativeTokenBarterUtils ||
+			zeroAddress,
 
 		erc721EscrowObligation:
 			contractAddresses?.erc721EscrowObligation ||
