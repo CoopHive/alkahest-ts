@@ -1,34 +1,28 @@
-import {
-  decodeAbiParameters,
-  encodeAbiParameters,
-  getAbiItem,
-  parseAbiItem,
-} from "viem";
-import type { ViemClient } from "../utils";
-import type { ChainAddresses } from "../types";
-import { getOptimalPollingInterval } from "../utils";
-
-import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
+import { decodeAbiParameters, encodeAbiParameters, getAbiItem, parseAbiItem } from "viem";
 import { abi as IntrinsicsArbiter2Abi } from "../contracts/IntrinsicsArbiter2";
-import { abi as TrustedPartyArbiterAbi } from "../contracts/TrustedPartyArbiter";
 import { abi as SpecificAttestationArbiterAbi } from "../contracts/SpecificAttestationArbiter";
+import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
+import { abi as TrustedPartyArbiterAbi } from "../contracts/TrustedPartyArbiter";
+import type { ChainAddresses } from "../types";
+import type { ViemClient } from "../utils";
+import { getOptimalPollingInterval } from "../utils";
 
 // Extract DemandData struct ABI from contract ABIs at module initialization
 const intrinsicsArbiter2DecodeDemandFunction = getAbiItem({
   abi: IntrinsicsArbiter2Abi.abi,
-  name: 'decodeDemandData'
+  name: "decodeDemandData",
 });
 const trustedPartyArbiterDecodeDemandFunction = getAbiItem({
   abi: TrustedPartyArbiterAbi.abi,
-  name: 'decodeDemandData'
+  name: "decodeDemandData",
 });
 const specificAttestationArbiterDecodeDemandFunction = getAbiItem({
   abi: SpecificAttestationArbiterAbi.abi,
-  name: 'decodeDemandData'
+  name: "decodeDemandData",
 });
 const trustedOracleArbiterDecodeDemandFunction = getAbiItem({
   abi: trustedOracleArbiterAbi.abi,
-  name: 'decodeDemandData'
+  name: "decodeDemandData",
 });
 
 // Extract the DemandData struct types from the function outputs
@@ -37,10 +31,9 @@ const trustedPartyArbiterDemandDataType = trustedPartyArbiterDecodeDemandFunctio
 const specificAttestationArbiterDemandDataType = specificAttestationArbiterDecodeDemandFunction.outputs[0];
 const trustedOracleArbiterDemandDataType = trustedOracleArbiterDecodeDemandFunction.outputs[0];
 
-
 /**
  * General Arbiters Client
- * 
+ *
  * Handles basic arbiters that don't depend on specific attestation properties:
  * - IntrinsicsArbiter2: Schema-based validation
  * - TrustedPartyArbiter: Creator-based validation with composable base arbiter
@@ -49,11 +42,7 @@ const trustedOracleArbiterDemandDataType = trustedOracleArbiterDecodeDemandFunct
  *   - Supports requestArbitration for requesting arbitration from specific oracles
  *   - Provides listening functions for oracles to respond only to arbitration requests
  */
-export const makeGeneralArbitersClient = (
-  viemClient: ViemClient,
-  addresses: ChainAddresses,
-) => {
-
+export const makeGeneralArbitersClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
   // Cache the parsed event ABIs to avoid re-parsing on each call
   const arbitrationMadeEvent = parseAbiItem(
     "event ArbitrationMade(bytes32 indexed obligation, address indexed oracle, bool decision)",
@@ -127,10 +116,7 @@ export const makeGeneralArbitersClient = (
      * @param demand - struct DemandData {address oracle, bytes data}
      * @returns abi encoded bytes
      */
-    encodeTrustedOracleDemand: (demand: {
-      oracle: `0x${string}`;
-      data: `0x${string}`;
-    }) => {
+    encodeTrustedOracleDemand: (demand: { oracle: `0x${string}`; data: `0x${string}` }) => {
       return encodeAbiParameters([trustedOracleArbiterDemandDataType], [demand]);
     },
 
@@ -150,10 +136,7 @@ export const makeGeneralArbitersClient = (
      * @param decision - bool decision
      * @returns transaction hash
      */
-    arbitrateAsTrustedOracle: async (
-      obligation: `0x${string}`,
-      decision: boolean,
-    ) => {
+    arbitrateAsTrustedOracle: async (obligation: `0x${string}`, decision: boolean) => {
       const hash = await viemClient.writeContract({
         address: addresses.trustedOracleArbiter,
         abi: trustedOracleArbiterAbi.abi,
@@ -169,10 +152,7 @@ export const makeGeneralArbitersClient = (
      * @param oracle - address of the oracle to request arbitration from
      * @returns transaction hash
      */
-    requestArbitrationFromTrustedOracle: async (
-      obligation: `0x${string}`,
-      oracle: `0x${string}`,
-    ) => {
+    requestArbitrationFromTrustedOracle: async (obligation: `0x${string}`, oracle: `0x${string}`) => {
       const hash = await viemClient.writeContract({
         address: addresses.trustedOracleArbiter,
         abi: trustedOracleArbiterAbi.abi,
@@ -191,11 +171,14 @@ export const makeGeneralArbitersClient = (
     checkExistingArbitration: async (
       obligation: `0x${string}`,
       oracle: `0x${string}`,
-    ): Promise<{
-      obligation: `0x${string}`;
-      oracle: `0x${string}`;
-      decision: boolean;
-    } | undefined> => {
+    ): Promise<
+      | {
+          obligation: `0x${string}`;
+          oracle: `0x${string}`;
+          decision: boolean;
+        }
+      | undefined
+    > => {
       const logs = await viemClient.getLogs({
         address: addresses.trustedOracleArbiter,
         event: arbitrationMadeEvent,
@@ -261,7 +244,7 @@ export const makeGeneralArbitersClient = (
 
     /**
      * Wait for an arbitration request to be made on a TrustedOracleArbiter
-     * @param obligation - bytes32 obligation uid  
+     * @param obligation - bytes32 obligation uid
      * @param oracle - address of the oracle
      * @param pollingInterval - polling interval in milliseconds (default: 1000)
      * @returns the event args
@@ -301,7 +284,6 @@ export const makeGeneralArbitersClient = (
         });
       });
     },
-
 
     /**
      * Listen for arbitration requests and only arbitrate on request

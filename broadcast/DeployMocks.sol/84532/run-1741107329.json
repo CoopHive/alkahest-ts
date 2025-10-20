@@ -6,10 +6,7 @@
       "contractName": "MockERC20",
       "contractAddress": "0x28478aaeca61d3d7e7e2525491b6255f745476a4",
       "function": null,
-      "arguments": [
-        "MockToken1",
-        "MT1"
-      ],
+      "arguments": ["MockToken1", "MT1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0xc67c5",
@@ -27,10 +24,7 @@
       "contractName": "MockERC20",
       "contractAddress": "0x03b8179cf21efd1f0debd293f0992fc33af52086",
       "function": null,
-      "arguments": [
-        "MockToken2",
-        "MT2"
-      ],
+      "arguments": ["MockToken2", "MT2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0xc67c5",
@@ -48,10 +42,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x88185a3ea40806c2f2a98d47bca67318c856fa31",
       "function": null,
-      "arguments": [
-        "MockERC721_1",
-        "MERC721_1"
-      ],
+      "arguments": ["MockERC721_1", "MERC721_1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x1386ce",
@@ -69,10 +60,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0xcc68456e23d256f35c4bb84e1f71029d314610d8",
       "function": null,
-      "arguments": [
-        "MockERC721_2",
-        "MERC721_2"
-      ],
+      "arguments": ["MockERC721_2", "MERC721_2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x1386ce",
@@ -90,10 +78,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x5bd6f569a4448c43df2c51648dcd2bdbd3288a6c",
       "function": null,
-      "arguments": [
-        "MockMultiToken1",
-        "MMT1"
-      ],
+      "arguments": ["MockMultiToken1", "MMT1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x17b6d7",
@@ -111,10 +96,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x4b0478b13834962b9b1f60f125b952e70f83f1ad",
       "function": null,
-      "arguments": [
-        "MockMultiToken2",
-        "MMT2"
-      ],
+      "arguments": ["MockMultiToken2", "MMT2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x17b6d7",
@@ -132,10 +114,7 @@
       "contractName": "MockERC20",
       "contractAddress": "0x28478aaeca61d3d7e7e2525491b6255f745476a4",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "1000000000000000000000"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "1000000000000000000000"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x28478aaeca61d3d7e7e2525491b6255f745476a4",
@@ -154,10 +133,7 @@
       "contractName": "MockERC20",
       "contractAddress": "0x03b8179cf21efd1f0debd293f0992fc33af52086",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "1000000000000000000000"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "1000000000000000000000"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x03b8179cf21efd1f0debd293f0992fc33af52086",
@@ -176,10 +152,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x88185a3ea40806c2f2a98d47bca67318c856fa31",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "1"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x88185a3ea40806c2f2a98d47bca67318c856fa31",
@@ -198,10 +171,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x88185a3ea40806c2f2a98d47bca67318c856fa31",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "3"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "3"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x88185a3ea40806c2f2a98d47bca67318c856fa31",
@@ -220,10 +190,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0xcc68456e23d256f35c4bb84e1f71029d314610d8",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "2"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0xcc68456e23d256f35c4bb84e1f71029d314610d8",
@@ -242,11 +209,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x5bd6f569a4448c43df2c51648dcd2bdbd3288a6c",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "1",
-        "5"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "1", "5"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x5bd6f569a4448c43df2c51648dcd2bdbd3288a6c",
@@ -265,11 +228,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x5bd6f569a4448c43df2c51648dcd2bdbd3288a6c",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "4",
-        "5"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "4", "5"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x5bd6f569a4448c43df2c51648dcd2bdbd3288a6c",
@@ -288,11 +247,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x4b0478b13834962b9b1f60f125b952e70f83f1ad",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "2",
-        "10"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "2", "10"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x4b0478b13834962b9b1f60f125b952e70f83f1ad",

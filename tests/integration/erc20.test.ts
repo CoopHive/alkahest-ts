@@ -1,16 +1,16 @@
 import { beforeAll, test } from "bun:test";
-import { contractAddresses, makeClient } from "../../src";
 import {
+  createWalletClient,
   decodeAbiParameters,
   encodeAbiParameters,
-  parseAbiParameters,
-  createWalletClient,
   http,
-  webSocket,
   nonceManager,
+  parseAbiParameters,
+  webSocket,
 } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
+import { contractAddresses, makeClient } from "../../src";
 
 import { abi as jobResultObligationAbi } from "../../src/contracts/JobResultObligation";
 
@@ -93,7 +93,7 @@ beforeAll(() => {
     console.log("Skipping external network tests - missing environment variables");
     return;
   }
-  
+
   const clients = createNetworkClients();
   clientBuyer = clients.buyerClient;
   clientSeller = clients.sellerClient;
@@ -107,12 +107,9 @@ test("tradeErc20ForErc20", async () => {
     console.log("Skipping test - missing environment variables for external network");
     return;
   }
-  
+
   // approve escrow contract to spend tokens
-  const escrowApproval = await clientBuyer.erc20.approve(
-    { address: usdc, value: 10n },
-    "escrow",
-  );
+  const escrowApproval = await clientBuyer.erc20.approve({ address: usdc, value: 10n }, "escrow");
   console.log(escrowApproval);
 
   // deposit 10usdc into escrow, demanding 10eurc, with no expiration
@@ -124,16 +121,11 @@ test("tradeErc20ForErc20", async () => {
   console.log(escrow);
 
   // approve payment contract to spend tokens
-  const paymentApproval = await clientSeller.erc20.approve(
-    { address: eurc, value: 10n },
-    "escrow",
-  );
+  const paymentApproval = await clientSeller.erc20.approve({ address: eurc, value: 10n }, "escrow");
   console.log(paymentApproval);
 
   // pay 10eurc for 10usdc (fulfill the buy order)
-  const payment = await clientSeller.erc20.payErc20ForErc20(
-    escrow.attested.uid,
-  );
+  const payment = await clientSeller.erc20.payErc20ForErc20(escrow.attested.uid);
   console.log(payment);
 });
 
@@ -143,7 +135,7 @@ test("tradeErc20ForCustom", async () => {
     console.log("Skipping test - missing environment variables for external network");
     return;
   }
-  
+
   // the example will use JobResultObligation to demand a string to be capitalized
   // but JobResultObligation is generic enough to represent much more (a db query, a Dockerfile...)
   // see https://github.com/CoopHive/alkahest-mocks/blob/main/src/Statements/JobResultObligation.sol
@@ -163,9 +155,7 @@ test("tradeErc20ForCustom", async () => {
   // struct DemandData {
   //     string query;
   // }
-  const baseDemand = encodeAbiParameters(parseAbiParameters("(string query)"), [
-    { query: "hello world" },
-  ]);
+  const baseDemand = encodeAbiParameters(parseAbiParameters("(string query)"), [{ query: "hello world" }]);
 
   // we use TrustedPartyArbiter to wrap the base demand. This actually does decode DemandData,
   // and we use the DemandData format it defines,
@@ -188,10 +178,7 @@ test("tradeErc20ForCustom", async () => {
   });
 
   // approve escrow contract to spend tokens
-  const escrowApproval = await clientBuyer.erc20.approve(
-    { address: usdc, value: 10n },
-    "escrow",
-  );
+  const escrowApproval = await clientBuyer.erc20.approve({ address: usdc, value: 10n }, "escrow");
   clientBuyer.viemClient.waitForTransactionReceipt({ hash: escrowApproval });
   console.log("escrow approval: ", escrowApproval);
 
@@ -216,19 +203,12 @@ test("tradeErc20ForCustom", async () => {
   //     address arbiter;
   //     bytes demand;
   // }
-  const decodedObligation = clientSeller.erc20.decodeEscrowObligation(
-    buyObligation.data,
-  );
+  const decodedObligation = clientSeller.erc20.decodeEscrowObligation(buyObligation.data);
   // TrustedPartyArbiter.DemandData
   // if using a custom arbiter, you can instead use decodeAbiParameters directly like below
-  const decodedDemand = clientSeller.arbiters.decodeTrustedPartyDemand(
-    decodedObligation.demand,
-  );
+  const decodedDemand = clientSeller.arbiters.decodeTrustedPartyDemand(decodedObligation.demand);
   // custom base demand described above
-  const decodedBaseDemand = decodeAbiParameters(
-    parseAbiParameters("(string query)"),
-    decodedDemand.baseDemand,
-  )[0];
+  const decodedBaseDemand = decodeAbiParameters(parseAbiParameters("(string query)"), decodedDemand.baseDemand)[0];
 
   // uppercase string for the example;
   // this could be anything as agreed upon between buyer and seller
@@ -260,15 +240,11 @@ test("tradeErc20ForCustom", async () => {
     ],
   });
   console.log(resultHash);
-  const resultObligation =
-    await clientSeller.getAttestedEventFromTxHash(resultHash);
+  const resultObligation = await clientSeller.getAttestedEventFromTxHash(resultHash);
   console.log("result obligation: ", resultObligation);
 
   // and collect the payment from escrow
-  const collection = await clientSeller.erc20.collectEscrow(
-    escrow.attested.uid,
-    resultObligation.uid,
-  );
+  const collection = await clientSeller.erc20.collectEscrow(escrow.attested.uid, resultObligation.uid);
 
   console.log("collection: ", collection);
 
@@ -284,12 +260,7 @@ test("tradeErc20ForCustom", async () => {
 
   // and extract the result from the fulfillment obligation
   if (!fulfillment.fulfillment) throw new Error("invalid fulfillment");
-  const fulfillmentData = await clientBuyer.getAttestation(
-    fulfillment.fulfillment,
-  );
-  const decodedResult = decodeAbiParameters(
-    parseAbiParameters("(string result)"),
-    fulfillmentData.data,
-  )[0];
+  const fulfillmentData = await clientBuyer.getAttestation(fulfillment.fulfillment);
+  const decodedResult = decodeAbiParameters(parseAbiParameters("(string result)"), fulfillmentData.data)[0];
   console.log("decoded result: ", decodedResult);
 });

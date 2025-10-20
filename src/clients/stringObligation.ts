@@ -1,20 +1,16 @@
-import {
-  decodeAbiParameters,
-  encodeAbiParameters,
-  getAbiItem,
-} from "viem";
-import type { ViemClient } from "../utils";
-import { getAttestation, getAttestedEventFromTxHash } from "../utils";
+import type { Type } from "arktype";
+import { decodeAbiParameters, encodeAbiParameters, getAbiItem } from "viem";
+import type { SafeParseReturnType, ZodTypeDef, z } from "zod";
 
 import { abi as stringObligationAbi } from "../contracts/StringObligation";
 import type { ChainAddresses } from "../types";
-import type { z, ZodTypeDef, SafeParseReturnType } from "zod";
-import type { Type } from "arktype";
+import type { ViemClient } from "../utils";
+import { getAttestation, getAttestedEventFromTxHash } from "../utils";
 
 // Extract ABI type at module initialization with fail-fast error handling
 const stringObligationDecodeFunction = getAbiItem({
   abi: stringObligationAbi.abi,
-  name: 'decodeObligationData'
+  name: "decodeObligationData",
 });
 
 // Extract the ObligationData struct type from the function output
@@ -33,18 +29,15 @@ type ZodParseReturnType<
     ? Promise<z.infer<TSchema>>
     : z.infer<TSchema>;
 
-export const makeStringObligationClient = (
-  viemClient: ViemClient,
-  addresses: ChainAddresses,
-) => {
+export const makeStringObligationClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
   const decode = (obligationData: `0x${string}`) => {
-    return decodeAbiParameters(
-      [stringObligationDataType],
-      obligationData,
-    )[0];
+    return decodeAbiParameters([stringObligationDataType], obligationData)[0];
   };
 
-    const doObligation = async (item: string, refUID: `0x${string}` = "0x0000000000000000000000000000000000000000000000000000000000000000") => {
+  const doObligation = async (
+    item: string,
+    refUID: `0x${string}` = "0x0000000000000000000000000000000000000000000000000000000000000000",
+  ) => {
     const { request } = await viemClient.simulateContract({
       address: addresses.stringObligation,
       abi: stringObligationAbi.abi,
@@ -74,21 +67,14 @@ export const makeStringObligationClient = (
 
   return {
     encode: (data: { item: string }) => {
-      return encodeAbiParameters(
-        [stringObligationDataType], 
-        [data]
-      );
+      return encodeAbiParameters([stringObligationDataType], [data]);
     },
     decode,
     decodeJson: <T>(obligationData: `0x${string}`) => {
       const decoded = decode(obligationData);
       return JSON.parse(decoded.item) as T;
     },
-    decodeZod: <
-      TSchema extends z.ZodSchema,
-      TAsync extends boolean = false,
-      TSafe extends boolean = false,
-    >(
+    decodeZod: <TSchema extends z.ZodSchema, TAsync extends boolean = false, TSafe extends boolean = false>(
       obligationData: `0x${string}`,
       schema: TSchema,
       schemaOptions?: Partial<z.ParseParams>,
@@ -101,10 +87,7 @@ export const makeStringObligationClient = (
       const decoded = decode(obligationData);
 
       // Type assertion needed because TypeScript can't infer the connection between parseFunc and return type
-      return schema[parseFunc](
-        JSON.parse(decoded.item),
-        schemaOptions,
-      ) as ZodParseReturnType<TSchema, TAsync, TSafe>;
+      return schema[parseFunc](JSON.parse(decoded.item), schemaOptions) as ZodParseReturnType<TSchema, TAsync, TSafe>;
     },
     decodeArkType: <Schema extends Type<any, any>>(
       obligationData: `0x${string}`,
@@ -124,10 +107,7 @@ export const makeStringObligationClient = (
      * @returns The complete obligation including attestation metadata and decoded obligation data
      */
     getObligation: async (uid: `0x${string}`) => {
-      const [attestation, schema] = await Promise.all([
-        getAttestation(viemClient, uid, addresses),
-        getSchema(),
-      ]);
+      const [attestation, schema] = await Promise.all([getAttestation(viemClient, uid, addresses), getSchema()]);
 
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);
@@ -140,10 +120,7 @@ export const makeStringObligationClient = (
       };
     },
     getJsonObligation: async <T>(uid: `0x${string}`) => {
-      const [attestation, schema] = await Promise.all([
-        getAttestation(viemClient, uid, addresses),
-        getSchema(),
-      ]);
+      const [attestation, schema] = await Promise.all([getAttestation(viemClient, uid, addresses), getSchema()]);
 
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);

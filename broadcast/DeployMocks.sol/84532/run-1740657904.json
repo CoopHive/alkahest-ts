@@ -6,10 +6,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x6aa9fa7a3e3529ee5f566d4c5c2528be6d7e2eb4",
       "function": null,
-      "arguments": [
-        "MockERC721_1",
-        "MERC721_1"
-      ],
+      "arguments": ["MockERC721_1", "MERC721_1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x1386ce",
@@ -27,10 +24,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x0895b774eb8a8b69ca2dce1897636d7e79f98d78",
       "function": null,
-      "arguments": [
-        "MockERC721_2",
-        "MERC721_2"
-      ],
+      "arguments": ["MockERC721_2", "MERC721_2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x1386ce",
@@ -48,10 +42,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x7caa519f345b4128612cd19f1c8c7bd76a744b71",
       "function": null,
-      "arguments": [
-        "MockMultiToken1",
-        "MMT1"
-      ],
+      "arguments": ["MockMultiToken1", "MMT1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x17b6d7",
@@ -69,10 +60,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0xd3e4a076131be79940c19dd721adeed6516adb7a",
       "function": null,
-      "arguments": [
-        "MockMultiToken2",
-        "MMT2"
-      ],
+      "arguments": ["MockMultiToken2", "MMT2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x17b6d7",
@@ -90,10 +78,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x6aa9fa7a3e3529ee5f566d4c5c2528be6d7e2eb4",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "1"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x6aa9fa7a3e3529ee5f566d4c5c2528be6d7e2eb4",
@@ -112,10 +97,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x6aa9fa7a3e3529ee5f566d4c5c2528be6d7e2eb4",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "3"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "3"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x6aa9fa7a3e3529ee5f566d4c5c2528be6d7e2eb4",
@@ -134,10 +116,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x0895b774eb8a8b69ca2dce1897636d7e79f98d78",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "2"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x0895b774eb8a8b69ca2dce1897636d7e79f98d78",
@@ -156,11 +135,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x7caa519f345b4128612cd19f1c8c7bd76a744b71",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "1",
-        "5"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "1", "5"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x7caa519f345b4128612cd19f1c8c7bd76a744b71",
@@ -179,11 +154,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x7caa519f345b4128612cd19f1c8c7bd76a744b71",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "4",
-        "5"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "4", "5"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x7caa519f345b4128612cd19f1c8c7bd76a744b71",
@@ -202,11 +173,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0xd3e4a076131be79940c19dd721adeed6516adb7a",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "2",
-        "10"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "2", "10"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0xd3e4a076131be79940c19dd721adeed6516adb7a",

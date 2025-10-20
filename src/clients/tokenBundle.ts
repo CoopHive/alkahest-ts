@@ -1,36 +1,23 @@
-import {
-  flattenTokenBundle,
-  getAttestedEventFromTxHash,
-  type ViemClient,
-} from "../utils";
-import type { ChainAddresses } from "../types";
-import type { ApprovalPurpose, Demand, TokenBundle } from "../types";
-
-import { abi as tokenBundleBarterUtilsAbi } from "../contracts/TokenBundleBarterUtils";
-import { abi as tokenBundleEscrowAbi } from "../contracts/TokenBundleEscrowObligation";
-import { abi as tokenBundlePaymentAbi } from "../contracts/TokenBundlePaymentObligation";
+import { decodeAbiParameters, encodeAbiParameters, getAbiItem } from "viem";
 import { abi as erc20Abi } from "../contracts/ERC20Permit";
 import { abi as erc721Abi } from "../contracts/IERC721";
 import { abi as erc1155Abi } from "../contracts/IERC1155";
-import {
-  decodeAbiParameters,
-  encodeAbiParameters,
-  getAbiItem,
-} from "viem";
+import { abi as tokenBundleBarterUtilsAbi } from "../contracts/TokenBundleBarterUtils";
+import { abi as tokenBundleEscrowAbi } from "../contracts/TokenBundleEscrowObligation";
+import { abi as tokenBundlePaymentAbi } from "../contracts/TokenBundlePaymentObligation";
+import type { ApprovalPurpose, ChainAddresses, Demand, TokenBundle } from "../types";
+import { flattenTokenBundle, getAttestedEventFromTxHash, type ViemClient } from "../utils";
 
-export const makeTokenBundleClient = (
-  viemClient: ViemClient,
-  addresses: ChainAddresses,
-) => {
+export const makeTokenBundleClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
   // Extract ABI types for encoding/decoding from contract ABIs
   const escrowObligationDataType = getAbiItem({
     abi: tokenBundleEscrowAbi.abi,
-    name: "decodeObligationData"
+    name: "decodeObligationData",
   }).outputs[0];
 
   const paymentObligationDataType = getAbiItem({
     abi: tokenBundlePaymentAbi.abi,
-    name: "decodeObligationData"
+    name: "decodeObligationData",
   }).outputs[0];
 
   /**
@@ -126,10 +113,7 @@ export const makeTokenBundleClient = (
      * @param fulfillment - UID of the fulfillment attestation
      * @returns Transaction hash
      */
-    collectEscrow: async (
-      buyAttestation: `0x${string}`,
-      fulfillment: `0x${string}`,
-    ) => {
+    collectEscrow: async (buyAttestation: `0x${string}`, fulfillment: `0x${string}`) => {
       const hash = await viemClient.writeContract({
         address: addresses.tokenBundleEscrowObligation,
         abi: tokenBundleEscrowAbi.abi,
@@ -170,11 +154,7 @@ export const makeTokenBundleClient = (
      * );
      * ```
      */
-    buyWithBundle: async (
-      price: TokenBundle,
-      item: Demand,
-      expiration: bigint,
-    ) => {
+    buyWithBundle: async (price: TokenBundle, item: Demand, expiration: bigint) => {
       const hash = await viemClient.writeContract({
         address: addresses.tokenBundleEscrowObligation,
         abi: tokenBundleEscrowAbi.abi,
@@ -239,11 +219,7 @@ export const makeTokenBundleClient = (
      * );
      * ```
      */
-    buyBundleForBundle: async (
-      bid: TokenBundle,
-      ask: TokenBundle,
-      expiration: bigint,
-    ) => {
+    buyBundleForBundle: async (bid: TokenBundle, ask: TokenBundle, expiration: bigint) => {
       const hash = await viemClient.writeContract({
         address: addresses.tokenBundleBarterUtils,
         abi: tokenBundleBarterUtilsAbi.abi,
@@ -302,9 +278,7 @@ export const makeTokenBundleClient = (
     approve: async (bundle: TokenBundle, purpose: ApprovalPurpose) => {
       // Get the appropriate contract address based on purpose
       const target =
-        purpose === "escrow"
-          ? addresses.tokenBundleEscrowObligation
-          : addresses.tokenBundlePaymentObligation;
+        purpose === "escrow" ? addresses.tokenBundleEscrowObligation : addresses.tokenBundlePaymentObligation;
 
       // Prepare approval transactions for all token types
       const approvalPromises: Promise<`0x${string}`>[] = [];
@@ -323,9 +297,7 @@ export const makeTokenBundleClient = (
 
       // Process ERC721 tokens
       // Group by token contract to use setApprovalForAll when possible
-      const erc721AddressesSet = new Set(
-        bundle.erc721s.map((token) => token.address),
-      );
+      const erc721AddressesSet = new Set(bundle.erc721s.map((token) => token.address));
 
       // For contracts with multiple tokens, use setApprovalForAll in parallel
       erc721AddressesSet.forEach((address) => {
@@ -341,9 +313,7 @@ export const makeTokenBundleClient = (
 
       // Process ERC1155 tokens
       // Group by token contract to use setApprovalForAll
-      const erc1155AddressesSet = new Set(
-        bundle.erc1155s.map((token) => token.address),
-      );
+      const erc1155AddressesSet = new Set(bundle.erc1155s.map((token) => token.address));
 
       // For ERC1155, always use setApprovalForAll in parallel
       erc1155AddressesSet.forEach((address) => {

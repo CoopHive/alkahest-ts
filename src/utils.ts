@@ -1,18 +1,9 @@
-import {
-  parseEventLogs,
-  type PublicActions,
-  type WalletClient,
-  type Transport,
-} from "viem";
-import { abi as iEasAbi } from "./contracts/IEAS";
-import { type Account, type Chain } from "viem";
-import type { ChainAddresses, TokenBundle, TokenBundleFlat } from "./types";
+import { type Account, type Chain, type PublicActions, parseEventLogs, type Transport, type WalletClient } from "viem";
 import { contractAddresses } from "./config";
+import { abi as easAbi, abi as iEasAbi } from "./contracts/IEAS";
+import type { ChainAddresses, TokenBundle, TokenBundleFlat } from "./types";
 
-import { abi as easAbi } from "./contracts/IEAS";
-
-export type ViemClient = WalletClient<Transport, Chain, Account> &
-  PublicActions;
+export type ViemClient = WalletClient<Transport, Chain, Account> & PublicActions;
 
 /**
  * Detect if the viem client is using WebSocket transport
@@ -26,9 +17,7 @@ export const isWebSocketTransport = (viemClient: ViemClient): boolean => {
   return (
     transport.type === "webSocket" ||
     // Additional check for subscription capabilities
-    (typeof transport === "object" &&
-      transport !== null &&
-      "subscribe" in transport)
+    (typeof transport === "object" && transport !== null && "subscribe" in transport)
   );
 };
 
@@ -40,20 +29,15 @@ export const isWebSocketTransport = (viemClient: ViemClient): boolean => {
  */
 export const getOptimalPollingInterval = (
   viemClient: ViemClient,
-  defaultInterval: number = 1000
+  defaultInterval: number = 1000,
 ): number | undefined => {
   // For WebSocket transports, return undefined to use subscription-based watching
   // For HTTP transports, return the polling interval
   return isWebSocketTransport(viemClient) ? undefined : defaultInterval;
 };
 
-export const getAttestation = async (
-  viemClient: ViemClient,
-  uid: `0x${string}`,
-  addresses?: ChainAddresses,
-) => {
-  let easAddress =
-    addresses?.eas ?? contractAddresses[viemClient.chain.name].eas;
+export const getAttestation = async (viemClient: ViemClient, uid: `0x${string}`, addresses?: ChainAddresses) => {
+  const easAddress = addresses?.eas ?? contractAddresses[viemClient.chain.name].eas;
 
   const attestation = await viemClient.readContract({
     address: easAddress,
@@ -64,10 +48,7 @@ export const getAttestation = async (
   return attestation;
 };
 
-export const getAttestedEventFromTxHash = async (
-  client: ViemClient,
-  hash: `0x${string}`,
-): Promise<any> => {
+export const getAttestedEventFromTxHash = async (client: ViemClient, hash: `0x${string}`): Promise<any> => {
   let tx;
   try {
     tx = await client.waitForTransactionReceipt({ hash });

@@ -1,16 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, test } from "bun:test";
-import {
-  encodeAbiParameters,
-  hexToBytes,
-  parseAbiParameters,
-  parseEther,
-  stringToHex,
-} from "viem";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
+import { encodeAbiParameters, hexToBytes, parseAbiParameters, parseEther, stringToHex } from "viem";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 
 const stringObligationAbi = parseAbiParameters("(string item)");
 const uptimeDemandAbi = parseAbiParameters("(bytes payload)");
@@ -157,34 +147,27 @@ test("asynchronous offchain oracle uptime flow", async () => {
     check_interval_secs: 2,
   };
 
-  const demandBytes = encodeAbiParameters(uptimeDemandAbi, [
-    { payload: stringToHex(JSON.stringify(demandPayload)) },
-  ]);
+  const demandBytes = encodeAbiParameters(uptimeDemandAbi, [{ payload: stringToHex(JSON.stringify(demandPayload)) }]);
 
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.charlie,
     data: demandBytes,
   });
 
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: parseEther("100"),
-      },
-      {
-        arbiter: testContext.addresses.trustedOracleArbiter,
-        demand,
-      },
-      BigInt(now + 3600),
-    );
+  const { attested: escrow } = await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+    {
+      address: testContext.mockAddresses.erc20A,
+      value: parseEther("100"),
+    },
+    {
+      arbiter: testContext.addresses.trustedOracleArbiter,
+      demand,
+    },
+    BigInt(now + 3600),
+  );
 
   const serviceUrl = demandPayload.service_url;
-  const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      serviceUrl,
-      escrow.uid,
-    );
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation(serviceUrl, escrow.uid);
 
   const scheduler: SchedulerContext = {
     jobDb: new Map(),
@@ -196,30 +179,25 @@ test("asynchronous offchain oracle uptime flow", async () => {
 
   const worker = startSchedulerWorker(scheduler, testContext.charlieClient.arbiters);
 
-  const listener = await testContext.charlieClient.oracle.listenAndArbitrateForEscrow({
-    escrow: {
-      attester: testContext.addresses.erc20EscrowObligation,
-      recipient: testContext.alice,
-      uid: escrow.uid,
-      demandAbi: uptimeDemandAbi,
-    },
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      recipient: testContext.bob,
-      refUID: escrow.uid,
-      obligationAbi: stringObligationAbi,
-    },
-    skipAlreadyArbitrated: true,
-    arbitrate: async (obligation, demandData) => {
+  const listener = await testContext.charlieClient.oracle.listenAndArbitrate(
+    async (attestation) => {
       const ctx = getScheduler();
       if (!ctx) return null;
 
+      // Extract obligation data
+      const obligation = testContext.charlieClient.extractObligationData(stringObligationAbi, attestation);
+
       const statement = obligation[0];
-      const payloadHex = demandData[0]?.payload;
-      if (!statement?.item || !payloadHex) return null;
+      if (!statement?.item) return null;
 
       const fulfillmentUid = ctx.urlIndex.get(statement.item);
       if (!fulfillmentUid || ctx.jobDb.has(fulfillmentUid)) return null;
+
+      // Get escrow and extract demand data
+      const [, demandData] = await testContext.charlieClient.getEscrowAndDemand(uptimeDemandAbi, attestation);
+
+      const payloadHex = demandData[0]?.payload;
+      if (!payloadHex) return null;
 
       let parsed: UptimeDemand;
       try {
@@ -244,12 +222,10 @@ test("asynchronous offchain oracle uptime flow", async () => {
       notifyScheduler(ctx);
       return null;
     },
-  });
-
-  await testContext.bobClient.arbiters.requestArbitrationFromTrustedOracle(
-    fulfillment.uid,
-    testContext.charlie,
+    { skipAlreadyArbitrated: true },
   );
+
+  await testContext.bobClient.oracle.requestArbitration(fulfillment.uid, testContext.charlie);
 
   const arbitration = await testContext.charlieClient.arbiters.waitForTrustedOracleArbitration(
     fulfillment.uid,
@@ -261,10 +237,7 @@ test("asynchronous offchain oracle uptime flow", async () => {
   let collectionHash: `0x${string}` | undefined;
   for (let attempts = 0; attempts < 50; attempts++) {
     try {
-      collectionHash = await testContext.bobClient.erc20.collectEscrow(
-        escrow.uid,
-        fulfillment.uid,
-      );
+      collectionHash = await testContext.bobClient.erc20.collectEscrow(escrow.uid, fulfillment.uid);
       break;
     } catch {
       await Bun.sleep(100);

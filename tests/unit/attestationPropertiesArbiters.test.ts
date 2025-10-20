@@ -12,21 +12,10 @@
  * - UidArbiter (Composing & NonComposing)
  */
 
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 
 describe("Attestation Properties Arbiters Tests", () => {
   let testContext: TestContext;
@@ -36,13 +25,13 @@ describe("Attestation Properties Arbiters Tests", () => {
 
   beforeAll(async () => {
     testContext = await setupTestEnvironment();
-    
+
     // Generate test accounts
     const alicePrivateKey = generatePrivateKey();
     const bobPrivateKey = generatePrivateKey();
     alice = privateKeyToAddress(alicePrivateKey);
     bob = privateKeyToAddress(bobPrivateKey);
-    
+
     testClient = testContext.testClient;
   });
 
@@ -54,7 +43,7 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("Composing variant", () => {
       test("should encode and decode AttesterArbiterComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           baseArbiter: alice,
           baseDemand: "0x1234567890abcdef" as `0x${string}`,
@@ -74,7 +63,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
       test("should handle empty baseDemand", () => {
         const client = testContext.aliceClient;
-        
+
         const demand = {
           baseArbiter: alice,
           baseDemand: "0x" as `0x${string}`,
@@ -83,7 +72,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
         const encoded = client.arbiters.encodeAttesterArbiterComposingDemand(demand);
         const decoded = client.arbiters.decodeAttesterArbiterComposingDemand(encoded);
-        
+
         expect(decoded.baseDemand).toBe("0x");
       });
     });
@@ -91,7 +80,7 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("NonComposing variant", () => {
       test("should encode and decode AttesterArbiterNonComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           attester: alice,
         };
@@ -111,7 +100,7 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("Composing variant", () => {
       test("should encode and decode ExpirationTimeAfterArbiterComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           baseArbiter: alice,
           baseDemand: "0xabcdef1234567890" as `0x${string}`,
@@ -120,7 +109,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
         const encoded = client.arbiters.encodeExpirationTimeAfterArbiterComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeExpirationTimeAfterArbiterComposingDemand(encoded);
-        
+
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
@@ -130,14 +119,14 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("NonComposing variant", () => {
       test("should encode and decode ExpirationTimeAfterArbiterNonComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           expirationTime: 1735689600n,
         };
 
         const encoded = client.arbiters.encodeExpirationTimeAfterArbiterNonComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeExpirationTimeAfterArbiterNonComposingDemand(encoded);
-        
+
         expect(decoded.expirationTime).toBe(originalDemand.expirationTime);
       });
     });
@@ -147,7 +136,7 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("Composing variant", () => {
       test("should encode and decode RecipientArbiterComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           baseArbiter: alice,
           baseDemand: "0x" as `0x${string}`,
@@ -156,7 +145,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
         const encoded = client.arbiters.encodeRecipientArbiterComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeRecipientArbiterComposingDemand(encoded);
-        
+
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.recipient).toBe(originalDemand.recipient);
@@ -166,14 +155,14 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("NonComposing variant", () => {
       test("should encode and decode RecipientArbiterNonComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           recipient: bob,
         };
 
         const encoded = client.arbiters.encodeRecipientArbiterNonComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeRecipientArbiterNonComposingDemand(encoded);
-        
+
         expect(decoded.recipient).toBe(originalDemand.recipient);
       });
     });
@@ -183,7 +172,7 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("Composing variant", () => {
       test("should encode and decode RefUidArbiterComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           baseArbiter: alice,
           baseDemand: "0x1111" as `0x${string}`,
@@ -192,7 +181,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
         const encoded = client.arbiters.encodeRefUidArbiterComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeRefUidArbiterComposingDemand(encoded);
-        
+
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.refUID).toBe(originalDemand.refUID);
@@ -202,14 +191,14 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("NonComposing variant", () => {
       test("should encode and decode RefUidArbiterNonComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           refUID: "0xabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcdefabcd" as `0x${string}`,
         };
 
         const encoded = client.arbiters.encodeRefUidArbiterNonComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeRefUidArbiterNonComposingDemand(encoded);
-        
+
         expect(decoded.refUID).toBe(originalDemand.refUID);
       });
     });
@@ -219,7 +208,7 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("Composing variant", () => {
       test("should encode and decode RevocableArbiterComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           baseArbiter: alice,
           baseDemand: "0x2222" as `0x${string}`,
@@ -228,7 +217,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
         const encoded = client.arbiters.encodeRevocableArbiterComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeRevocableArbiterComposingDemand(encoded);
-        
+
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.revocable).toBe(originalDemand.revocable);
@@ -236,7 +225,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
       test("should handle false revocable value", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           baseArbiter: alice,
           baseDemand: "0x" as `0x${string}`,
@@ -245,7 +234,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
         const encoded = client.arbiters.encodeRevocableArbiterComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeRevocableArbiterComposingDemand(encoded);
-        
+
         expect(decoded.revocable).toBe(false);
       });
     });
@@ -253,14 +242,14 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("NonComposing variant", () => {
       test("should encode and decode RevocableArbiterNonComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           revocable: true,
         };
 
         const encoded = client.arbiters.encodeRevocableArbiterNonComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeRevocableArbiterNonComposingDemand(encoded);
-        
+
         expect(decoded.revocable).toBe(originalDemand.revocable);
       });
     });
@@ -270,7 +259,7 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("Composing variant", () => {
       test("should encode and decode SchemaArbiterComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           baseArbiter: alice,
           baseDemand: "0x4444" as `0x${string}`,
@@ -279,7 +268,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
         const encoded = client.arbiters.encodeSchemaArbiterComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeSchemaArbiterComposingDemand(encoded);
-        
+
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.schema).toBe(originalDemand.schema);
@@ -289,14 +278,14 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("NonComposing variant", () => {
       test("should encode and decode SchemaArbiterNonComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           schema: "0xdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeefdeadbeef" as `0x${string}`,
         };
 
         const encoded = client.arbiters.encodeSchemaArbiterNonComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeSchemaArbiterNonComposingDemand(encoded);
-        
+
         expect(decoded.schema).toBe(originalDemand.schema);
       });
     });
@@ -306,7 +295,7 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("Composing variant", () => {
       test("should encode and decode TimeAfterArbiterComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           baseArbiter: alice,
           baseDemand: "0x5555" as `0x${string}`,
@@ -315,7 +304,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
         const encoded = client.arbiters.encodeTimeAfterArbiterComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeTimeAfterArbiterComposingDemand(encoded);
-        
+
         expect(decoded.baseArbiter).toBe(originalDemand.baseArbiter);
         expect(decoded.baseDemand).toBe(originalDemand.baseDemand);
         expect(decoded.time).toBe(originalDemand.time);
@@ -325,14 +314,14 @@ describe("Attestation Properties Arbiters Tests", () => {
     describe("NonComposing variant", () => {
       test("should encode and decode TimeAfterArbiterNonComposing demand data correctly", () => {
         const client = testContext.aliceClient;
-        
+
         const originalDemand = {
           time: 1735689600n,
         };
 
         const encoded = client.arbiters.encodeTimeAfterArbiterNonComposingDemand(originalDemand);
         const decoded = client.arbiters.decodeTimeAfterArbiterNonComposingDemand(encoded);
-        
+
         expect(decoded.time).toBe(originalDemand.time);
       });
     });
@@ -485,7 +474,7 @@ describe("Attestation Properties Arbiters Tests", () => {
   describe("Error handling", () => {
     test("should throw error for invalid hex data", () => {
       const client = testContext.aliceClient;
-      
+
       expect(() => {
         client.arbiters.decodeAttesterArbiterComposingDemand("invalid-hex" as `0x${string}`);
       }).toThrow();
@@ -493,7 +482,7 @@ describe("Attestation Properties Arbiters Tests", () => {
 
     test("should throw error for insufficient data", () => {
       const client = testContext.aliceClient;
-      
+
       expect(() => {
         client.arbiters.decodeAttesterArbiterComposingDemand("0x123" as `0x${string}`);
       }).toThrow();
@@ -503,20 +492,17 @@ describe("Attestation Properties Arbiters Tests", () => {
   describe("Integration with manual encoding", () => {
     test("should produce same result as manual ABI encoding", () => {
       const client = testContext.aliceClient;
-      
+
       const demand = {
         attester: alice,
       };
-      
+
       // Manual encoding using viem directly
-      const manualEncoded = encodeAbiParameters(
-        parseAbiParameters("(address attester)"),
-        [demand]
-      );
-      
+      const manualEncoded = encodeAbiParameters(parseAbiParameters("(address attester)"), [demand]);
+
       // SDK encoding
       const sdkEncoded = client.arbiters.encodeAttesterArbiterNonComposingDemand(demand);
-      
+
       expect(sdkEncoded).toBe(manualEncoded);
     });
   });

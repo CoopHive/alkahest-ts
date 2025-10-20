@@ -1,46 +1,26 @@
-import {
-  flattenTokenBundle,
-  getAttestedEventFromTxHash,
-  type ViemClient,
-} from "../utils";
-import type { ChainAddresses } from "../types";
-import type {
-  ApprovalPurpose,
-  Demand,
-  Erc1155,
-  Erc20,
-  Erc721,
-  TokenBundle,
-} from "../types";
-
+import { decodeAbiParameters, encodeAbiParameters, getAbiItem } from "viem";
 import { abi as erc721BarterUtilsAbi } from "../contracts/ERC721BarterCrossToken";
 import { abi as erc721EscrowAbi } from "../contracts/ERC721EscrowObligation";
 import { abi as erc721PaymentAbi } from "../contracts/ERC721PaymentObligation";
 import { abi as erc721Abi } from "../contracts/IERC721";
-import {
-  decodeAbiParameters,
-  encodeAbiParameters,
-  getAbiItem,
-} from "viem";
+import type { ApprovalPurpose, ChainAddresses, Demand, Erc20, Erc721, Erc1155, TokenBundle } from "../types";
+import { flattenTokenBundle, getAttestedEventFromTxHash, type ViemClient } from "../utils";
 
 // Extract ABI types at module initialization with fail-fast error handling
 const erc721EscrowDecodeFunction = getAbiItem({
   abi: erc721EscrowAbi.abi,
-  name: 'decodeObligationData'
+  name: "decodeObligationData",
 });
 const erc721PaymentDecodeFunction = getAbiItem({
   abi: erc721PaymentAbi.abi,
-  name: 'decodeObligationData'
+  name: "decodeObligationData",
 });
 
 // Extract the ObligationData struct types from the function outputs
 const erc721EscrowObligationDataType = erc721EscrowDecodeFunction.outputs[0];
 const erc721PaymentObligationDataType = erc721PaymentDecodeFunction.outputs[0];
 
-export const makeErc721Client = (
-  viemClient: ViemClient,
-  addresses: ChainAddresses,
-) => {
+export const makeErc721Client = (viemClient: ViemClient, addresses: ChainAddresses) => {
   /**
    * Encodes ERC721EscrowObligation.ObligationData to bytes using raw parameters.
    * @param data - ObligationData object to encode
@@ -52,10 +32,7 @@ export const makeErc721Client = (
     token: `0x${string}`;
     tokenId: bigint;
   }) => {
-    return encodeAbiParameters(
-      [erc721EscrowObligationDataType],
-      [data],
-    );
+    return encodeAbiParameters([erc721EscrowObligationDataType], [data]);
   };
 
   /**
@@ -63,15 +40,8 @@ export const makeErc721Client = (
    * @param data - ObligationData object to encode
    * @returns the abi encoded ObligationData as bytes
    */
-  const encodePaymentObligationRaw = (data: {
-    token: `0x${string}`;
-    tokenId: bigint;
-    payee: `0x${string}`;
-  }) => {
-    return encodeAbiParameters(
-      [erc721PaymentObligationDataType],
-      [data],
-    );
+  const encodePaymentObligationRaw = (data: { token: `0x${string}`; tokenId: bigint; payee: `0x${string}` }) => {
+    return encodeAbiParameters([erc721PaymentObligationDataType], [data]);
   };
 
   return {
@@ -112,10 +82,7 @@ export const makeErc721Client = (
      * @returns the decoded ObligationData object
      */
     decodeEscrowObligation: (obligationData: `0x${string}`) => {
-      return decodeAbiParameters(
-        [erc721EscrowObligationDataType],
-        obligationData,
-      )[0];
+      return decodeAbiParameters([erc721EscrowObligationDataType], obligationData)[0];
     },
     /**
      * Decodes ERC721PaymentObligation.ObligationData from bytes.
@@ -123,10 +90,7 @@ export const makeErc721Client = (
      * @returns the decoded ObligationData object
      */
     decodePaymentObligation: (obligationData: `0x${string}`) => {
-      return decodeAbiParameters(
-        [erc721PaymentObligationDataType],
-        obligationData,
-      )[0];
+      return decodeAbiParameters([erc721PaymentObligationDataType], obligationData)[0];
     },
     /**
      * Approves a specific token for trading
@@ -135,10 +99,7 @@ export const makeErc721Client = (
      * @returns Transaction hash
      */
     approve: async (token: Erc721, purpose: ApprovalPurpose) => {
-      const to =
-        purpose === "escrow"
-          ? addresses.erc721EscrowObligation
-          : addresses.erc721PaymentObligation;
+      const to = purpose === "escrow" ? addresses.erc721EscrowObligation : addresses.erc721PaymentObligation;
       const hash = await viemClient.writeContract({
         address: token.address,
         abi: erc721Abi.abi,
@@ -155,14 +116,8 @@ export const makeErc721Client = (
      * @param purpose - Purpose of approval (escrow or payment)
      * @returns Transaction hash
      */
-    approveAll: async (
-      token_contract: `0x${string}`,
-      purpose: ApprovalPurpose,
-    ) => {
-      const to =
-        purpose === "escrow"
-          ? addresses.erc721EscrowObligation
-          : addresses.erc721PaymentObligation;
+    approveAll: async (token_contract: `0x${string}`, purpose: ApprovalPurpose) => {
+      const to = purpose === "escrow" ? addresses.erc721EscrowObligation : addresses.erc721PaymentObligation;
       const hash = await viemClient.writeContract({
         address: token_contract,
         abi: erc721Abi.abi,
@@ -179,14 +134,8 @@ export const makeErc721Client = (
      * @param purpose - Purpose of approval to revoke (escrow or payment)
      * @returns Transaction hash
      */
-    revokeAll: async (
-      token_contract: `0x${string}`,
-      purpose: ApprovalPurpose,
-    ) => {
-      const to =
-        purpose === "escrow"
-          ? addresses.erc721EscrowObligation
-          : addresses.erc721PaymentObligation;
+    revokeAll: async (token_contract: `0x${string}`, purpose: ApprovalPurpose) => {
+      const to = purpose === "escrow" ? addresses.erc721EscrowObligation : addresses.erc721PaymentObligation;
       const hash = await viemClient.writeContract({
         address: token_contract,
         abi: erc721Abi.abi,
@@ -203,10 +152,7 @@ export const makeErc721Client = (
      * @param fulfillment - UID of the fulfillment attestation
      * @returns Transaction hash
      */
-    collectEscrow: async (
-      buyAttestation: `0x${string}`,
-      fulfillment: `0x${string}`,
-    ) => {
+    collectEscrow: async (buyAttestation: `0x${string}`, fulfillment: `0x${string}`) => {
       const hash = await viemClient.writeContract({
         address: addresses.erc721EscrowObligation,
         abi: erc721EscrowAbi.abi,
@@ -315,11 +261,7 @@ export const makeErc721Client = (
      * );
      * ```
      */
-    buyErc721ForErc721: async (
-      bid: Erc721,
-      ask: Erc721,
-      expiration: bigint,
-    ) => {
+    buyErc721ForErc721: async (bid: Erc721, ask: Erc721, expiration: bigint) => {
       const hash = await viemClient.writeContract({
         address: addresses.erc721BarterUtils,
         abi: erc721BarterUtilsAbi.abi,
@@ -421,11 +363,7 @@ export const makeErc721Client = (
      * );
      * ```
      */
-    buyErc1155WithErc721: async (
-      bid: Erc721,
-      ask: Erc1155,
-      expiration: bigint,
-    ) => {
+    buyErc1155WithErc721: async (bid: Erc721, ask: Erc1155, expiration: bigint) => {
       const hash = await viemClient.writeContract({
         address: addresses.erc721BarterUtils,
         abi: erc721BarterUtilsAbi.abi,
@@ -479,22 +417,12 @@ export const makeErc721Client = (
      * );
      * ```
      */
-    buyBundleWithErc721: async (
-      bid: Erc721,
-      ask: TokenBundle,
-      payee: `0x${string}`,
-      expiration: bigint,
-    ) => {
+    buyBundleWithErc721: async (bid: Erc721, ask: TokenBundle, payee: `0x${string}`, expiration: bigint) => {
       const hash = await viemClient.writeContract({
         address: addresses.erc721BarterUtils,
         abi: erc721BarterUtilsAbi.abi,
         functionName: "buyBundleWithErc721",
-        args: [
-          bid.address,
-          bid.id,
-          { ...flattenTokenBundle(ask), payee },
-          expiration,
-        ],
+        args: [bid.address, bid.id, { ...flattenTokenBundle(ask), payee }, expiration],
       });
 
       const attested = await getAttestedEventFromTxHash(viemClient, hash);

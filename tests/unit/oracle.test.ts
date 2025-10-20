@@ -1,10 +1,6 @@
 import { afterAll, beforeAll, beforeEach, expect, test } from "bun:test";
-import { encodeAbiParameters, parseAbiParameters, decodeAbiParameters } from "viem";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
+import { encodeAbiParameters, parseAbiParameters } from "viem";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 
 let testContext: TestContext;
 
@@ -26,932 +22,289 @@ afterAll(async () => {
   await teardownTestEnvironment(testContext);
 });
 
-test("trivialArbitratePast", async () => {
+test("trivial arbitratePast", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [{ mockDemand: "foo" }]),
   });
 
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "foo",
-      escrow.uid,
-    );
-
-  const decisions = await testContext.bobClient.oracle.arbitratePast({
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
+  const { attested: escrow } = await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+    {
+      address: testContext.mockAddresses.erc20A,
+      value: 10n,
     },
-    arbitrate: async (_obligation) => true,
-  });
-
-  decisions.decisions.forEach(($) => expect($?.decision).toBe(true));
-
-  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment.uid,
+    { arbiter, demand },
+    0n,
   );
 
-  expect(collectionHash).toBeTruthy();
-});
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
 
-test("trivialListenAndArbitrate", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
-  });
+  // Request arbitration
+  const requestHash = await testContext.bobClient.oracle.requestArbitration(fulfillment.uid, testContext.bob);
 
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrate({
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
-    },
-    arbitrate: async (_obligation) => true,
-    onAfterArbitrate: async (decision) => {
-      expect(decision?.attestation.uid).toEqual(fulfillment.uid);
-      expect(decision?.obligation[0].item).toEqual("foo");
-      expect(decision?.decision).toBe(true);
-    },
-    pollingInterval: 50,
-  });
-
-  const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "foo",
-      escrow.uid,
-    );
-
-  await Bun.sleep(100);
-  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment.uid,
-  );
-
-  expect(collectionHash).toBeTruthy();
-
-  unwatch();
-});
-
-test("conditionalArbitratePast", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
-  });
-
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { attested: fulfillment1 } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "good",
-      escrow.uid,
-    );
-
-  const { attested: fulfillment2 } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "bad",
-      escrow.uid,
-    );
-
-  const decisions = await testContext.bobClient.oracle.arbitratePast({
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
-    },
-    arbitrate: async (_obligation) => _obligation[0].item === "good",
-  });
-
-  decisions.decisions.forEach(($) =>
-    expect($?.decision).toBe($?.obligation[0].item === "good"),
-  );
-
-  const failedCollection = testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment2.uid,
-  );
-  expect(async () => await failedCollection).toThrow();
-
-  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment1.uid,
-  );
-
-  expect(collectionHash).toBeTruthy();
-});
-
-test("conditionalListenAndArbitrate", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
-  });
-
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrate({
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
-    },
-    arbitrate: async (_obligation) => _obligation[0].item === "good",
-    onAfterArbitrate: async (decision) => {
-      expect(decision?.decision).toBe(decision?.obligation[0].item === "good");
-    },
-    pollingInterval: 50,
-  });
-
-  const { attested: fulfillment1 } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "good",
-      escrow.uid,
-    );
-
-  const { attested: fulfillment2 } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "bad",
-      escrow.uid,
-    );
-
-  await Bun.sleep(100);
-  const failedCollection = testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment2.uid,
-  );
-  expect(async () => await failedCollection).toThrow();
-
-  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment1.uid,
-  );
-  expect(collectionHash).toBeTruthy();
-
-  unwatch();
-});
-
-test("trivialArbitratePastEscrow", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
-  });
-
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "foo",
-      escrow.uid,
-    );
-
-  const decisions = await testContext.bobClient.oracle.arbitratePastForEscrow({
-    escrow: {
-      attester: testContext.addresses.erc20EscrowObligation,
-      demandAbi: parseAbiParameters("(string mockDemand)"),
-    },
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
-    },
-    arbitrate: async (_obligation, _demand) => true,
-  });
-
-  decisions.decisions.forEach(($) => expect($?.decision).toBe(true));
-
-  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment.uid,
-  );
-
-  expect(collectionHash).toBeTruthy();
-});
-
-test("trivialListenAndArbitrateEscrow", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
-  });
-
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { unwatch } =
-    await testContext.bobClient.oracle.listenAndArbitrateForEscrow({
-      escrow: {
-        attester: testContext.addresses.erc20EscrowObligation,
-        demandAbi: parseAbiParameters("(string mockDemand)"),
-      },
-      fulfillment: {
-        attester: testContext.addresses.stringObligation,
-        obligationAbi: parseAbiParameters("(string item)"),
-      },
-      arbitrate: async (_obligation, _demand) => true,
-      onAfterArbitrate: async (decision) => {
-        expect(decision?.attestation.uid).toEqual(fulfillment.uid);
-        expect(decision?.obligation[0].item).toEqual("foo");
-        expect(decision?.decision).toBe(true);
-      },
-      pollingInterval: 50,
-    });
-
-  const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "foo",
-      escrow.uid,
-    );
-
-  await Bun.sleep(100);
-  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment.uid,
-  );
-
-  expect(collectionHash).toBeTruthy();
-
-  unwatch();
-});
-
-test("conditionalArbitratePastEscrow", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
-  });
-
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { attested: fulfillment1 } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "foo",
-      escrow.uid,
-    );
-
-  const { attested: fulfillment2 } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "bar",
-      escrow.uid,
-    );
-
-  const decisions = await testContext.bobClient.oracle.arbitratePastForEscrow({
-    escrow: {
-      attester: testContext.addresses.erc20EscrowObligation,
-      demandAbi: parseAbiParameters("(string mockDemand)"),
-    },
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
-    },
-    arbitrate: async (_obligation, _demand) =>
-      _obligation[0].item === _demand[0].mockDemand,
-  });
-
-  decisions.decisions.forEach(($) =>
-    expect($!.demand[0].mockDemand === $!.obligation[0].item).toBe($!.decision !== null ? $!.decision : false),
-  );
-
-  const failedCollection = testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment2.uid,
-  );
-  expect(async () => await failedCollection).toThrow();
-
-  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment1.uid,
-  );
-
-  expect(collectionHash).toBeTruthy();
-});
-
-test("conditionalListenAndArbitrateEscrow", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
-  });
-
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateForEscrow({
-    escrow: {
-      attester: testContext.addresses.erc20EscrowObligation,
-      demandAbi: parseAbiParameters("(string mockDemand)"),
-    },
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
-    },
-    arbitrate: async (_obligation, _demand) =>
-      _obligation[0].item === _demand[0].mockDemand,
-    onAfterArbitrate: async (decision) => {
-      expect(decision?.decision).toBe(
-        decision?.obligation[0].item === decision?.demand[0].mockDemand,
-      );
-    },
-    pollingInterval: 50,
-  });
-
-  const { attested: fulfillment1 } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "foo",
-      escrow.uid,
-    );
-
-  const { attested: fulfillment2 } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "bar",
-      escrow.uid,
-    );
-
-  await Bun.sleep(100);
-  const failedCollection = testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment2.uid,
-  );
-  expect(async () => await failedCollection).toThrow();
-
-  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    fulfillment1.uid,
-  );
-  expect(collectionHash).toBeTruthy();
-
-  unwatch();
-});
-
-test("arbitratePast with skipAlreadyArbitrated option", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
-  });
-
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "foo",
-      escrow.uid,
-    );
-
-  // First arbitration should succeed
-  const { decisions: firstDecisions } =
-    await testContext.bobClient.oracle.arbitratePast({
-      fulfillment: {
-        obligationAbi: parseAbiParameters("(string item)"),
-        attester: testContext.addresses.stringObligation,
-      },
-      arbitrate: async (obligation) => {
-        return obligation[0].item === "foo";
-      },
-      skipAlreadyArbitrated: false, // Explicitly set to false
-    });
-
-  expect(firstDecisions.length).toBe(1);
-  expect(firstDecisions[0]?.decision).toBe(true);
-
-  // Wait for the transaction to be confirmed
-  const firstDecision = firstDecisions[0];
-  if (firstDecision && 'hash' in firstDecision && firstDecision.hash) {
-    await testContext.testClient.waitForTransactionReceipt({
-      hash: firstDecision.hash,
-    });
-  } else {
-    throw new Error("Expected first decision to have a hash");
-  }
-
-  // Second arbitration with skipAlreadyArbitrated: false should attempt to arbitrate again
-  const { decisions: secondDecisions } =
-    await testContext.bobClient.oracle.arbitratePast({
-      fulfillment: {
-        obligationAbi: parseAbiParameters("(string item)"),
-        attester: testContext.addresses.stringObligation,
-      },
-      arbitrate: async (obligation) => {
-        return obligation[0].item === "foo";
-      },
-      skipAlreadyArbitrated: false,
-    });
-
-  expect(secondDecisions.length).toBe(1);
-
-  // Third arbitration with skipAlreadyArbitrated: true should skip re-arbitration
-  const { decisions: thirdDecisions } =
-    await testContext.bobClient.oracle.arbitratePast({
-      fulfillment: {
-        obligationAbi: parseAbiParameters("(string item)"),
-        attester: testContext.addresses.stringObligation,
-      },
-      arbitrate: async (obligation) => {
-        return obligation[0].item === "foo";
-      },
-      skipAlreadyArbitrated: true,
-    });
-
-  expect(thirdDecisions.length).toBe(0); // Should skip already arbitrated fulfillments
-});
-
-test("arbitratePastForEscrow with skipAlreadyArbitrated option", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "foo" },
-    ]),
-  });
-
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
-
-  const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "foo",
-      escrow.uid,
-    );
-
-  // First arbitration should succeed
-  const { decisions: firstDecisions } =
-    await testContext.bobClient.oracle.arbitratePastForEscrow({
-      escrow: {
-        attester: testContext.addresses.erc20EscrowObligation,
-        demandAbi: parseAbiParameters("(string mockDemand)"),
-      },
-      fulfillment: {
-        attester: testContext.addresses.stringObligation,
-        obligationAbi: parseAbiParameters("(string item)"),
-      },
-      arbitrate: async (obligation, demand) => {
-        return obligation[0].item === demand[0].mockDemand;
-      },
-      skipAlreadyArbitrated: false,
-    });
-
-  expect(firstDecisions.length).toBe(1);
-  expect(firstDecisions[0]?.decision).toBe(true);
-
-  // Wait for the transaction to be confirmed
+  // Wait for arbitration request to be confirmed
   await testContext.testClient.waitForTransactionReceipt({
-    hash: firstDecisions[0]?.hash!,
+    hash: requestHash,
   });
 
-  // Second arbitration with skipAlreadyArbitrated: true should skip re-arbitration
-  const { decisions: secondDecisions } =
-    await testContext.bobClient.oracle.arbitratePastForEscrow({
-      escrow: {
-        attester: testContext.addresses.erc20EscrowObligation,
-        demandAbi: parseAbiParameters("(string mockDemand)"),
-      },
-      fulfillment: {
-        attester: testContext.addresses.stringObligation,
-        obligationAbi: parseAbiParameters("(string item)"),
-      },
-      arbitrate: async (obligation, demand) => {
-        return obligation[0].item === demand[0].mockDemand;
-      },
-      skipAlreadyArbitrated: true,
-    });
-
-  expect(secondDecisions.length).toBe(0); // Should skip already arbitrated fulfillments
-});
-
-test("listenAndArbitrateNewFulfillments - only listens for new events", async () => {
-  const arbiter = testContext.addresses.trustedOracleArbiter;
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "test" },
-    ]),
+  const obligationAbi = parseAbiParameters("(string item)");
+  const decisions = await testContext.bobClient.oracle.arbitratePast(async (attestation) => {
+    const obligation = testContext.bobClient.extractObligationData(obligationAbi, attestation);
+    return true;
   });
 
-  // Create escrow first
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
+  decisions.forEach(($) => expect($.decision).toBe(true));
 
-  // Create a fulfillment BEFORE starting to listen
-  const { attested: pastFulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "test",
-      escrow.uid,
-    );
+  const collectionHash = await testContext.bobClient.erc20.collectEscrow(escrow.uid, fulfillment.uid);
 
-  let arbitrationsProcessed = 0;
-  let newFulfillmentProcessed = false;
-
-  // Start listening only for NEW events (should not process past fulfillment)
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillments({
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
-    },
-    arbitrate: async (obligation) => {
-      arbitrationsProcessed++;
-      if (obligation[0].item === "new-test") {
-        newFulfillmentProcessed = true;
-      }
-      return obligation[0].item === "new-test";
-    },
-    onAfterArbitrate: async (decision) => {
-      expect(decision?.obligation[0].item).toEqual("new-test");
-      expect(decision?.decision).toBe(true);
-    },
-    pollingInterval: 25,
-  });
-
-  // Wait a bit to ensure listener is established
-  await Bun.sleep(25);
-
-  // Past fulfillment should NOT be processed
-  expect(arbitrationsProcessed).toBe(0);
-
-  // Create a NEW fulfillment after starting to listen
-  const { attested: newFulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "new-test",
-      escrow.uid,
-    );
-
-  // Wait for the new fulfillment to be processed
-  await Bun.sleep(75);
-
-  // Should have processed exactly 1 arbitration (the new one)
-  expect(arbitrationsProcessed).toBe(1);
-  expect(newFulfillmentProcessed).toBe(true);
-
-  // Verify collection works
-  const collectionHash = await testContext.bobClient.erc20.collectEscrow(
-    escrow.uid,
-    newFulfillment.uid,
-  );
   expect(collectionHash).toBeTruthy();
-
-  unwatch();
 });
 
-test("listenAndArbitrateNewFulfillments with conditional arbitration", async () => {
+test("conditional arbitratePast", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "accept" },
-    ]),
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [{ mockDemand: "foo" }]),
   });
 
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
+  const { attested: escrow } = await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+    {
+      address: testContext.mockAddresses.erc20A,
+      value: 10n,
+    },
+    { arbiter, demand },
+    0n,
+  );
 
-  let acceptedCount = 0;
-  let rejectedCount = 0;
+  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.doObligation("good", escrow.uid);
 
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillments({
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
-    },
-    arbitrate: async (obligation) => {
-      const shouldAccept = obligation[0].item === "accept";
-      if (shouldAccept) acceptedCount++;
-      else rejectedCount++;
-      return shouldAccept;
-    },
-    onAfterArbitrate: async (decision) => {
-      expect(decision?.decision).toBe(decision?.obligation[0].item === "accept");
-    },
-    pollingInterval: 25,
+  const { attested: fulfillment2 } = await testContext.bobClient.stringObligation.doObligation("bad", escrow.uid);
+
+  // Request arbitration for both
+  const requestHash1 = await testContext.bobClient.oracle.requestArbitration(fulfillment1.uid, testContext.bob);
+  const requestHash2 = await testContext.bobClient.oracle.requestArbitration(fulfillment2.uid, testContext.bob);
+
+  // Wait for arbitration requests to be confirmed
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: requestHash1,
+  });
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: requestHash2,
   });
 
-  // Create fulfillments that should be accepted
-  await testContext.bobClient.stringObligation.doObligation("accept", escrow.uid);
-  await testContext.bobClient.stringObligation.doObligation("reject", escrow.uid);
-  await testContext.bobClient.stringObligation.doObligation("accept", escrow.uid);
+  const obligationAbi = parseAbiParameters("(string item)");
+  const decisions = await testContext.bobClient.oracle.arbitratePast(async (attestation) => {
+    const obligation = testContext.bobClient.extractObligationData(obligationAbi, attestation);
+    return obligation[0].item === "good";
+  });
 
-  await Bun.sleep(100);
+  expect(decisions.length).toBe(2);
+  expect(decisions.filter((d) => d.decision).length).toBe(1);
 
-  expect(acceptedCount).toBe(2);
-  expect(rejectedCount).toBe(1);
+  const failedCollection = testContext.bobClient.erc20.collectEscrow(escrow.uid, fulfillment2.uid);
+  expect(async () => await failedCollection).toThrow();
 
-  unwatch();
+  const collectionHash = await testContext.bobClient.erc20.collectEscrow(escrow.uid, fulfillment1.uid);
+
+  expect(collectionHash).toBeTruthy();
 });
 
-test("listenAndArbitrateNewFulfillmentsForEscrow with skipAlreadyArbitrated", async () => {
+test("arbitratePast with skipAlreadyArbitrated", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
   const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "skip-test" },
-    ]),
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [{ mockDemand: "foo" }]),
   });
 
-  let arbitrationsAttempted = 0;
+  const { attested: escrow } = await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+    {
+      address: testContext.mockAddresses.erc20A,
+      value: 10n,
+    },
+    { arbiter, demand },
+    0n,
+  );
 
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillmentsForEscrow({
-    escrow: {
-      attester: testContext.addresses.erc20EscrowObligation,
-      demandAbi: parseAbiParameters("(string mockDemand)"),
-    },
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
-    },
-    arbitrate: async (obligation, demand) => {
-      arbitrationsAttempted++;
-      return obligation[0].item === demand[0].mockDemand;
-    },
-    skipAlreadyArbitrated: true,
-    pollingInterval: 25,
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
+
+  // Request arbitration
+  const requestHash = await testContext.bobClient.oracle.requestArbitration(fulfillment.uid, testContext.bob);
+
+  // Wait for arbitration request to be confirmed
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: requestHash,
   });
 
-  // Create new escrow
-  const { attested: escrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand },
-      0n,
-    );
+  const obligationAbi = parseAbiParameters("(string item)");
 
-  await Bun.sleep(50);
+  // First arbitration
+  const firstDecisions = await testContext.bobClient.oracle.arbitratePast(async (attestation) => {
+    const obligation = testContext.bobClient.extractObligationData(obligationAbi, attestation);
+    return obligation[0].item === "foo";
+  });
 
-  // Create fulfillment
-  const { attested: fulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "skip-test",
-      escrow.uid,
-    );
+  expect(firstDecisions.length).toBe(1);
 
-  await Bun.sleep(75);
+  // Wait for transaction confirmation
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: firstDecisions[0].hash,
+  });
 
-  // Should have processed the first arbitration
-  expect(arbitrationsAttempted).toBe(1);
+  // Second arbitration with skipAlreadyArbitrated should find nothing
+  const secondDecisions = await testContext.bobClient.oracle.arbitratePast(
+    async (attestation) => {
+      const obligation = testContext.bobClient.extractObligationData(obligationAbi, attestation);
+      return obligation[0].item === "foo";
+    },
+    { skipAlreadyArbitrated: true },
+  );
 
-  // Create another fulfillment with the same obligation - should be skipped due to already arbitrated
-  const { attested: duplicateFulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "skip-test",
-      escrow.uid,
-    );
-
-  await Bun.sleep(75);
-
-  // Should still be 1 because the duplicate should be skipped
-  expect(arbitrationsAttempted).toBe(2); // Note: This tests the listener behavior, not the skipAlreadyArbitrated for the same fulfillment
-
-  unwatch();
+  expect(secondDecisions.length).toBe(0);
 });
 
-test("listenAndArbitrateNewFulfillments with onlyIfEscrowDemandsCurrentOracle", async () => {
+test("listenAndArbitrate", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
-
-  // Create demand for Bob (current oracle)
-  const demandForBob = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "for-bob" },
-    ]),
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [{ mockDemand: "foo" }]),
   });
 
-  let arbitrationsProcessed = 0;
-  let processedFulfillments: string[] = [];
-
-  // Bob starts listening with onlyIfEscrowDemandsCurrentOracle: true
-  const { unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillments({
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
+  const { attested: escrow } = await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+    {
+      address: testContext.mockAddresses.erc20A,
+      value: 10n,
     },
-    arbitrate: async (obligation) => {
-      arbitrationsProcessed++;
-      processedFulfillments.push(obligation[0].item);
+    { arbiter, demand },
+    0n,
+  );
+
+  const obligationAbi = parseAbiParameters("(string item)");
+  const { decisions, unwatch } = await testContext.bobClient.oracle.listenAndArbitrate(
+    async (attestation) => {
+      const obligation = testContext.bobClient.extractObligationData(obligationAbi, attestation);
       return true;
     },
-    onlyIfEscrowDemandsCurrentOracle: true,
-    pollingInterval: 25,
-  });
-
-  // Create escrow demanding Bob as oracle
-  const { attested: escrowForBob } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
+    {
+      onAfterArbitrate: async (decision) => {
+        const obligation = testContext.bobClient.extractObligationData(obligationAbi, decision.attestation);
+        expect(decision.attestation.uid).toEqual(fulfillment.uid);
+        expect(obligation[0].item).toEqual("foo");
+        expect(decision.decision).toBe(true);
       },
-      { arbiter, demand: demandForBob },
-      0n,
-    );
-
-  await Bun.sleep(50);
-
-  // Create fulfillment for Bob's escrow (should be processed)
-  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation(
-    "for-bob",
-    escrowForBob.uid,
+      pollingInterval: 50,
+    },
   );
 
-  // Get the full attestation to verify refUID
-  const fullAttestation = await testContext.bobClient.getAttestation(fulfillment.uid);
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
 
-  // Verify the fulfillment is properly linked to the escrow
-  expect(fullAttestation.refUID).toBe(escrowForBob.uid);
+  // Request arbitration
+  await testContext.bobClient.oracle.requestArbitration(fulfillment.uid, testContext.bob);
 
   await Bun.sleep(150);
 
-  // Should process 1 arbitration (the one demanding Bob as oracle)
-  // Note: Since we're only creating one escrow that demands Bob, it should be processed
-  expect(arbitrationsProcessed).toBe(1);
-  expect(processedFulfillments).toContain("for-bob");
+  const collectionHash = await testContext.bobClient.erc20.collectEscrow(escrow.uid, fulfillment.uid);
+
+  expect(collectionHash).toBeTruthy();
 
   unwatch();
 });
 
-test("listenAndArbitrateNewFulfillmentsForEscrow - listens to past and new escrows, only new fulfillments", async () => {
+test("listenAndArbitrate with onlyNew", async () => {
   const arbiter = testContext.addresses.trustedOracleArbiter;
-
-  // Create a past escrow BEFORE starting to listen
-  const pastDemand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
     oracle: testContext.bob,
-    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [
-      { mockDemand: "past-escrow" },
-    ]),
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [{ mockDemand: "foo" }]),
   });
 
-  const { attested: pastEscrow } =
-    await testContext.aliceClient.erc20.permitAndBuyWithErc20(
-      {
-        address: testContext.mockAddresses.erc20A,
-        value: 10n,
-      },
-      { arbiter, demand: pastDemand },
-      0n,
-    );
-
-  // Create a past fulfillment BEFORE starting to listen (should NOT be processed)
-  const { attested: pastFulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "past-fulfillment",
-      pastEscrow.uid,
-    );
-
-  let arbitrationsProcessed = 0;
-  let processedFulfillments: string[] = [];
-
-  // Start listening - should pick up past escrows but only NEW fulfillments
-  const { pastEscrows, unwatch } = await testContext.bobClient.oracle.listenAndArbitrateNewFulfillmentsForEscrow({
-    escrow: {
-      attester: testContext.addresses.erc20EscrowObligation,
-      demandAbi: parseAbiParameters("(string mockDemand)"),
+  const { attested: escrow } = await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+    {
+      address: testContext.mockAddresses.erc20A,
+      value: 10n,
     },
-    fulfillment: {
-      attester: testContext.addresses.stringObligation,
-      obligationAbi: parseAbiParameters("(string item)"),
+    { arbiter, demand },
+    0n,
+  );
+
+  const obligationAbi = parseAbiParameters("(string item)");
+
+  // Start listening with onlyNew: true
+  const { decisions, unwatch } = await testContext.bobClient.oracle.listenAndArbitrate(
+    async (attestation) => {
+      const obligation = testContext.bobClient.extractObligationData(obligationAbi, attestation);
+      return obligation[0].item === "good";
     },
-    arbitrate: async (obligation, demand) => {
-      arbitrationsProcessed++;
-      processedFulfillments.push(`${obligation[0].item}-${demand[0].mockDemand}`);
-      return obligation[0].item.includes(demand[0].mockDemand);
+    {
+      onlyNew: true,
+      pollingInterval: 50,
     },
-    pollingInterval: 50,
-  });
+  );
 
-  // Verify past escrows were loaded
-  expect(pastEscrows.length).toBe(1);
-  expect(pastEscrows[0]?.demand[0].mockDemand).toBe("past-escrow");
+  expect(decisions.length).toBe(0); // Should not arbitrate past
 
-  // Wait to ensure listener is established
-  await Bun.sleep(100);
+  // Create new fulfillment
+  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation("good", escrow.uid);
 
-  // Past fulfillment should NOT be processed since we only listen to NEW fulfillments
-  expect(arbitrationsProcessed).toBe(0);
-
-  // Create NEW fulfillment for the past escrow (should be processed)
-  const { attested: newFulfillmentForPastEscrow } =
-    await testContext.bobClient.stringObligation.doObligation(
-      "new-for-past-escrow",
-      pastEscrow.uid,
-    );
+  // Request arbitration
+  await testContext.bobClient.oracle.requestArbitration(fulfillment.uid, testContext.bob);
 
   await Bun.sleep(150);
 
-  // Should process the new fulfillment for past escrow
-  expect(arbitrationsProcessed).toBe(1);
-  expect(processedFulfillments).toContain("new-for-past-escrow-past-escrow");
+  const collectionHash = await testContext.bobClient.erc20.collectEscrow(escrow.uid, fulfillment.uid);
+
+  expect(collectionHash).toBeTruthy();
 
   unwatch();
-}, 10000); // Increased timeout to 10 seconds
+});
+
+test("arbitratePast with escrow demand extraction", async () => {
+  const arbiter = testContext.addresses.trustedOracleArbiter;
+  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.bob,
+    data: encodeAbiParameters(parseAbiParameters("(string mockDemand)"), [{ mockDemand: "foo" }]),
+  });
+
+  const { attested: escrow } = await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+    {
+      address: testContext.mockAddresses.erc20A,
+      value: 10n,
+    },
+    { arbiter, demand },
+    0n,
+  );
+
+  const { attested: fulfillment1 } = await testContext.bobClient.stringObligation.doObligation("foo", escrow.uid);
+
+  const { attested: fulfillment2 } = await testContext.bobClient.stringObligation.doObligation("bar", escrow.uid);
+
+  // Request arbitration for both
+  const requestHash1 = await testContext.bobClient.oracle.requestArbitration(fulfillment1.uid, testContext.bob);
+  const requestHash2 = await testContext.bobClient.oracle.requestArbitration(fulfillment2.uid, testContext.bob);
+
+  // Wait for arbitration requests to be confirmed
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: requestHash1,
+  });
+  await testContext.testClient.waitForTransactionReceipt({
+    hash: requestHash2,
+  });
+
+  const obligationAbi = parseAbiParameters("(string item)");
+  const demandAbi = parseAbiParameters("(string mockDemand)");
+
+  const decisions = await testContext.bobClient.oracle.arbitratePast(async (attestation) => {
+    const obligation = testContext.bobClient.extractObligationData(obligationAbi, attestation);
+    const [, demand] = await testContext.bobClient.getEscrowAndDemand(demandAbi, attestation);
+    return obligation[0].item === demand[0].mockDemand;
+  });
+
+  expect(decisions.length).toBe(2);
+  expect(decisions.filter((d) => d.decision).length).toBe(1);
+
+  const failedCollection = testContext.bobClient.erc20.collectEscrow(escrow.uid, fulfillment2.uid);
+  expect(async () => await failedCollection).toThrow();
+
+  const collectionHash = await testContext.bobClient.erc20.collectEscrow(escrow.uid, fulfillment1.uid);
+
+  expect(collectionHash).toBeTruthy();
+});

@@ -8,29 +8,17 @@
  * - TrustedOracleArbiter: Oracle-based decision making with arbitration requests
  */
 
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "bun:test";
-import { encodeAbiParameters, parseAbiParameters, createWalletClient, http, publicActions } from "viem";
-import { generatePrivateKey, privateKeyToAddress, privateKeyToAccount } from "viem/accounts";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { createWalletClient, encodeAbiParameters, http, parseAbiParameters, publicActions } from "viem";
+import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts";
 import { foundry } from "viem/chains";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
 import { makeClient } from "../../src";
-
 // Import contract artifacts needed for tests
 import { abi as intrinsicsArbiter2Abi } from "../../src/contracts/IntrinsicsArbiter2";
-import { abi as trustedPartyArbiterAbi } from "../../src/contracts/TrustedPartyArbiter";
 import { abi as specificAttestationArbiterAbi } from "../../src/contracts/SpecificAttestationArbiter";
 import { abi as trustedOracleArbiterAbi } from "../../src/contracts/TrustedOracleArbiter";
+import { abi as trustedPartyArbiterAbi } from "../../src/contracts/TrustedPartyArbiter";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 
 describe("General Arbiters Tests", () => {
   // Test context and variables
@@ -133,16 +121,13 @@ describe("General Arbiters Tests", () => {
 
     test("should produce same result as manual ABI encoding", () => {
       const demand = { schema: targetSchema };
-      
+
       // Manual encoding using viem directly
-      const manualEncoded = encodeAbiParameters(
-        parseAbiParameters("(bytes32 schema)"),
-        [demand]
-      );
-      
+      const manualEncoded = encodeAbiParameters(parseAbiParameters("(bytes32 schema)"), [demand]);
+
       // SDK encoding
       const sdkEncoded = aliceClient.arbiters.encodeIntrinsics2Demand(demand);
-      
+
       expect(sdkEncoded).toBe(manualEncoded);
     });
   });
@@ -214,16 +199,16 @@ describe("General Arbiters Tests", () => {
         baseDemand: "0xabcd" as `0x${string}`,
         creator: bob,
       };
-      
+
       // Manual encoding using viem directly
       const manualEncoded = encodeAbiParameters(
         parseAbiParameters("(address baseArbiter, bytes baseDemand, address creator)"),
-        [demand]
+        [demand],
       );
-      
+
       // SDK encoding
       const sdkEncoded = aliceClient.arbiters.encodeTrustedPartyDemand(demand);
-      
+
       expect(sdkEncoded).toBe(manualEncoded);
     });
   });
@@ -276,16 +261,13 @@ describe("General Arbiters Tests", () => {
 
     test("should produce same result as manual ABI encoding", () => {
       const demand = { uid: targetUid };
-      
+
       // Manual encoding using viem directly
-      const manualEncoded = encodeAbiParameters(
-        parseAbiParameters("(bytes32 uid)"),
-        [demand]
-      );
-      
+      const manualEncoded = encodeAbiParameters(parseAbiParameters("(bytes32 uid)"), [demand]);
+
       // SDK encoding
       const sdkEncoded = aliceClient.arbiters.encodeSpecificAttestationDemand(demand);
-      
+
       expect(sdkEncoded).toBe(manualEncoded);
     });
   });
@@ -308,38 +290,35 @@ describe("General Arbiters Tests", () => {
       // Create a mock obligation attestation using StringObligation
       const testString = "Test obligation data for arbitration";
       const { attested: attestationEvent } = await aliceClient.stringObligation.doObligation(testString);
-      
+
       const obligation = attestationEvent.uid;
       const oracle = charlie; // Use charlie as oracle
-      
+
       // Request arbitration and verify the transaction
-      const hash = await aliceClient.arbiters.requestArbitrationFromTrustedOracle(
-        obligation,
-        oracle
-      );
-      
+      const hash = await aliceClient.arbiters.requestArbitrationFromTrustedOracle(obligation, oracle);
+
       // Verify the hash format
       expect(hash).toMatch(/^0x[0-9a-f]{64}$/i);
-      
+
       // Wait for transaction receipt
       const receipt = await testClient.waitForTransactionReceipt({ hash });
       expect(receipt.status).toBe("success");
-      
+
       // Get and verify the ArbitrationRequested event was emitted
       const logs = await testClient.getLogs({
         address: testContext.addresses.trustedOracleArbiter,
         event: {
-          type: 'event',
-          name: 'ArbitrationRequested',
+          type: "event",
+          name: "ArbitrationRequested",
           inputs: [
-            { name: 'obligation', type: 'bytes32', indexed: true },
-            { name: 'oracle', type: 'address', indexed: true }
-          ]
+            { name: "obligation", type: "bytes32", indexed: true },
+            { name: "oracle", type: "address", indexed: true },
+          ],
         },
         fromBlock: receipt.blockNumber,
         toBlock: receipt.blockNumber,
       });
-      
+
       // Verify event was emitted with correct data
       expect(logs).toHaveLength(1);
       expect(logs[0].args?.obligation).toBe(obligation);
@@ -350,22 +329,16 @@ describe("General Arbiters Tests", () => {
       // Create a mock obligation attestation using StringObligation
       const testString = "Test obligation data for existing arbitration check";
       const { attested: attestationEvent } = await aliceClient.stringObligation.doObligation(testString);
-      
+
       const obligation = attestationEvent.uid;
       const oracle = charlie;
 
       // First check - should be undefined since no arbitration made yet
-      const existingBefore = await aliceClient.arbiters.checkExistingArbitration(
-        obligation,
-        oracle
-      );
+      const existingBefore = await aliceClient.arbiters.checkExistingArbitration(obligation, oracle);
       expect(existingBefore).toBeUndefined();
 
       // Request arbitration first (as this creates the initial arbitration request)
-      const requestHash = await aliceClient.arbiters.requestArbitrationFromTrustedOracle(
-        obligation,
-        oracle
-      );
+      const requestHash = await aliceClient.arbiters.requestArbitrationFromTrustedOracle(obligation, oracle);
       await testClient.waitForTransactionReceipt({ hash: requestHash });
 
       // For this test, we'll verify that the arbitration request was created
@@ -374,20 +347,19 @@ describe("General Arbiters Tests", () => {
       const logs = await testClient.getLogs({
         address: testContext.addresses.trustedOracleArbiter,
         event: {
-          type: 'event',
-          name: 'ArbitrationRequested',
+          type: "event",
+          name: "ArbitrationRequested",
           inputs: [
-            { name: 'obligation', type: 'bytes32', indexed: true },
-            { name: 'oracle', type: 'address', indexed: true }
-          ]
+            { name: "obligation", type: "bytes32", indexed: true },
+            { name: "oracle", type: "address", indexed: true },
+          ],
         },
-        fromBlock: 'earliest',
+        fromBlock: "earliest",
       });
-      
+
       // Verify that an arbitration request was made
-      const relevantLogs = logs.filter(log => 
-        log.args?.obligation === obligation && 
-        log.args?.oracle?.toLowerCase() === oracle.toLowerCase()
+      const relevantLogs = logs.filter(
+        (log) => log.args?.obligation === obligation && log.args?.oracle?.toLowerCase() === oracle.toLowerCase(),
       );
       expect(relevantLogs).toHaveLength(1);
     });
@@ -402,11 +374,11 @@ describe("General Arbiters Tests", () => {
       const waitPromise = aliceClient.arbiters.waitForTrustedOracleArbitrationRequest(
         obligation,
         oracle,
-        100 // short polling interval for testing
+        100, // short polling interval for testing
       );
 
       // Small delay to ensure the listener is set up
-      await new Promise(resolve => setTimeout(resolve, 50));
+      await new Promise((resolve) => setTimeout(resolve, 50));
 
       // Since we can't easily trigger the request without a real attestation,
       // we'll just verify the promise was created and can be cancelled
@@ -416,7 +388,7 @@ describe("General Arbiters Tests", () => {
       }, 100);
 
       // For the unit test, we'll just verify the function structure
-      expect(typeof waitPromise.then).toBe('function');
+      expect(typeof waitPromise.then).toBe("function");
     });
 
     test("should validate oracle arbitration request", async () => {
@@ -438,7 +410,7 @@ describe("General Arbiters Tests", () => {
           functionName: "checkObligation",
           args: [attestation, demand, counteroffer],
         });
-        
+
         // May return false if no arbitration has been made yet
         expect(typeof result).toBe("boolean");
       } catch (error) {
@@ -452,16 +424,13 @@ describe("General Arbiters Tests", () => {
         oracle: alice,
         data: "0x1234abcd" as `0x${string}`,
       };
-      
+
       // Manual encoding using viem directly
-      const manualEncoded = encodeAbiParameters(
-        parseAbiParameters("(address oracle, bytes data)"),
-        [demand]
-      );
-      
+      const manualEncoded = encodeAbiParameters(parseAbiParameters("(address oracle, bytes data)"), [demand]);
+
       // SDK encoding
       const sdkEncoded = aliceClient.arbiters.encodeTrustedOracleDemand(demand);
-      
+
       expect(sdkEncoded).toBe(manualEncoded);
     });
   });
@@ -479,9 +448,9 @@ describe("General Arbiters Tests", () => {
         oracle: alice,
         data: "0x" as `0x${string}`,
       });
-      
+
       expect(emptyDemand).toMatch(/^0x[0-9a-f]+$/i);
-      
+
       const decoded = aliceClient.arbiters.decodeTrustedOracleDemand(emptyDemand);
       expect(decoded.oracle).toBe(alice);
       expect(decoded.data).toBe("0x");
@@ -493,16 +462,16 @@ describe("General Arbiters Tests", () => {
       // Create a nested scenario where TrustedPartyArbiter wraps IntrinsicsArbiter2
       const targetSchema = "0x1234567890123456789012345678901234567890123456789012345678901234" as const;
       const intrinsicsData = aliceClient.arbiters.encodeIntrinsics2Demand({ schema: targetSchema });
-      
+
       const trustedPartyDemand = aliceClient.arbiters.encodeTrustedPartyDemand({
         baseArbiter: testContext.addresses.intrinsicsArbiter2,
         baseDemand: intrinsicsData,
         creator: bob,
       });
 
-      const attestation = createTestAttestation({ 
+      const attestation = createTestAttestation({
         schema: targetSchema,
-        recipient: bob  // Trusted party (recipient must match creator)
+        recipient: bob, // Trusted party (recipient must match creator)
       });
       const counteroffer = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
