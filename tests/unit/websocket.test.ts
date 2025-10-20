@@ -330,17 +330,20 @@ describe("WebSocket Transport Support", () => {
         }),
       );
 
+      const obligationAbi = parseAbiParameters("(string item)");
+
       // Test real WebSocket event listening
-      const { unwatch } = await client.oracle.listenAndArbitrate({
-        fulfillment: {
-          attester: contractAddresses["Base Sepolia"].stringObligation,
-          obligationAbi: parseAbiParameters("(string item)"),
+      const { unwatch } = await client.oracle.listenAndArbitrate(
+        async (attestation) => {
+          const obligation = client.extractObligationData(obligationAbi, attestation);
+          return obligation[0].item === "test";
         },
-        arbitrate: async (obligation) => obligation[0].item === "test",
-        onAfterArbitrate: async (decision) => {
-          console.log("WebSocket arbitration:", decision);
-        },
-      });
+        {
+          onAfterArbitrate: async (decision) => {
+            console.log("WebSocket arbitration:", decision);
+          },
+        }
+      );
 
       // Clean up
       setTimeout(() => unwatch(), 1000);
