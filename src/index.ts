@@ -8,6 +8,7 @@ import {
 	type Account,
 	type Chain,
 	type DecodeAbiParametersReturnType,
+	type PublicActions,
 	type Transport,
 	type WalletClient,
 } from "viem";
@@ -28,6 +29,85 @@ import { getAttestation, getOptimalPollingInterval } from "./utils";
 
 import { abi as easAbi } from "./contracts/IEAS";
 import { makeDefaultExtension } from "./extensions";
+
+// Forward declarations to avoid circular type inference
+type Extended = {
+	[key: string]: unknown;
+};
+
+type ExtendableClient<
+	T extends object,
+	TExtended extends Extended | undefined = undefined,
+> = T &
+	(TExtended extends Extended ? TExtended : object) & {
+		extend<U extends Extended>(
+			extender: (client: T & (TExtended extends Extended ? TExtended : object)) => U,
+		): ExtendableClient<T, U & (TExtended extends Extended ? TExtended : object)>;
+	};
+
+// Base client type (without extensions)
+export type MinimalClient = ExtendableClient<{
+	viemClient: WalletClient<Transport, Chain, Account> & PublicActions<Transport, Chain, Account>;
+	makeExtendableClient: typeof makeExtendableClient;
+	address: `0x${string}`;
+	contractAddresses: ChainAddresses;
+	getAttestation: (uid: `0x${string}`) => ReturnType<typeof getAttestation>;
+	getAttestedEventFromTxHash: (hash: `0x${string}`) => Promise<{
+		recipient: `0x${string}`;
+		attester: `0x${string}`;
+		uid: `0x${string}`;
+		schemaUID: `0x${string}`;
+	}>;
+	waitForFulfillment: (
+		contractAddress: `0x${string}`,
+		buyAttestation: `0x${string}`,
+		pollingInterval?: number,
+	) => Promise<{
+		payment?: `0x${string}` | undefined;
+		fulfillment?: `0x${string}` | undefined;
+		fulfiller?: `0x${string}` | undefined;
+	}>;
+	extractObligationData: <ObligationData extends readonly AbiParameter[]>(
+		obligationAbi: ObligationData,
+		attestation: { data: `0x${string}` },
+	) => DecodeAbiParametersReturnType<ObligationData>;
+	getEscrowAttestation: (fulfillment: { refUID: `0x${string}` }) => ReturnType<typeof getAttestation>;
+	extractDemandData: <DemandData extends readonly AbiParameter[]>(
+		demandAbi: DemandData,
+		escrowAttestation: { data: `0x${string}` },
+	) => DecodeAbiParametersReturnType<DemandData>;
+	getEscrowAndDemand: <DemandData extends readonly AbiParameter[]>(
+		demandAbi: DemandData,
+		fulfillment: { refUID: `0x${string}` },
+	) => Promise<
+		[Awaited<ReturnType<typeof getAttestation>>, DecodeAbiParametersReturnType<DemandData>]
+	>;
+}>;
+
+// Full client type with default extensions
+export type AlkahestClient = MinimalClient & ReturnType<typeof makeDefaultExtension> & {
+	extend: MinimalClient["extend"];
+};
+
+// Helper function to create extendable clients (following viem's pattern)
+function makeExtendableClient<T extends object, TExtended extends Extended | undefined = undefined>(
+	base: T,
+): ExtendableClient<T, TExtended> {
+	type ExtendFn = (base: T & (TExtended extends Extended ? TExtended : object)) => Extended;
+
+	function extend(current: typeof base) {
+		return (extendFn: ExtendFn) => {
+			const extensions = extendFn(current as any) as Extended;
+			// Remove any base keys from extensions to avoid conflicts
+			for (const key in base) delete extensions[key];
+			const combined = { ...current, ...extensions };
+			return Object.assign(combined, { extend: extend(combined as any) });
+		};
+	}
+
+	return Object.assign(base, { extend: extend(base) as any }) as ExtendableClient<T, TExtended>;
+}
+
 /**
  * Creates an Alkahest client for interacting with the protocol
  * @param walletClient - Viem wallet client object
@@ -46,9 +126,9 @@ import { makeDefaultExtension } from "./extensions";
 export const makeClient = (
 	walletClient: WalletClient<Transport, Chain, Account>,
 	contractAddresses?: Partial<ChainAddresses>,
-) => {
+): AlkahestClient => {
 	const client = makeMinimalClient(walletClient, contractAddresses);
-	return client.extend(makeDefaultExtension);
+	return client.extend(makeDefaultExtension) as AlkahestClient;
 };
 
 /**
@@ -76,7 +156,7 @@ export const makeClient = (
 export const makeMinimalClient = (
 	walletClient: WalletClient<Transport, Chain, Account>,
 	contractAddresses?: Partial<ChainAddresses>,
-) => {
+): MinimalClient => {
 	const viemClient = walletClient.extend(publicActions);
 
 	// Determine base addresses to use
@@ -286,23 +366,6 @@ export const makeMinimalClient = (
 			baseAddresses?.valueArbiterNonComposing ||
 			zeroAddress,
 	};
-
-	type ExtendableClient<T extends object> = T & {
-		extend<U extends object>(extender: (client: T) => U): ExtendableClient<T & U>;
-	};
-
-	function makeExtendableClient<T extends object>(base: T): ExtendableClient<T> {
-		return {
-			...base,
-			extend<U extends object>(extender: (client: T) => U): ExtendableClient<T & U> {
-				const extensions = extender(base);
-				return makeExtendableClient({
-					...base,
-					...extensions,
-				});
-			},
-		};
-	}
 
 	const client = {
 		/** The underlying Viem client */
