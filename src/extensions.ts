@@ -12,27 +12,32 @@ import { makeOracleClient } from "./oracle/oracle";
  * @param client - The base client to extend
  * @returns Extension object with all standard client functionality
  */
-export const makeDefaultExtension = (client: any) => ({
-  /** Unified client for all arbiter functionality */
-  arbiters: makeArbitersClient(client.viemClient, client.contractAddresses),
+export const makeDefaultExtension = (client: any) => {
+  const arbiters = makeArbitersClient(client.viemClient, client.contractAddresses);
 
-  /** Methods for interacting with ERC20 tokens */
-  erc20: makeErc20Client(client.viemClient, client.contractAddresses),
+  return {
+    /** ERC-20 token utilities for barter deals */
+    erc20: makeErc20Client(client.viemClient, client.contractAddresses),
 
-  /** Methods for interacting with ERC721 tokens */
-  erc721: makeErc721Client(client.viemClient, client.contractAddresses),
+    /** ERC-721 NFT utilities for barter deals */
+    erc721: makeErc721Client(client.viemClient, client.contractAddresses),
 
-  /** Methods for interacting with ERC1155 tokens */
-  erc1155: makeErc1155Client(client.viemClient, client.contractAddresses),
+    /** ERC-1155 multi-token utilities for barter deals */
+    erc1155: makeErc1155Client(client.viemClient, client.contractAddresses),
 
-  /** Methods for interacting with token bundles */
-  bundle: makeTokenBundleClient(client.viemClient, client.contractAddresses),
+    /** Token bundle utilities for complex barter deals */
+    bundle: makeTokenBundleClient(client.viemClient, client.contractAddresses),
 
-  /** Methods for interacting with attestations */
-  attestation: makeAttestationClient(client.viemClient, client.contractAddresses),
+    /** Attestation utilities for creating buy/sell attestations */
+    attestation: makeAttestationClient(client.viemClient, client.contractAddresses),
 
-  /** Utilities for StringObligation */
-  stringObligation: makeStringObligationClient(client.viemClient, client.contractAddresses),
+    /** All arbiters functionality with hierarchical structure */
+    arbiters,
 
-  oracle: makeOracleClient(client.viemClient, client.contractAddresses),
-});
+    /** Utilities for StringObligation */
+    stringObligation: makeStringObligationClient(client.viemClient, client.contractAddresses),
+
+    /** Oracle functionality - backward compatibility alias */
+    oracle: makeOracleClient(client.viemClient, client.contractAddresses),
+  };
+};
