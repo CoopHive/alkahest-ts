@@ -1,17 +1,6 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { parseEther } from "viem";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 import { compareAddresses } from "../utils/tokenTestUtils";
 
 describe("Client Tests", () => {
@@ -80,9 +69,7 @@ describe("Client Tests", () => {
       expect(aliceClient).toBeDefined();
       expect(aliceClient.address).toBe(alice);
       expect(aliceClient.contractAddresses.eas).toBe(testContext.addresses.eas);
-      expect(aliceClient.contractAddresses.easSchemaRegistry).toBe(
-        testContext.addresses.easSchemaRegistry,
-      );
+      expect(aliceClient.contractAddresses.easSchemaRegistry).toBe(testContext.addresses.easSchemaRegistry);
 
       // Verify client has all expected components
       expect(aliceClient.arbiters).toBeDefined();
@@ -104,15 +91,14 @@ describe("Client Tests", () => {
       const testSchemaId = await registerTestSchema();
 
       // Create a test attestation to retrieve
-      const { attested: attestationData } =
-        await aliceClient.attestation.createAttestation(
-          testSchemaId,
-          bob,
-          BigInt(Math.floor(Date.now() / 1000) + 86400), // 1 day expiration
-          true, // revocable
-          "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
-          ("0x" + Buffer.from("test data").toString("hex")) as `0x${string}`, // data
-        );
+      const { attested: attestationData } = await aliceClient.attestation.createAttestation(
+        testSchemaId,
+        bob,
+        BigInt(Math.floor(Date.now() / 1000) + 86400), // 1 day expiration
+        true, // revocable
+        "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
+        ("0x" + Buffer.from("test data").toString("hex")) as `0x${string}`, // data
+      );
 
       // Use the getAttestation function to retrieve it
       const attestation = await aliceClient.getAttestation(attestationData.uid);
@@ -121,12 +107,7 @@ describe("Client Tests", () => {
       expect(attestation.uid).toBe(attestationData.uid);
       expect(attestation.schema).toBe(testSchemaId);
       expect(attestation.recipient).toBe(bob);
-      expect(
-        compareAddresses(
-          attestation.attester,
-          testContext.addresses.attestationBarterUtils,
-        ),
-      ).toBe(true);
+      expect(compareAddresses(attestation.attester, testContext.addresses.attestationBarterUtils)).toBe(true);
     });
   });
 
@@ -148,31 +129,20 @@ describe("Client Tests", () => {
       const attestEvent = await aliceClient.getAttestedEventFromTxHash(txHash);
 
       // Verify the event data is non-empty
-      expect(
-        compareAddresses(
-          attestEvent.attester,
-          testContext.addresses.attestationBarterUtils,
-        ),
-      ).toBe(true);
+      expect(compareAddresses(attestEvent.attester, testContext.addresses.attestationBarterUtils)).toBe(true);
       expect(attestEvent.schemaUID).toBe(testSchemaId);
       expect(attestEvent.uid).toBeDefined();
-      expect(attestEvent.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attestEvent.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
   });
 
   describe("waitForFulfillment", () => {
     test("should wait for an escrow fulfillment", async () => {
       // First create a string attestation by Bob to use for fulfillment
-      const { attested: fulfillmentEvent } =
-        await bobClient.stringObligation.doObligation("fulfillment data");
+      const { attested: fulfillmentEvent } = await bobClient.stringObligation.doObligation("fulfillment data");
       const fulfillmentUid = fulfillmentEvent.uid as `0x${string}`;
 
-      await aliceClient.erc20.approve(
-        { address: erc20Token, value: 10n },
-        "escrow",
-      );
+      await aliceClient.erc20.approve({ address: erc20Token, value: 10n }, "escrow");
       // Alice creates an escrow attestation that requires a fulfillment
       const { attested: escrowData } = await aliceClient.erc20.buyWithErc20(
         { address: erc20Token, value: 10n },

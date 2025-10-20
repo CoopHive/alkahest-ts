@@ -1,58 +1,53 @@
+import AttestationBarterUtils from "@contracts/AttestationBarterUtils.json";
+import AttestationEscrowObligation from "@contracts/AttestationEscrowObligation.json";
+import AttestationEscrowObligation2 from "@contracts/AttestationEscrowObligation2.json";
+import ERC20BarterCrossToken from "@contracts/ERC20BarterCrossToken.json";
+// Import contract artifacts
+import ERC20EscrowObligation from "@contracts/ERC20EscrowObligation.json";
+import ERC20PaymentObligation from "@contracts/ERC20PaymentObligation.json";
+import ERC721BarterCrossToken from "@contracts/ERC721BarterCrossToken.json";
+import ERC721EscrowObligation from "@contracts/ERC721EscrowObligation.json";
+import ERC721PaymentObligation from "@contracts/ERC721PaymentObligation.json";
+import ERC1155BarterCrossToken from "@contracts/ERC1155BarterCrossToken.json";
+import ERC1155EscrowObligation from "@contracts/ERC1155EscrowObligation.json";
+import ERC1155PaymentObligation from "@contracts/ERC1155PaymentObligation.json";
+import SpecificAttestationArbiter from "@contracts/SpecificAttestationArbiter.json";
+import StringObligation from "@contracts/StringObligation.json";
+import TokenBundleBarterUtils from "@contracts/TokenBundleBarterUtils.json";
+import TokenBundleEscrowObligation from "@contracts/TokenBundleEscrowObligation.json";
+import TokenBundlePaymentObligation from "@contracts/TokenBundlePaymentObligation.json";
+import TrivialArbiter from "@contracts/TrivialArbiter.json";
+import TrustedOracleArbiter from "@contracts/TrustedOracleArbiter.json";
+import TrustedPartyArbiter from "@contracts/TrustedPartyArbiter.json";
 import { createAnvil } from "@viem/anvil";
+import { $ } from "bun";
 import {
+  createTestClient,
   createWalletClient,
   http,
-  createTestClient,
-  publicActions,
-  walletActions,
-  parseEther,
   nonceManager,
   type PublicActions,
-  type WalletActions,
+  parseEther,
+  publicActions,
   type TestClient,
+  type WalletActions,
+  walletActions,
   webSocket,
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { foundry } from "viem/chains";
-import { $ } from "bun";
 import { makeClient } from "../../src";
-import {
-  createTokenTestExtension,
-  type AlkahestTestActions,
-} from "./tokenTestUtils";
-
-// Import contract artifacts
-import ERC20EscrowObligation from "@contracts/ERC20EscrowObligation.json";
-import ERC20PaymentObligation from "@contracts/ERC20PaymentObligation.json";
-import ERC721EscrowObligation from "@contracts/ERC721EscrowObligation.json";
-import ERC721PaymentObligation from "@contracts/ERC721PaymentObligation.json";
-import ERC1155EscrowObligation from "@contracts/ERC1155EscrowObligation.json";
-import ERC1155PaymentObligation from "@contracts/ERC1155PaymentObligation.json";
-import TokenBundleEscrowObligation from "@contracts/TokenBundleEscrowObligation.json";
-import TokenBundlePaymentObligation from "@contracts/TokenBundlePaymentObligation.json";
-import ERC20BarterCrossToken from "@contracts/ERC20BarterCrossToken.json";
-import ERC721BarterCrossToken from "@contracts/ERC721BarterCrossToken.json";
-import ERC1155BarterCrossToken from "@contracts/ERC1155BarterCrossToken.json";
-import TokenBundleBarterUtils from "@contracts/TokenBundleBarterUtils.json";
-import AttestationBarterUtils from "@contracts/AttestationBarterUtils.json";
-import AttestationEscrowObligation from "@contracts/AttestationEscrowObligation.json";
-import AttestationEscrowObligation2 from "@contracts/AttestationEscrowObligation2.json";
-import StringObligation from "@contracts/StringObligation.json";
-import TrivialArbiter from "@contracts/TrivialArbiter.json";
-import TrustedOracleArbiter from "@contracts/TrustedOracleArbiter.json";
-import TrustedPartyArbiter from "@contracts/TrustedPartyArbiter.json";
-import SpecificAttestationArbiter from "@contracts/SpecificAttestationArbiter.json";
-import AnyArbiter from "../../src/contracts/AnyArbiter.json";
 import AllArbiter from "../../src/contracts/AllArbiter.json";
+import AnyArbiter from "../../src/contracts/AnyArbiter.json";
 import IntrinsicsArbiter from "../../src/contracts/IntrinsicsArbiter2.json";
 import IntrinsicsArbiter2 from "../../src/contracts/IntrinsicsArbiter2.json";
-
 // Import implementation contracts from fixtures
 import EAS from "../fixtures/EAS.json";
-import SchemaRegistry from "../fixtures/SchemaRegistry.json";
 import MockERC20Permit from "../fixtures/MockERC20Permit.json";
 import MockERC721 from "../fixtures/MockERC721.json";
 import MockERC1155 from "../fixtures/MockERC1155.json";
+import SchemaRegistry from "../fixtures/SchemaRegistry.json";
+import { type AlkahestTestActions, createTokenTestExtension } from "./tokenTestUtils";
 
 export type TestContext = {
   // Anvil instance and clients
@@ -131,11 +126,9 @@ export type TestContext = {
   // Helper functions
   deployContract: <T extends { abi: any; bytecode: { object: string } }>(
     contract: T,
-    args?: any[]
+    args?: any[],
   ) => Promise<`0x${string}`>;
-  deployObligation: <T extends { abi: any; bytecode: { object: string } }>(
-    contract: T
-  ) => Promise<`0x${string}`>;
+  deployObligation: <T extends { abi: any; bytecode: { object: string } }>(contract: T) => Promise<`0x${string}`>;
 };
 
 /**
@@ -282,9 +275,10 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   };
 
   // Helper to deploy contracts
-  async function deployContract<
-    T extends { abi: any; bytecode: { object: string } },
-  >(contract: T, args: any[] = []): Promise<`0x${string}`> {
+  async function deployContract<T extends { abi: any; bytecode: { object: string } }>(
+    contract: T,
+    args: any[] = [],
+  ): Promise<`0x${string}`> {
     const hash = await testClient.deployContract({
       abi: contract.abi,
       bytecode: contract.bytecode.object as `0x${string}`,
@@ -302,13 +296,9 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   // Deploy arbiters
   addresses.trivialArbiter = await deployContract(TrivialArbiter);
   addresses.trustedPartyArbiter = await deployContract(TrustedPartyArbiter);
-  addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter, [
-    addresses.eas,
-  ]);
+  addresses.trustedOracleArbiter = await deployContract(TrustedOracleArbiter, [addresses.eas]);
 
-  addresses.specificAttestationArbiter = await deployContract(
-    SpecificAttestationArbiter,
-  );
+  addresses.specificAttestationArbiter = await deployContract(SpecificAttestationArbiter);
   addresses.intrinsicsArbiter = await deployContract(IntrinsicsArbiter);
   addresses.intrinsicsArbiter2 = await deployContract(IntrinsicsArbiter2);
   addresses.anyArbiter = await deployContract(AnyArbiter);
@@ -317,46 +307,23 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   // Deploy obligation contracts (all following same pattern with EAS and schema registry)
 
   // Helper to deploy obligation contracts
-  async function deployObligation<
-    T extends { abi: any; bytecode: { object: string } },
-  >(contract: T): Promise<`0x${string}`> {
-    return deployContract(contract, [
-      addresses.eas,
-      addresses.easSchemaRegistry,
-    ]);
+  async function deployObligation<T extends { abi: any; bytecode: { object: string } }>(
+    contract: T,
+  ): Promise<`0x${string}`> {
+    return deployContract(contract, [addresses.eas, addresses.easSchemaRegistry]);
   }
 
   // Deploy basic obligations
-  addresses.erc20EscrowObligation = await deployObligation(
-    ERC20EscrowObligation,
-  );
-  addresses.erc20PaymentObligation = await deployObligation(
-    ERC20PaymentObligation,
-  );
-  addresses.erc721EscrowObligation = await deployObligation(
-    ERC721EscrowObligation,
-  );
-  addresses.erc721PaymentObligation = await deployObligation(
-    ERC721PaymentObligation,
-  );
-  addresses.erc1155EscrowObligation = await deployObligation(
-    ERC1155EscrowObligation,
-  );
-  addresses.erc1155PaymentObligation = await deployObligation(
-    ERC1155PaymentObligation,
-  );
-  addresses.tokenBundleEscrowObligation = await deployObligation(
-    TokenBundleEscrowObligation,
-  );
-  addresses.tokenBundlePaymentObligation = await deployObligation(
-    TokenBundlePaymentObligation,
-  );
-  addresses.attestationEscrowObligation = await deployObligation(
-    AttestationEscrowObligation,
-  );
-  addresses.attestationEscrowObligation2 = await deployObligation(
-    AttestationEscrowObligation2,
-  );
+  addresses.erc20EscrowObligation = await deployObligation(ERC20EscrowObligation);
+  addresses.erc20PaymentObligation = await deployObligation(ERC20PaymentObligation);
+  addresses.erc721EscrowObligation = await deployObligation(ERC721EscrowObligation);
+  addresses.erc721PaymentObligation = await deployObligation(ERC721PaymentObligation);
+  addresses.erc1155EscrowObligation = await deployObligation(ERC1155EscrowObligation);
+  addresses.erc1155PaymentObligation = await deployObligation(ERC1155PaymentObligation);
+  addresses.tokenBundleEscrowObligation = await deployObligation(TokenBundleEscrowObligation);
+  addresses.tokenBundlePaymentObligation = await deployObligation(TokenBundlePaymentObligation);
+  addresses.attestationEscrowObligation = await deployObligation(AttestationEscrowObligation);
+  addresses.attestationEscrowObligation2 = await deployObligation(AttestationEscrowObligation2);
   addresses.stringObligation = await deployObligation(StringObligation);
 
   // Deploy barter utils
@@ -401,38 +368,23 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   ]);
 
   // Token bundle barter utils
-  addresses.tokenBundleBarterUtils = await deployContract(
-    TokenBundleBarterUtils,
-    [
-      addresses.eas,
-      addresses.tokenBundleEscrowObligation,
-      addresses.tokenBundlePaymentObligation,
-    ],
-  );
+  addresses.tokenBundleBarterUtils = await deployContract(TokenBundleBarterUtils, [
+    addresses.eas,
+    addresses.tokenBundleEscrowObligation,
+    addresses.tokenBundlePaymentObligation,
+  ]);
 
   // Attestation barter utils
-  addresses.attestationBarterUtils = await deployContract(
-    AttestationBarterUtils,
-    [
-      addresses.eas,
-      addresses.easSchemaRegistry,
-      addresses.attestationEscrowObligation2,
-    ],
-  );
+  addresses.attestationBarterUtils = await deployContract(AttestationBarterUtils, [
+    addresses.eas,
+    addresses.easSchemaRegistry,
+    addresses.attestationEscrowObligation2,
+  ]);
 
   // Deploy mock tokens
-  mockAddresses.erc20A = await deployContract(MockERC20Permit, [
-    "Token A",
-    "TKA",
-  ]);
-  mockAddresses.erc20B = await deployContract(MockERC20Permit, [
-    "Token B",
-    "TKB",
-  ]);
-  mockAddresses.erc20C = await deployContract(MockERC20Permit, [
-    "Token C",
-    "TKC",
-  ]);
+  mockAddresses.erc20A = await deployContract(MockERC20Permit, ["Token A", "TKA"]);
+  mockAddresses.erc20B = await deployContract(MockERC20Permit, ["Token B", "TKB"]);
+  mockAddresses.erc20C = await deployContract(MockERC20Permit, ["Token C", "TKC"]);
   mockAddresses.erc721A = await deployContract(MockERC721);
   mockAddresses.erc721B = await deployContract(MockERC721);
   mockAddresses.erc721C = await deployContract(MockERC721);

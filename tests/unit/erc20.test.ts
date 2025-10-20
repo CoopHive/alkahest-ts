@@ -1,17 +1,6 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "bun:test";
-import { parseEther, getAddress } from "viem";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { getAddress, parseEther } from "viem";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 import { compareAddresses } from "../utils/tokenTestUtils";
 
 describe("ERC20 Tests", () => {
@@ -88,10 +77,7 @@ describe("ERC20 Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       // Alice approves and buys ERC20 for ERC20
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: bidAmount },
-        "escrow",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: bidAmount }, "escrow");
 
       const { attested } = await aliceClient.erc20.buyErc20ForErc20(
         { address: aliceErc20Token, value: bidAmount },
@@ -100,9 +86,7 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPermitAndBuyErc20ForErc20", async () => {
@@ -118,16 +102,13 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPermitAndBuyWithErc20", async () => {
       const amount = parseEther("100");
       const arbiter = getAddress(bob); // Using Bob as the arbiter like in Solidity tests
-      const demand =
-        `0x${Buffer.from("test demand").toString("hex")}` as `0x${string}`;
+      const demand = `0x${Buffer.from("test demand").toString("hex")}` as `0x${string}`;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       // Alice uses permit and creates custom demand escrow
@@ -138,9 +119,7 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the escrow attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPermitAndPayWithErc20", async () => {
@@ -153,9 +132,7 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the payment attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPayErc20ForErc20", async () => {
@@ -165,53 +142,31 @@ describe("ERC20 Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       // Alice approves and creates an escrow
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: bidAmount },
-        "escrow",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: bidAmount }, "escrow");
 
-      const { attested: buyAttestation } =
-        await aliceClient.erc20.buyErc20ForErc20(
-          { address: aliceErc20Token, value: bidAmount },
-          { address: bobErc20Token, value: askAmount },
-          expiration,
-        );
+      const { attested: buyAttestation } = await aliceClient.erc20.buyErc20ForErc20(
+        { address: aliceErc20Token, value: bidAmount },
+        { address: bobErc20Token, value: askAmount },
+        expiration,
+      );
 
       // Bob approves and fulfills the escrow
       // Check balances before the exchange
-      const bobInitialBalanceA = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        bob,
-      );
+      const bobInitialBalanceA = await testClient.getErc20Balance({ address: aliceErc20Token }, bob);
 
-      const aliceInitialBalanceB = await testClient.getErc20Balance(
-        { address: bobErc20Token },
-        alice,
-      );
+      const aliceInitialBalanceB = await testClient.getErc20Balance({ address: bobErc20Token }, alice);
 
-      await bobClient.erc20.approve(
-        { address: bobErc20Token, value: askAmount },
-        "payment",
-      );
+      await bobClient.erc20.approve({ address: bobErc20Token, value: askAmount }, "payment");
 
-      const { attested: sellAttestation } =
-        await bobClient.erc20.payErc20ForErc20(buyAttestation.uid);
+      const { attested: sellAttestation } = await bobClient.erc20.payErc20ForErc20(buyAttestation.uid);
 
       // Assert the sell attestation was created
-      expect(sellAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(sellAttestation.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Check token transfers
-      const bobFinalBalanceA = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        bob,
-      );
+      const bobFinalBalanceA = await testClient.getErc20Balance({ address: aliceErc20Token }, bob);
 
-      const aliceFinalBalanceB = await testClient.getErc20Balance(
-        { address: bobErc20Token },
-        alice,
-      );
+      const aliceFinalBalanceB = await testClient.getErc20Balance({ address: bobErc20Token }, alice);
 
       // Verify token transfers by checking the difference
       expect(bobFinalBalanceA - bobInitialBalanceA).toBe(bidAmount);
@@ -225,48 +180,29 @@ describe("ERC20 Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       // Alice approves and creates an escrow
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: bidAmount },
-        "escrow",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: bidAmount }, "escrow");
 
-      const { attested: buyAttestation } =
-        await aliceClient.erc20.buyErc20ForErc20(
-          { address: aliceErc20Token, value: bidAmount },
-          { address: bobErc20Token, value: askAmount },
-          expiration,
-        );
+      const { attested: buyAttestation } = await aliceClient.erc20.buyErc20ForErc20(
+        { address: aliceErc20Token, value: bidAmount },
+        { address: bobErc20Token, value: askAmount },
+        expiration,
+      );
 
       // Check balances before the exchange
-      const bobInitialBalanceA = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        bob,
-      );
+      const bobInitialBalanceA = await testClient.getErc20Balance({ address: aliceErc20Token }, bob);
 
-      const aliceInitialBalanceB = await testClient.getErc20Balance(
-        { address: bobErc20Token },
-        alice,
-      );
+      const aliceInitialBalanceB = await testClient.getErc20Balance({ address: bobErc20Token }, alice);
 
       // Bob uses permit and fulfills the escrow
-      const { attested: sellAttestation } =
-        await bobClient.erc20.permitAndPayErc20ForErc20(buyAttestation.uid);
+      const { attested: sellAttestation } = await bobClient.erc20.permitAndPayErc20ForErc20(buyAttestation.uid);
 
       // Assert the sell attestation was created
-      expect(sellAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(sellAttestation.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Check token transfers
-      const bobFinalBalanceA = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        bob,
-      );
+      const bobFinalBalanceA = await testClient.getErc20Balance({ address: aliceErc20Token }, bob);
 
-      const aliceFinalBalanceB = await testClient.getErc20Balance(
-        { address: bobErc20Token },
-        alice,
-      );
+      const aliceFinalBalanceB = await testClient.getErc20Balance({ address: bobErc20Token }, alice);
 
       // Verify token transfers by checking the difference
       expect(bobFinalBalanceA - bobInitialBalanceA).toBe(bidAmount);
@@ -281,10 +217,7 @@ describe("ERC20 Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       // Alice approves and creates an escrow for ERC721
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: bidAmount },
-        "escrow",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: bidAmount }, "escrow");
 
       const { attested } = await aliceClient.erc20.buyErc721WithErc20(
         { address: aliceErc20Token, value: bidAmount },
@@ -293,9 +226,7 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the buy attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPermitAndBuyErc721WithErc20", async () => {
@@ -311,9 +242,7 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the buy attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPayErc20ForErc721", async () => {
@@ -322,43 +251,27 @@ describe("ERC20 Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       // First create a buy attestation with Bob escrowing ERC721
-      await bobClient.erc721.approve(
-        { address: bobErc721Token, id: erc721TokenId },
-        "escrow",
-      );
+      await bobClient.erc721.approve({ address: bobErc721Token, id: erc721TokenId }, "escrow");
 
-      const { attested: buyAttestation } =
-        await bobClient.erc721.buyErc20WithErc721(
-          { address: bobErc721Token, id: erc721TokenId },
-          { address: aliceErc20Token, value: erc20Amount },
-          expiration,
-        );
+      const { attested: buyAttestation } = await bobClient.erc721.buyErc20WithErc721(
+        { address: bobErc721Token, id: erc721TokenId },
+        { address: aliceErc20Token, value: erc20Amount },
+        expiration,
+      );
 
       // Check balances before the exchange
-      const aliceInitialBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceInitialBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       // Alice approves her ERC20 and fulfills the escrow
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: erc20Amount },
-        "payment",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: erc20Amount }, "payment");
 
-      const { attested: payAttestation } =
-        await aliceClient.erc20.payErc20ForErc721(buyAttestation.uid);
+      const { attested: payAttestation } = await aliceClient.erc20.payErc20ForErc721(buyAttestation.uid);
 
       // Assert the payment attestation was created
-      expect(payAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(payAttestation.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Check token transfers
-      const aliceFinalBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceFinalBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       const aliceOwnsToken = await testClient.getErc721Owner({
         address: bobErc721Token,
@@ -367,9 +280,7 @@ describe("ERC20 Tests", () => {
 
       // Verify transfers
       expect(compareAddresses(aliceOwnsToken, alice)).toBe(true);
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
-        erc20Amount,
-      );
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(erc20Amount);
     });
 
     test("testPermitAndPayErc20ForErc721", async () => {
@@ -378,44 +289,28 @@ describe("ERC20 Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       // First create a buy attestation with Bob escrowing ERC721
-      await bobClient.erc721.approve(
-        { address: bobErc721Token, id: erc721TokenId },
-        "escrow",
-      );
+      await bobClient.erc721.approve({ address: bobErc721Token, id: erc721TokenId }, "escrow");
 
-      const { attested: buyAttestation } =
-        await bobClient.erc721.buyErc20WithErc721(
-          { address: bobErc721Token, id: erc721TokenId },
-          { address: aliceErc20Token, value: erc20Amount },
-          expiration,
-        );
+      const { attested: buyAttestation } = await bobClient.erc721.buyErc20WithErc721(
+        { address: bobErc721Token, id: erc721TokenId },
+        { address: aliceErc20Token, value: erc20Amount },
+        expiration,
+      );
 
       // Check balances before the exchange
-      const aliceInitialBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceInitialBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       // Alice approves her ERC20 and fulfills the escrow
       // We'll skip using permit and use regular payErc20ForErc721 since test tokens may not support EIP-2612
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: erc20Amount },
-        "payment",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: erc20Amount }, "payment");
 
-      const { attested: payAttestation } =
-        await aliceClient.erc20.payErc20ForErc721(buyAttestation.uid);
+      const { attested: payAttestation } = await aliceClient.erc20.payErc20ForErc721(buyAttestation.uid);
 
       // Assert the payment attestation was created
-      expect(payAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(payAttestation.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Check token transfers
-      const aliceFinalBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceFinalBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       const aliceOwnsToken = await testClient.getErc721Owner({
         address: bobErc721Token,
@@ -424,9 +319,7 @@ describe("ERC20 Tests", () => {
 
       // Verify transfers
       expect(compareAddresses(aliceOwnsToken, alice)).toBe(true);
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
-        erc20Amount,
-      );
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(erc20Amount);
     });
 
     test("testBuyErc1155WithErc20", async () => {
@@ -436,10 +329,7 @@ describe("ERC20 Tests", () => {
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
       // Alice approves and creates an escrow for ERC1155
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: bidAmount },
-        "escrow",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: bidAmount }, "escrow");
 
       const { attested } = await aliceClient.erc20.buyErc1155WithErc20(
         { address: aliceErc20Token, value: bidAmount },
@@ -452,9 +342,7 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the buy attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPermitAndBuyErc1155WithErc20", async () => {
@@ -475,9 +363,7 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the buy attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPayErc20ForErc1155", async () => {
@@ -489,18 +375,14 @@ describe("ERC20 Tests", () => {
       // First create a buy attestation with Bob escrowing ERC1155
       await bobClient.erc1155.approveAll(bobErc1155Token, "escrow");
 
-      const { attested: buyAttestation } =
-        await bobClient.erc1155.buyErc20WithErc1155(
-          { address: bobErc1155Token, id: tokenId, value: amount },
-          { address: aliceErc20Token, value: erc20Amount },
-          expiration,
-        );
+      const { attested: buyAttestation } = await bobClient.erc1155.buyErc20WithErc1155(
+        { address: bobErc1155Token, id: tokenId, value: amount },
+        { address: aliceErc20Token, value: erc20Amount },
+        expiration,
+      );
 
       // Check balances before the exchange
-      const aliceInitialBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceInitialBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       const aliceInitialBalanceErc1155 = await testClient.getErc1155Balance(
         { address: bobErc1155Token, id: tokenId },
@@ -508,24 +390,15 @@ describe("ERC20 Tests", () => {
       );
 
       // Alice approves her ERC20 and fulfills the escrow
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: erc20Amount },
-        "payment",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: erc20Amount }, "payment");
 
-      const { attested: payAttestation } =
-        await aliceClient.erc20.payErc20ForErc1155(buyAttestation.uid);
+      const { attested: payAttestation } = await aliceClient.erc20.payErc20ForErc1155(buyAttestation.uid);
 
       // Assert the payment attestation was created
-      expect(payAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(payAttestation.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Check token transfers
-      const aliceFinalBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceFinalBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       const aliceFinalBalanceErc1155 = await testClient.getErc1155Balance(
         { address: bobErc1155Token, id: tokenId },
@@ -533,12 +406,8 @@ describe("ERC20 Tests", () => {
       );
 
       // Verify transfers
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
-        erc20Amount,
-      );
-      expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(
-        amount,
-      );
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(erc20Amount);
+      expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(amount);
     });
 
     test("testPermitAndPayErc20ForErc1155", async () => {
@@ -550,18 +419,14 @@ describe("ERC20 Tests", () => {
       // First create a buy attestation with Bob escrowing ERC1155
       await bobClient.erc1155.approveAll(bobErc1155Token, "escrow");
 
-      const { attested: buyAttestation } =
-        await bobClient.erc1155.buyErc20WithErc1155(
-          { address: bobErc1155Token, id: tokenId, value: amount },
-          { address: aliceErc20Token, value: erc20Amount },
-          expiration,
-        );
+      const { attested: buyAttestation } = await bobClient.erc1155.buyErc20WithErc1155(
+        { address: bobErc1155Token, id: tokenId, value: amount },
+        { address: aliceErc20Token, value: erc20Amount },
+        expiration,
+      );
 
       // Check balances before the exchange
-      const aliceInitialBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceInitialBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       const aliceInitialBalanceErc1155 = await testClient.getErc1155Balance(
         { address: bobErc1155Token, id: tokenId },
@@ -570,24 +435,15 @@ describe("ERC20 Tests", () => {
 
       // Alice approves her ERC20 and fulfills the escrow
       // We'll skip using permit and use regular payErc20ForErc1155 since test tokens may not support EIP-2612
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: erc20Amount },
-        "payment",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: erc20Amount }, "payment");
 
-      const { attested: payAttestation } =
-        await aliceClient.erc20.payErc20ForErc1155(buyAttestation.uid);
+      const { attested: payAttestation } = await aliceClient.erc20.payErc20ForErc1155(buyAttestation.uid);
 
       // Assert the payment attestation was created
-      expect(payAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(payAttestation.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Check token transfers
-      const aliceFinalBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceFinalBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       const aliceFinalBalanceErc1155 = await testClient.getErc1155Balance(
         { address: bobErc1155Token, id: tokenId },
@@ -595,12 +451,8 @@ describe("ERC20 Tests", () => {
       );
 
       // Verify transfers
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
-        erc20Amount,
-      );
-      expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(
-        amount,
-      );
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(erc20Amount);
+      expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(amount);
     });
 
     test("testBuyBundleWithErc20", async () => {
@@ -615,10 +467,7 @@ describe("ERC20 Tests", () => {
       };
 
       // Alice approves tokens for token bundle escrow
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: bidAmount },
-        "escrow",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: bidAmount }, "escrow");
 
       const { attested } = await aliceClient.erc20.buyBundleWithErc20(
         { address: aliceErc20Token, value: bidAmount },
@@ -628,9 +477,7 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the buy attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPermitAndBuyBundleWithErc20", async () => {
@@ -653,9 +500,7 @@ describe("ERC20 Tests", () => {
       );
 
       // Assert the buy attestation was created
-      expect(attested.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attested.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testPayErc20ForBundle", async () => {
@@ -699,15 +544,9 @@ describe("ERC20 Tests", () => {
       );
 
       // Check balances before the exchange
-      const aliceInitialBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceInitialBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
-      const aliceInitialBalanceBobErc20 = await testClient.getErc20Balance(
-        { address: bobErc20Token },
-        alice,
-      );
+      const aliceInitialBalanceBobErc20 = await testClient.getErc20Balance({ address: bobErc20Token }, alice);
 
       const aliceInitialBalanceErc1155 = await testClient.getErc1155Balance(
         { address: bobErc1155Token, id: erc1155TokenId },
@@ -715,30 +554,18 @@ describe("ERC20 Tests", () => {
       );
 
       // Alice approves her tokens for payment
-      await aliceClient.erc20.approve(
-        { address: aliceErc20Token, value: erc20Amount },
-        "payment",
-      );
+      await aliceClient.erc20.approve({ address: aliceErc20Token, value: erc20Amount }, "payment");
 
       // Alice fulfills the escrow with her ERC20
-      const { attested: payAttestation } =
-        await aliceClient.erc20.payErc20ForBundle(buyAttestation.uid);
+      const { attested: payAttestation } = await aliceClient.erc20.payErc20ForBundle(buyAttestation.uid);
 
       // Assert the payment attestation was created
-      expect(payAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(payAttestation.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Check token transfers
-      const aliceFinalBalanceErc20 = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const aliceFinalBalanceErc20 = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
-      const aliceFinalBalanceBobErc20 = await testClient.getErc20Balance(
-        { address: bobErc20Token },
-        alice,
-      );
+      const aliceFinalBalanceBobErc20 = await testClient.getErc20Balance({ address: bobErc20Token }, alice);
 
       const aliceFinalBalanceErc1155 = await testClient.getErc1155Balance(
         { address: bobErc1155Token, id: erc1155TokenId },
@@ -751,15 +578,9 @@ describe("ERC20 Tests", () => {
       });
 
       // Verify transfers
-      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(
-        erc20Amount,
-      );
-      expect(aliceFinalBalanceBobErc20 - aliceInitialBalanceBobErc20).toBe(
-        bobErc20Amount / 2n,
-      );
-      expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(
-        erc1155Amount / 2n,
-      );
+      expect(aliceInitialBalanceErc20 - aliceFinalBalanceErc20).toBe(erc20Amount);
+      expect(aliceFinalBalanceBobErc20 - aliceInitialBalanceBobErc20).toBe(bobErc20Amount / 2n);
+      expect(aliceFinalBalanceErc1155 - aliceInitialBalanceErc1155).toBe(erc1155Amount / 2n);
       expect(compareAddresses(aliceOwnsToken, alice)).toBe(true);
     });
   });

@@ -1,17 +1,6 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "bun:test";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { parseEther } from "viem";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 import { compareAddresses } from "../utils/tokenTestUtils";
 
 describe("TokenBundle Tests", () => {
@@ -137,17 +126,14 @@ describe("TokenBundle Tests", () => {
       await aliceClient.bundle.approve(aliceBundle, "escrow");
 
       // Alice creates buy attestation
-      const { attested: buyAttestation } =
-        await aliceClient.bundle.buyBundleForBundle(
-          aliceBundle,
-          bobBundle,
-          expiration,
-        );
+      const { attested: buyAttestation } = await aliceClient.bundle.buyBundleForBundle(
+        aliceBundle,
+        bobBundle,
+        expiration,
+      );
 
       // Assert the attestation was created
-      expect(buyAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(buyAttestation.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Verify Alice's tokens are now in escrow
       const finalErc20ABalanceEscrow = await testClient.getErc20Balance(
@@ -166,18 +152,9 @@ describe("TokenBundle Tests", () => {
       );
 
       // Verify tokens were escrowed
-      expect(finalErc20ABalanceEscrow - initialErc20ABalanceEscrow).toBe(
-        aliceBundle.erc20s[0].value,
-      );
-      expect(
-        compareAddresses(
-          finalErc721AOwner,
-          testContext.addresses.tokenBundleEscrowObligation,
-        ),
-      ).toBe(true);
-      expect(finalErc1155ABalanceEscrow - initialErc1155ABalanceEscrow).toBe(
-        aliceBundle.erc1155s[0].value,
-      );
+      expect(finalErc20ABalanceEscrow - initialErc20ABalanceEscrow).toBe(aliceBundle.erc20s[0].value);
+      expect(compareAddresses(finalErc721AOwner, testContext.addresses.tokenBundleEscrowObligation)).toBe(true);
+      expect(finalErc1155ABalanceEscrow - initialErc1155ABalanceEscrow).toBe(aliceBundle.erc1155s[0].value);
     });
 
     test("testPayBundleForBundle", async () => {
@@ -191,10 +168,7 @@ describe("TokenBundle Tests", () => {
       await bobClient.bundle.approve(bobBundle, "escrow");
 
       // Create bundle payment statement for Alice's bundle
-      const bundlePaymentStatement = bobClient.bundle.encodePaymentObligation(
-        aliceBundle,
-        bob,
-      );
+      const bundlePaymentStatement = bobClient.bundle.encodePaymentObligation(aliceBundle, bob);
 
       // Bob creates bundle escrow demanding Alice's bundle
       const { attested: buyAttestation } = await bobClient.bundle.buyWithBundle(
@@ -207,15 +181,9 @@ describe("TokenBundle Tests", () => {
       );
 
       // Check balances before fulfillment
-      const aliceInitialErc20BBalance = await testClient.getErc20Balance(
-        { address: bobErc20Token },
-        alice,
-      );
+      const aliceInitialErc20BBalance = await testClient.getErc20Balance({ address: bobErc20Token }, alice);
 
-      const bobInitialErc20ABalance = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        bob,
-      );
+      const bobInitialErc20ABalance = await testClient.getErc20Balance({ address: aliceErc20Token }, bob);
 
       const aliceInitialErc1155BBalance = await testClient.getErc1155Balance(
         { address: bobErc1155Token, id: erc1155TokenIdB },
@@ -231,24 +199,15 @@ describe("TokenBundle Tests", () => {
       await aliceClient.bundle.approve(aliceBundle, "payment");
 
       // Alice fulfills Bob's order
-      const { attested: payAttestation } =
-        await aliceClient.bundle.payBundleForBundle(buyAttestation.uid);
+      const { attested: payAttestation } = await aliceClient.bundle.payBundleForBundle(buyAttestation.uid);
 
       // Assert the payment attestation was created
-      expect(payAttestation.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(payAttestation.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Check balances after fulfillment
-      const aliceFinalErc20BBalance = await testClient.getErc20Balance(
-        { address: bobErc20Token },
-        alice,
-      );
+      const aliceFinalErc20BBalance = await testClient.getErc20Balance({ address: bobErc20Token }, alice);
 
-      const bobFinalErc20ABalance = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        bob,
-      );
+      const bobFinalErc20ABalance = await testClient.getErc20Balance({ address: aliceErc20Token }, bob);
 
       const aliceFinalErc1155BBalance = await testClient.getErc1155Balance(
         { address: bobErc1155Token, id: erc1155TokenIdB },
@@ -272,22 +231,14 @@ describe("TokenBundle Tests", () => {
 
       // Verify token transfers
       // Alice receives Bob's tokens
-      expect(aliceFinalErc20BBalance - aliceInitialErc20BBalance).toBe(
-        bobBundle.erc20s[0].value,
-      );
+      expect(aliceFinalErc20BBalance - aliceInitialErc20BBalance).toBe(bobBundle.erc20s[0].value);
       expect(compareAddresses(aliceErc721BOwner, alice)).toBe(true);
-      expect(aliceFinalErc1155BBalance - aliceInitialErc1155BBalance).toBe(
-        bobBundle.erc1155s[0].value,
-      );
+      expect(aliceFinalErc1155BBalance - aliceInitialErc1155BBalance).toBe(bobBundle.erc1155s[0].value);
 
       // Bob receives Alice's tokens
-      expect(bobFinalErc20ABalance - bobInitialErc20ABalance).toBe(
-        aliceBundle.erc20s[0].value,
-      );
+      expect(bobFinalErc20ABalance - bobInitialErc20ABalance).toBe(aliceBundle.erc20s[0].value);
       expect(compareAddresses(bobErc721AOwner, bob)).toBe(true);
-      expect(bobFinalErc1155ABalance - bobInitialErc1155ABalance).toBe(
-        aliceBundle.erc1155s[0].value,
-      );
+      expect(bobFinalErc1155ABalance - bobInitialErc1155ABalance).toBe(aliceBundle.erc1155s[0].value);
     });
 
     test("testReclaimExpired", async () => {
@@ -300,12 +251,11 @@ describe("TokenBundle Tests", () => {
       // Alice approves and creates escrow
       await aliceClient.bundle.approve(aliceBundle, "escrow");
 
-      const { attested: buyAttestation } =
-        await aliceClient.bundle.buyBundleForBundle(
-          aliceBundle,
-          bobBundle,
-          shortExpiration,
-        );
+      const { attested: buyAttestation } = await aliceClient.bundle.buyBundleForBundle(
+        aliceBundle,
+        bobBundle,
+        shortExpiration,
+      );
 
       // Advance blockchain time to after expiration
       await testClient.increaseTime({ seconds: 120 }); // Advance 120 seconds
@@ -316,31 +266,20 @@ describe("TokenBundle Tests", () => {
         id: aliceErc721Id,
       });
 
-      const initialErc20Balance = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const initialErc20Balance = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       const initialErc1155Balance = await testClient.getErc1155Balance(
         { address: aliceErc1155Token, id: erc1155TokenIdA },
         alice,
       );
 
-      expect(
-        compareAddresses(
-          escrowErc721Owner,
-          testContext.addresses.tokenBundleEscrowObligation,
-        ),
-      ).toBe(true);
+      expect(compareAddresses(escrowErc721Owner, testContext.addresses.tokenBundleEscrowObligation)).toBe(true);
 
       // Alice collects her expired escrow
       await aliceClient.bundle.reclaimExpired(buyAttestation.uid);
 
       // Verify Alice got her tokens back
-      const finalErc20Balance = await testClient.getErc20Balance(
-        { address: aliceErc20Token },
-        alice,
-      );
+      const finalErc20Balance = await testClient.getErc20Balance({ address: aliceErc20Token }, alice);
 
       const finalErc721Owner = await testClient.getErc721Owner({
         address: aliceErc721Token,
@@ -353,12 +292,8 @@ describe("TokenBundle Tests", () => {
       );
 
       expect(compareAddresses(finalErc721Owner, alice)).toBe(true);
-      expect(finalErc1155Balance - initialErc1155Balance).toBe(
-        aliceBundle.erc1155s[0].value,
-      );
-      expect(finalErc20Balance - initialErc20Balance).toBe(
-        aliceBundle.erc20s[0].value,
-      );
+      expect(finalErc1155Balance - initialErc1155Balance).toBe(aliceBundle.erc1155s[0].value);
+      expect(finalErc20Balance - initialErc20Balance).toBe(aliceBundle.erc20s[0].value);
     });
   });
 });

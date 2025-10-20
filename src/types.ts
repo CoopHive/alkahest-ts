@@ -1,4 +1,4 @@
-import type { Hex, BlockNumber, BlockTag } from "viem";
+import type { BlockNumber, BlockTag, Hex } from "viem";
 
 export type ChainAddresses = {
   eas: `0x${string}`;
@@ -202,12 +202,12 @@ export interface PerformanceFilters {
   skipValidation?: boolean;
 }
 
-export interface EnhancedArbitrateFilters extends
-  TimeFilters,
-  AttestationFilters,
-  BlockFilters,
-  BatchFilters,
-  PerformanceFilters {
+export interface EnhancedArbitrateFilters
+  extends TimeFilters,
+    AttestationFilters,
+    BlockFilters,
+    BatchFilters,
+    PerformanceFilters {
   /** Only arbitrate if escrow demands current oracle */
   onlyIfEscrowDemandsCurrentOracle?: boolean;
   /** Skip obligations that have already been arbitrated */

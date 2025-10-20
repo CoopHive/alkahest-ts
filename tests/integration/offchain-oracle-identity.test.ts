@@ -1,14 +1,7 @@
 import { afterAll, beforeAll, beforeEach, expect, test } from "bun:test";
-import {
-  parseAbiParameters,
-  recoverMessageAddress,
-} from "viem";
+import { parseAbiParameters, recoverMessageAddress } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 
 const stringObligationAbi = parseAbiParameters("(string item)");
 
@@ -65,10 +58,7 @@ test("contextless offchain identity oracle flow", async () => {
   const listener = await testContext.charlieClient.oracle.listenAndArbitrate(
     async (attestation) => {
       // Extract obligation data
-      const obligation = testContext.charlieClient.extractObligationData(
-        stringObligationAbi,
-        attestation,
-      );
+      const obligation = testContext.charlieClient.extractObligationData(stringObligationAbi, attestation);
 
       const payload = obligation[0]?.item;
       if (!payload) return false;
@@ -106,19 +96,12 @@ test("contextless offchain identity oracle flow", async () => {
     { skipAlreadyArbitrated: true },
   );
 
-  const createPayload = createIdentityPayloadFactory(
-    identityAccount.address,
-    identityAccount,
-  );
+  const createPayload = createIdentityPayloadFactory(identityAccount.address, identityAccount);
 
   const goodPayload = await createPayload(1);
-  const { attested: goodFulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(goodPayload);
+  const { attested: goodFulfillment } = await testContext.bobClient.stringObligation.doObligation(goodPayload);
 
-  await testContext.bobClient.oracle.requestArbitration(
-    goodFulfillment.uid,
-    testContext.charlie,
-  );
+  await testContext.bobClient.oracle.requestArbitration(goodFulfillment.uid, testContext.charlie);
 
   const goodDecision = await testContext.charlieClient.arbiters.waitForTrustedOracleArbitration(
     goodFulfillment.uid,
@@ -129,13 +112,9 @@ test("contextless offchain identity oracle flow", async () => {
   expect(identityRegistry.get(identityAccount.address)).toBe(1);
 
   const badPayload = await createPayload(1);
-  const { attested: badFulfillment } =
-    await testContext.bobClient.stringObligation.doObligation(badPayload);
+  const { attested: badFulfillment } = await testContext.bobClient.stringObligation.doObligation(badPayload);
 
-  await testContext.bobClient.oracle.requestArbitration(
-    badFulfillment.uid,
-    testContext.charlie,
-  );
+  await testContext.bobClient.oracle.requestArbitration(badFulfillment.uid, testContext.charlie);
 
   const badDecision = await testContext.charlieClient.arbiters.waitForTrustedOracleArbitration(
     badFulfillment.uid,

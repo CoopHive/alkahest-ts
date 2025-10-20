@@ -1,6 +1,6 @@
 import { describe, expect, it } from "bun:test";
+import type { Account, Chain, Transport, WalletClient } from "viem";
 import { makeMinimalClient } from "../src";
-import type { WalletClient, Transport, Chain, Account } from "viem";
 
 describe("Client Extension Tests", () => {
   it("can chain multiple extensions", () => {

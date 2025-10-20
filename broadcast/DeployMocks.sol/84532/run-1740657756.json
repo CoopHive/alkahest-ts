@@ -6,10 +6,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x2de644714a0443752c95a02a5ac3afd50a0c15a9",
       "function": null,
-      "arguments": [
-        "MockERC721_1",
-        "MERC721_1"
-      ],
+      "arguments": ["MockERC721_1", "MERC721_1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x1386ce",
@@ -27,10 +24,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0xecaa92438732cac4ad1e1f905ad64f309084a8ce",
       "function": null,
-      "arguments": [
-        "MockERC721_2",
-        "MERC721_2"
-      ],
+      "arguments": ["MockERC721_2", "MERC721_2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x1386ce",
@@ -48,10 +42,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x8369199cb80b42eff6f996da239dd5fc047ca06f",
       "function": null,
-      "arguments": [
-        "MockMultiToken1",
-        "MMT1"
-      ],
+      "arguments": ["MockMultiToken1", "MMT1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x17b6d7",
@@ -69,10 +60,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0xefe826b188169614f9bed4974aa0c2743c0a006f",
       "function": null,
-      "arguments": [
-        "MockMultiToken2",
-        "MMT2"
-      ],
+      "arguments": ["MockMultiToken2", "MMT2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "gas": "0x17b6d7",
@@ -90,10 +78,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x2de644714a0443752c95a02a5ac3afd50a0c15a9",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "1"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "1"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x2de644714a0443752c95a02a5ac3afd50a0c15a9",
@@ -112,10 +97,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x2de644714a0443752c95a02a5ac3afd50a0c15a9",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "3"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "3"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x2de644714a0443752c95a02a5ac3afd50a0c15a9",
@@ -134,10 +116,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0xecaa92438732cac4ad1e1f905ad64f309084a8ce",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "5"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "5"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0xecaa92438732cac4ad1e1f905ad64f309084a8ce",
@@ -156,10 +135,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0xecaa92438732cac4ad1e1f905ad64f309084a8ce",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "2"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "2"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0xecaa92438732cac4ad1e1f905ad64f309084a8ce",
@@ -178,10 +154,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0xecaa92438732cac4ad1e1f905ad64f309084a8ce",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "4"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "4"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0xecaa92438732cac4ad1e1f905ad64f309084a8ce",
@@ -200,10 +173,7 @@
       "contractName": "MockERC721",
       "contractAddress": "0x2de644714a0443752c95a02a5ac3afd50a0c15a9",
       "function": "mint(address,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "6"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "6"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x2de644714a0443752c95a02a5ac3afd50a0c15a9",
@@ -222,11 +192,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x8369199cb80b42eff6f996da239dd5fc047ca06f",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "1",
-        "5"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "1", "5"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x8369199cb80b42eff6f996da239dd5fc047ca06f",
@@ -245,11 +211,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x8369199cb80b42eff6f996da239dd5fc047ca06f",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "3",
-        "10"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "3", "10"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x8369199cb80b42eff6f996da239dd5fc047ca06f",
@@ -268,11 +230,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x8369199cb80b42eff6f996da239dd5fc047ca06f",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "4",
-        "5"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "4", "5"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x8369199cb80b42eff6f996da239dd5fc047ca06f",
@@ -291,11 +249,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0xefe826b188169614f9bed4974aa0c2743c0a006f",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47",
-        "5",
-        "5"
-      ],
+      "arguments": ["0x51A257aAF108c9b0A3e140519bD14e5B4bf15e47", "5", "5"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0xefe826b188169614f9bed4974aa0c2743c0a006f",
@@ -314,11 +268,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0xefe826b188169614f9bed4974aa0c2743c0a006f",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "2",
-        "10"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "2", "10"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0xefe826b188169614f9bed4974aa0c2743c0a006f",
@@ -337,11 +287,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0xefe826b188169614f9bed4974aa0c2743c0a006f",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "6",
-        "15"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "6", "15"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0xefe826b188169614f9bed4974aa0c2743c0a006f",
@@ -360,11 +306,7 @@
       "contractName": "MockERC1155",
       "contractAddress": "0x8369199cb80b42eff6f996da239dd5fc047ca06f",
       "function": "mint(address,uint256,uint256)",
-      "arguments": [
-        "0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb",
-        "7",
-        "8"
-      ],
+      "arguments": ["0x002189E2F82ac8FBF19e2Dc279d19E07eCE12cfb", "7", "8"],
       "transaction": {
         "from": "0x51a257aaf108c9b0a3e140519bd14e5b4bf15e47",
         "to": "0x8369199cb80b42eff6f996da239dd5fc047ca06f",

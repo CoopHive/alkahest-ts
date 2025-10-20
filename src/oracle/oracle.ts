@@ -1,16 +1,7 @@
-import {
-  parseAbiItem,
-  type Address,
-  type BlockNumber,
-  type BlockTag,
-} from "viem";
-import type {
-  Attestation,
-  ChainAddresses,
-} from "../types";
-import { getAttestation, getOptimalPollingInterval, type ViemClient } from "../utils";
-
+import { type Address, type BlockNumber, type BlockTag, parseAbiItem } from "viem";
 import { abi as trustedOracleArbiterAbi } from "../contracts/TrustedOracleArbiter";
+import type { Attestation, ChainAddresses } from "../types";
+import { getAttestation, getOptimalPollingInterval, type ViemClient } from "../utils";
 
 /**
  * Options for arbitration
@@ -42,10 +33,7 @@ export type ListenAndArbitrateResult = {
   unwatch: () => void;
 };
 
-export const makeOracleClient = (
-  viemClient: ViemClient,
-  addresses: ChainAddresses,
-) => {
+export const makeOracleClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
   const arbitrationRequestedEvent = parseAbiItem(
     "event ArbitrationRequested(bytes32 indexed obligation, address indexed oracle)",
   );
@@ -53,10 +41,7 @@ export const makeOracleClient = (
     "event ArbitrationMade(bytes32 indexed obligation, address indexed oracle, bool decision)",
   );
 
-  const arbitrateOnchain = async (
-    obligationUid: `0x${string}`,
-    decision: boolean,
-  ) =>
+  const arbitrateOnchain = async (obligationUid: `0x${string}`, decision: boolean) =>
     await viemClient.writeContract({
       address: addresses.trustedOracleArbiter,
       abi: trustedOracleArbiterAbi.abi,
@@ -69,10 +54,7 @@ export const makeOracleClient = (
   /**
    * Request arbitration for an obligation
    */
-  const requestArbitration = async (
-    obligationUid: `0x${string}`,
-    oracle: Address,
-  ) => {
+  const requestArbitration = async (obligationUid: `0x${string}`, oracle: Address) => {
     return await viemClient.writeContract({
       address: addresses.trustedOracleArbiter,
       abi: trustedOracleArbiterAbi.abi,
@@ -86,9 +68,7 @@ export const makeOracleClient = (
   /**
    * Get arbitration requests for the current oracle
    */
-  const getArbitrationRequests = async (
-    options: ArbitrateOptions = {},
-  ): Promise<Attestation[]> => {
+  const getArbitrationRequests = async (options: ArbitrateOptions = {}): Promise<Attestation[]> => {
     const logs = await viemClient.getLogs({
       address: addresses.trustedOracleArbiter,
       event: arbitrationRequestedEvent,
@@ -100,19 +80,15 @@ export const makeOracleClient = (
     });
 
     const attestations = await Promise.all(
-      logs.map(async (log) =>
-        await getAttestation(viemClient, log.args.obligation!, addresses),
-      ),
+      logs.map(async (log) => await getAttestation(viemClient, log.args.obligation!, addresses)),
     );
 
     // Filter out expired or revoked attestations
     const now = BigInt(Math.floor(Date.now() / 1000));
     const validAttestations = attestations.filter(
       (attestation) =>
-        (attestation.expirationTime === BigInt(0) ||
-          attestation.expirationTime >= now) &&
-        (attestation.revocationTime === BigInt(0) ||
-          attestation.revocationTime >= now),
+        (attestation.expirationTime === BigInt(0) || attestation.expirationTime >= now) &&
+        (attestation.revocationTime === BigInt(0) || attestation.revocationTime >= now),
     );
 
     if (options.skipAlreadyArbitrated) {
@@ -173,15 +149,10 @@ export const makeOracleClient = (
     } = {},
   ): Promise<ListenAndArbitrateResult> => {
     // Arbitrate past attestations if not onlyNew
-    const decisions = options.onlyNew
-      ? []
-      : await arbitratePast(arbitrate, options);
+    const decisions = options.onlyNew ? [] : await arbitratePast(arbitrate, options);
 
     // Use optimal polling interval based on transport type
-    const optimalInterval = getOptimalPollingInterval(
-      viemClient,
-      options.pollingInterval,
-    );
+    const optimalInterval = getOptimalPollingInterval(viemClient, options.pollingInterval);
 
     // Listen for new arbitration requests
     const unwatch = viemClient.watchEvent({
@@ -193,11 +164,7 @@ export const makeOracleClient = (
       onLogs: async (logs) => {
         await Promise.all(
           logs.map(async (log) => {
-            const attestation = await getAttestation(
-              viemClient,
-              log.args.obligation!,
-              addresses,
-            );
+            const attestation = await getAttestation(viemClient, log.args.obligation!, addresses);
 
             // Check if already arbitrated if skipAlreadyArbitrated is enabled
             if (options.skipAlreadyArbitrated) {

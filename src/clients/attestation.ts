@@ -1,31 +1,20 @@
-import {
-  getAttestation,
-  getAttestedEventFromTxHash,
-  type ViemClient,
-} from "../utils";
-import type { ChainAddresses } from "../types";
+import { decodeAbiParameters, encodeAbiParameters, getAbiItem } from "viem";
+import { abi as attestationBarterUtilsAbi } from "../contracts/AttestationBarterUtils";
 import { abi as attestationEscrowAbi } from "../contracts/AttestationEscrowObligation";
 import { abi as attestationEscrow2Abi } from "../contracts/AttestationEscrowObligation2";
-import { abi as attestationBarterUtilsAbi } from "../contracts/AttestationBarterUtils";
-import {
-  decodeAbiParameters,
-  encodeAbiParameters,
-  getAbiItem,
-} from "viem";
+import type { ChainAddresses } from "../types";
+import { getAttestation, getAttestedEventFromTxHash, type ViemClient } from "../utils";
 
-export const makeAttestationClient = (
-  viemClient: ViemClient,
-  addresses: ChainAddresses,
-) => {
+export const makeAttestationClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
   // Extract ABI types for encoding/decoding from contract ABIs
   const escrowObligationDataType = getAbiItem({
     abi: attestationEscrowAbi.abi,
-    name: "decodeObligationData"
+    name: "decodeObligationData",
   }).outputs[0];
 
   const escrow2ObligationDataType = getAbiItem({
     abi: attestationEscrow2Abi.abi,
-    name: "decodeObligationData"
+    name: "decodeObligationData",
   }).outputs[0];
 
   // Use contract ABIs directly
@@ -105,10 +94,7 @@ export const makeAttestationClient = (
      * @returns The complete obligation including attestation metadata and decoded obligation data
      */
     getEscrowObligation: async (uid: `0x${string}`) => {
-      const [attestation, schema] = await Promise.all([
-        getAttestation(viemClient, uid),
-        getEscrowSchema(),
-      ]);
+      const [attestation, schema] = await Promise.all([getAttestation(viemClient, uid), getEscrowSchema()]);
 
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);
@@ -121,10 +107,7 @@ export const makeAttestationClient = (
       };
     },
     getEscrow2Obligation: async (uid: `0x${string}`) => {
-      const [attestation, schema] = await Promise.all([
-        getAttestation(viemClient, uid),
-        getEscrow2Schema(),
-      ]);
+      const [attestation, schema] = await Promise.all([getAttestation(viemClient, uid), getEscrow2Schema()]);
 
       if (attestation.schema !== schema) {
         throw new Error(`Unsupported schema: ${attestation.schema}`);
@@ -191,10 +174,7 @@ export const makeAttestationClient = (
      * @param fulfillmentAttestation - The UID of the fulfillment attestation
      * @returns The transaction hash and validation attestation data
      */
-    collectEscrow: async (
-      escrowAttestation: `0x${string}`,
-      fulfillmentAttestation: `0x${string}`,
-    ) => {
+    collectEscrow: async (escrowAttestation: `0x${string}`, fulfillmentAttestation: `0x${string}`) => {
       const hash = await viemClient.writeContract({
         address: addresses.attestationEscrowObligation,
         abi: attestationEscrowAbi.abi,
@@ -253,10 +233,7 @@ export const makeAttestationClient = (
      * @param fulfillmentAttestation - The UID of the fulfillment attestation
      * @returns The transaction hash and validation attestation data
      */
-    collectEscrow2: async (
-      escrowAttestation: `0x${string}`,
-      fulfillmentAttestation: `0x${string}`,
-    ) => {
+    collectEscrow2: async (escrowAttestation: `0x${string}`, fulfillmentAttestation: `0x${string}`) => {
       const hash = await viemClient.writeContract({
         address: addresses.attestationEscrowObligation2,
         abi: attestationEscrow2Abi.abi,
@@ -276,11 +253,7 @@ export const makeAttestationClient = (
      * @param revocable - Whether attestations using this schema can be revoked
      * @returns The transaction hash
      */
-    registerSchema: async (
-      schema: string,
-      resolver: `0x${string}`,
-      revocable: boolean,
-    ) => {
+    registerSchema: async (schema: string, resolver: `0x${string}`, revocable: boolean) => {
       const hash = await viemClient.writeContract({
         address: addresses.attestationBarterUtils,
         abi: attestationBarterUtilsAbi.abi,
@@ -351,12 +324,7 @@ export const makeAttestationClient = (
         address: addresses.attestationBarterUtils,
         abi: attestationBarterUtilsAbi.abi,
         functionName: "attestAndCreateEscrow",
-        args: [
-          attestation,
-          escrow.arbiter,
-          escrow.demand,
-          escrow.expirationTime,
-        ],
+        args: [attestation, escrow.arbiter, escrow.demand, escrow.expirationTime],
       });
 
       const attested = await getAttestedEventFromTxHash(viemClient, hash);

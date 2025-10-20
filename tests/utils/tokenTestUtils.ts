@@ -9,9 +9,7 @@ export function compareAddresses(a: string, b: string) {
   return a.toLowerCase() === b.toLowerCase();
 }
 
-export type AlkahestTestActions = ReturnType<
-  ReturnType<typeof createTokenTestExtension>
->;
+export type AlkahestTestActions = ReturnType<ReturnType<typeof createTokenTestExtension>>;
 
 // Create token testing extensions that can be added to viem clients
 export function createTokenTestExtension<C extends Client & PublicActions>() {
@@ -37,10 +35,7 @@ export function createTokenTestExtension<C extends Client & PublicActions>() {
     },
 
     // Get ERC1155 token balance
-    async getErc1155Balance(
-      token: Omit<Erc1155, "value">,
-      owner: `0x${string}`,
-    ) {
+    async getErc1155Balance(token: Omit<Erc1155, "value">, owner: `0x${string}`) {
       return client.readContract({
         address: token.address,
         abi: MockERC1155.abi,

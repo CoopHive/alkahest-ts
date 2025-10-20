@@ -1,23 +1,7 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "bun:test";
-import {
-  decodeAbiParameters,
-  parseAbiParameters,
-  parseAbi,
-  parseEventLogs,
-} from "viem";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { $ } from "bun";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
+import { decodeAbiParameters, parseAbi, parseAbiParameters, parseEventLogs } from "viem";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 
 describe("Attestation Tests", () => {
   // Test context and variables
@@ -83,108 +67,81 @@ describe("Attestation Tests", () => {
 
     test("testDoObligation", async () => {
       // Create an attestation
-      const { attested: attestationData } =
-        await aliceClient.attestation.createAttestation(
-          testSchemaId,
-          bob,
-          BigInt(Math.floor(Date.now() / 1000) + 86400), // 1 day expiration
-          true, // revocable
-          "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
-          ("0x" +
-            Buffer.from("test attestation data").toString(
-              "hex",
-            )) as `0x${string}`, // data
-        );
+      const { attested: attestationData } = await aliceClient.attestation.createAttestation(
+        testSchemaId,
+        bob,
+        BigInt(Math.floor(Date.now() / 1000) + 86400), // 1 day expiration
+        true, // revocable
+        "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
+        ("0x" + Buffer.from("test attestation data").toString("hex")) as `0x${string}`, // data
+      );
 
       // Create an escrow for the attestation
-      const demand = ("0x" +
-        Buffer.from("test demand").toString("hex")) as `0x${string}`;
+      const demand = ("0x" + Buffer.from("test demand").toString("hex")) as `0x${string}`;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
-      const { attested: escrowData } =
-        await aliceClient.attestation.buyWithAttestation(
-          {
-            schema: testSchemaId,
-            data: {
-              recipient: bob,
-              expirationTime: BigInt(Math.floor(Date.now() / 1000) + 86400),
-              revocable: true,
-              refUID:
-                "0x0000000000000000000000000000000000000000000000000000000000000000",
-              data: ("0x" +
-                Buffer.from("test attestation data").toString(
-                  "hex",
-                )) as `0x${string}`,
-              value: 0n,
-            },
+      const { attested: escrowData } = await aliceClient.attestation.buyWithAttestation(
+        {
+          schema: testSchemaId,
+          data: {
+            recipient: bob,
+            expirationTime: BigInt(Math.floor(Date.now() / 1000) + 86400),
+            revocable: true,
+            refUID: "0x0000000000000000000000000000000000000000000000000000000000000000",
+            data: ("0x" + Buffer.from("test attestation data").toString("hex")) as `0x${string}`,
+            value: 0n,
           },
-          {
-            arbiter: testContext.addresses.trivialArbiter,
-            demand,
-          },
-          expiration,
-        );
-
-      expect(escrowData.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
+        },
+        {
+          arbiter: testContext.addresses.trivialArbiter,
+          demand,
+        },
+        expiration,
       );
+
+      expect(escrowData.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Get the attestation using the SDK function
       const attestation = await aliceClient.getAttestation(escrowData.uid);
 
       // Verify that the escrow was created with correct data
-      expect(attestation.schema).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attestation.schema).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
       expect(attestation.recipient).toBe(aliceClient.address);
     });
 
     test("testCollectEscrow", async () => {
       // Bob creates a fulfillment attestation using StringObligation
-      const { attested: fulfillmentEvent } =
-        await bobClient.stringObligation.doObligation("fulfillment data");
+      const { attested: fulfillmentEvent } = await bobClient.stringObligation.doObligation("fulfillment data");
       const fulfillmentUid = fulfillmentEvent.uid as `0x${string}`;
 
       // Alice creates an escrow attestation that requires a fulfillment
-      const demandData = ("0x" +
-        Buffer.from("test demand").toString("hex")) as `0x${string}`;
+      const demandData = ("0x" + Buffer.from("test demand").toString("hex")) as `0x${string}`;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now
 
-      const { attested: escrowData } =
-        await aliceClient.attestation.buyWithAttestation(
-          {
-            schema: testSchemaId,
-            data: {
-              recipient: bob,
-              expirationTime: BigInt(Math.floor(Date.now() / 1000) + 86400),
-              revocable: true,
-              refUID:
-                "0x0000000000000000000000000000000000000000000000000000000000000000",
-              data: ("0x" +
-                Buffer.from("test attestation data").toString(
-                  "hex",
-                )) as `0x${string}`,
-              value: 0n,
-            },
+      const { attested: escrowData } = await aliceClient.attestation.buyWithAttestation(
+        {
+          schema: testSchemaId,
+          data: {
+            recipient: bob,
+            expirationTime: BigInt(Math.floor(Date.now() / 1000) + 86400),
+            revocable: true,
+            refUID: "0x0000000000000000000000000000000000000000000000000000000000000000",
+            data: ("0x" + Buffer.from("test attestation data").toString("hex")) as `0x${string}`,
+            value: 0n,
           },
-          {
-            arbiter: testContext.addresses.trivialArbiter,
-            demand: demandData,
-          },
-          expiration,
-        );
+        },
+        {
+          arbiter: testContext.addresses.trivialArbiter,
+          demand: demandData,
+        },
+        expiration,
+      );
 
       // Bob collects the payment by providing his fulfillment
-      const { attested: paymentData } =
-        await bobClient.attestation.collectEscrow(
-          escrowData.uid,
-          fulfillmentUid,
-        );
+      const { attested: paymentData } = await bobClient.attestation.collectEscrow(escrowData.uid, fulfillmentUid);
 
       // Verify payment attestation was created
-      expect(paymentData.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(paymentData.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Verify the escrow attestation is revoked - skip this check as the contract may not be revoking the attestation in test mode
       // If we want to check revocation, we would need to modify the contract to ensure it revokes in test mode
@@ -229,32 +186,25 @@ describe("Attestation Tests", () => {
         throw new Error("No schema registration event found");
       }
 
-      let testSchemaId = schemaEventLogs[0].args.uid;
+      const testSchemaId = schemaEventLogs[0].args.uid;
 
       // Create a pre-existing attestation exactly like in Solidity test (lines 52-65)
 
-      const { hash: attestHash } =
-        await bobClient.attestation.createAttestation(
-          testSchemaId,
-          bob,
-          0n, // no expiration
-          true, // revocable
-          "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
-          ("0x" +
-            Buffer.from("pre-existing attestation data").toString(
-              "hex",
-            )) as `0x${string}`, // data
-        );
+      const { hash: attestHash } = await bobClient.attestation.createAttestation(
+        testSchemaId,
+        bob,
+        0n, // no expiration
+        true, // revocable
+        "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
+        ("0x" + Buffer.from("pre-existing attestation data").toString("hex")) as `0x${string}`, // data
+      );
 
       // Get attestation UID using the SDK function
-      const attestEvent =
-        await bobClient.getAttestedEventFromTxHash(attestHash);
+      const attestEvent = await bobClient.getAttestedEventFromTxHash(attestHash);
       preExistingAttestationId = attestEvent.uid as `0x${string}`;
 
       // Verify the attestation exists in EAS
-      const attestation = await bobClient.getAttestation(
-        preExistingAttestationId,
-      );
+      const attestation = await bobClient.getAttestation(preExistingAttestationId);
 
       expect(attestation.uid).toBe(preExistingAttestationId);
     });
@@ -263,30 +213,25 @@ describe("Attestation Tests", () => {
       // This test directly mirrors the Solidity test in AttestationEscrowObligation2Test.sol, lines 95-128
 
       // Create the obligation data as in Solidity test (lines 99-103)
-      const demandData = ("0x" +
-        Buffer.from("test demand").toString("hex")) as `0x${string}`;
+      const demandData = ("0x" + Buffer.from("test demand").toString("hex")) as `0x${string}`;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day from now - EXPIRATION_TIME (line 105)
 
       // Create the obligation - lines 106-107
-      const { hash: escrowHash } =
-        await aliceClient.attestation.buyWithAttestation2(
-          preExistingAttestationId,
-          {
-            arbiter: testContext.addresses.trivialArbiter,
-            demand: demandData,
-          },
-          expiration,
-        );
+      const { hash: escrowHash } = await aliceClient.attestation.buyWithAttestation2(
+        preExistingAttestationId,
+        {
+          arbiter: testContext.addresses.trivialArbiter,
+          demand: demandData,
+        },
+        expiration,
+      );
 
       // Get the escrow attestation UID using the SDK function
-      const escrowEvent =
-        await aliceClient.getAttestedEventFromTxHash(escrowHash);
+      const escrowEvent = await aliceClient.getAttestedEventFromTxHash(escrowHash);
       const escrowUid = escrowEvent.uid as `0x${string}`;
 
       // Verify attestation exists - line 110
-      expect(escrowUid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(escrowUid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Get the attestation from EAS - using getAttestation(uid)
       const attestation = await aliceClient.getAttestation(escrowUid);
@@ -294,18 +239,14 @@ describe("Attestation Tests", () => {
       // Get the attestation schema ID - matches line 116
       const schemaId = (await testClient.readContract({
         address: testContext.addresses.attestationEscrowObligation2,
-        abi: parseAbi([
-          "function ATTESTATION_SCHEMA() view returns (bytes32)",
-        ]),
+        abi: parseAbi(["function ATTESTATION_SCHEMA() view returns (bytes32)"]),
         functionName: "ATTESTATION_SCHEMA",
         args: [],
       })) as `0x${string}`;
 
       // Verify schema and recipient - lines 114-119
       expect(attestation.schema).toBe(schemaId);
-      expect(attestation.recipient.toLowerCase()).toBe(
-        aliceClient.address.toLowerCase(),
-      );
+      expect(attestation.recipient.toLowerCase()).toBe(aliceClient.address.toLowerCase());
 
       // Verify attestation data - lines 122-127
       // Instead of using decodeEscrow2Statement which may have ABI format differences,
@@ -325,60 +266,47 @@ describe("Attestation Tests", () => {
       // Setup: create an escrow with the accepting TrivialArbiter - lines 166-177
 
       // Create the obligation data - lines 169-173
-      const demandData = ("0x" +
-        Buffer.from("test demand").toString("hex")) as `0x${string}`;
+      const demandData = ("0x" + Buffer.from("test demand").toString("hex")) as `0x${string}`;
       const expiration = BigInt(Math.floor(Date.now() / 1000) + 86400); // 1 day expiration - line 175
 
       // Create the escrow exactly as in Solidity test - lines 176-177
-      const { hash: escrowHash } =
-        await aliceClient.attestation.buyWithAttestation2(
-          preExistingAttestationId,
-          {
-            arbiter: testContext.addresses.trivialArbiter,
-            demand: demandData,
-          },
-          expiration,
-        );
+      const { hash: escrowHash } = await aliceClient.attestation.buyWithAttestation2(
+        preExistingAttestationId,
+        {
+          arbiter: testContext.addresses.trivialArbiter,
+          demand: demandData,
+        },
+        expiration,
+      );
 
       // Get the escrow attestation UID using the SDK function
-      const escrowEvent =
-        await aliceClient.getAttestedEventFromTxHash(escrowHash);
+      const escrowEvent = await aliceClient.getAttestedEventFromTxHash(escrowHash);
       const escrowUid = escrowEvent.uid as `0x${string}`;
 
       // Create a fulfillment attestation using StringObligation - lines 180-185
 
       // Create the string data - lines 181-183
-      const { attested: fulfillmentEvent } =
-        await bobClient.stringObligation.doObligation("fulfillment data");
+      const { attested: fulfillmentEvent } = await bobClient.stringObligation.doObligation("fulfillment data");
       const fulfillmentUid = fulfillmentEvent.uid as `0x${string}`;
 
       // Collect payment - lines 188-189
 
-      const { hash: collectHash } = await bobClient.attestation.collectEscrow2(
-        escrowUid,
-        fulfillmentUid,
-      );
+      const { hash: collectHash } = await bobClient.attestation.collectEscrow2(escrowUid, fulfillmentUid);
 
       // Get the validation attestation UID using the SDK function
-      const validationEvent =
-        await bobClient.getAttestedEventFromTxHash(collectHash);
+      const validationEvent = await bobClient.getAttestedEventFromTxHash(collectHash);
       const validationUid = validationEvent.uid as `0x${string}`;
 
       // Verify validationUid is not empty - line 191
-      expect(validationUid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(validationUid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Get the validation attestation from EAS - lines 194-195
-      const validationAttestation =
-        await bobClient.getAttestation(validationUid);
+      const validationAttestation = await bobClient.getAttestation(validationUid);
 
       // Get the validation schema ID from the obligation contract - line 196-199
       const validationSchemaId = (await testClient.readContract({
         address: testContext.addresses.attestationEscrowObligation2,
-        abi: parseAbi([
-          "function VALIDATION_SCHEMA() view returns (bytes32)",
-        ]),
+        abi: parseAbi(["function VALIDATION_SCHEMA() view returns (bytes32)"]),
         functionName: "VALIDATION_SCHEMA",
         args: [],
       })) as `0x${string}`;
@@ -387,9 +315,7 @@ describe("Attestation Tests", () => {
       expect(validationAttestation.schema).toBe(validationSchemaId);
 
       // Verify recipient is the attester (Bob) - lines 200-204
-      expect(validationAttestation.recipient.toLowerCase()).toBe(
-        bobClient.address.toLowerCase(),
-      );
+      expect(validationAttestation.recipient.toLowerCase()).toBe(bobClient.address.toLowerCase());
 
       // Verify that refUID matches the original attestation ID - lines 205-209
       expect(validationAttestation.refUID).toBe(preExistingAttestationId);
@@ -400,9 +326,7 @@ describe("Attestation Tests", () => {
         validationAttestation.data,
       )[0];
 
-      expect(validationData.validatedAttestationUid).toBe(
-        preExistingAttestationId,
-      );
+      expect(validationData.validatedAttestationUid).toBe(preExistingAttestationId);
 
       // Check if escrow attestation was revoked - lines 212-213
       const escrowAttestation = await bobClient.getAttestation(escrowUid);
@@ -422,9 +346,7 @@ describe("Attestation Tests", () => {
         true,
       );
 
-      expect(hash).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(hash).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testCreateAttestation", async () => {
@@ -442,23 +364,19 @@ describe("Attestation Tests", () => {
       const schemaId = registerReceipt.logs[0].topics[1] as `0x${string}`;
 
       // Create an attestation using the SDK function
-      const { hash: attestationHash } =
-        await aliceClient.attestation.createAttestation(
-          schemaId,
-          bob,
-          BigInt(Math.floor(Date.now() / 1000) + 86400), // 1 day expiration
-          true, // revocable
-          "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
-          ("0x" + Buffer.from("true").toString("hex")) as `0x${string}`, // data
-        );
+      const { hash: attestationHash } = await aliceClient.attestation.createAttestation(
+        schemaId,
+        bob,
+        BigInt(Math.floor(Date.now() / 1000) + 86400), // 1 day expiration
+        true, // revocable
+        "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
+        ("0x" + Buffer.from("true").toString("hex")) as `0x${string}`, // data
+      );
 
-      const attestationEvent =
-        await aliceClient.getAttestedEventFromTxHash(attestationHash);
+      const attestationEvent = await aliceClient.getAttestedEventFromTxHash(attestationHash);
       const attestationUid = attestationEvent.uid as `0x${string}`;
 
-      expect(attestationUid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attestationUid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testAttestAndCreateEscrow", async () => {
@@ -476,40 +394,33 @@ describe("Attestation Tests", () => {
       const schemaId = registerReceipt.logs[0].topics[1] as `0x${string}`;
 
       // First create an attestation using the SDK function
-      const { hash: attestationHash } =
-        await aliceClient.attestation.createAttestation(
-          schemaId,
-          bob,
-          BigInt(Math.floor(Date.now() / 1000) + 86400), // 1 day expiration
-          true, // revocable
-          "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
-          ("0x" + Buffer.from("true").toString("hex")) as `0x${string}`, // data
-        );
+      const { hash: attestationHash } = await aliceClient.attestation.createAttestation(
+        schemaId,
+        bob,
+        BigInt(Math.floor(Date.now() / 1000) + 86400), // 1 day expiration
+        true, // revocable
+        "0x0000000000000000000000000000000000000000000000000000000000000000", // no ref
+        ("0x" + Buffer.from("true").toString("hex")) as `0x${string}`, // data
+      );
 
-      const attestationEvent =
-        await aliceClient.getAttestedEventFromTxHash(attestationHash);
+      const attestationEvent = await aliceClient.getAttestedEventFromTxHash(attestationHash);
       const attestationUid = attestationEvent.uid as `0x${string}`;
 
       // Now create an escrow for this attestation using the SDK function
-      const demandData = ("0x" +
-        Buffer.from("false").toString("hex")) as `0x${string}`;
-      const { hash: escrowHash } =
-        await aliceClient.attestation.buyWithAttestation2(
-          attestationUid,
-          {
-            arbiter: testContext.addresses.trivialArbiter,
-            demand: demandData,
-          },
-          BigInt(Math.floor(Date.now() / 1000) + 2 * 86400), // 2 days expiration
-        );
+      const demandData = ("0x" + Buffer.from("false").toString("hex")) as `0x${string}`;
+      const { hash: escrowHash } = await aliceClient.attestation.buyWithAttestation2(
+        attestationUid,
+        {
+          arbiter: testContext.addresses.trivialArbiter,
+          demand: demandData,
+        },
+        BigInt(Math.floor(Date.now() / 1000) + 2 * 86400), // 2 days expiration
+      );
 
-      const escrowEvent =
-        await aliceClient.getAttestedEventFromTxHash(escrowHash);
+      const escrowEvent = await aliceClient.getAttestedEventFromTxHash(escrowHash);
       const escrowUid = escrowEvent.uid as `0x${string}`;
 
-      expect(escrowUid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(escrowUid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
   });
 });

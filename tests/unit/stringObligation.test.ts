@@ -1,22 +1,8 @@
-import {
-  afterAll,
-  beforeAll,
-  beforeEach,
-  describe,
-  expect,
-  test,
-} from "bun:test";
-import {
-  encodeAbiParameters,
-  parseAbiParameters,
-} from "viem";
-import {
-  setupTestEnvironment,
-  teardownTestEnvironment,
-  type TestContext,
-} from "../utils/setup";
-import { z } from "zod";
+import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
 import { type } from "arktype";
+import { encodeAbiParameters, parseAbiParameters } from "viem";
+import { z } from "zod";
+import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 
 describe("StringObligation Tests", () => {
   // Test context and variables
@@ -59,9 +45,7 @@ describe("StringObligation Tests", () => {
       const schema = await aliceClient.stringObligation.getSchema();
 
       // Verify schema is not empty
-      expect(schema).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(schema).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testDoObligation", async () => {
@@ -69,13 +53,10 @@ describe("StringObligation Tests", () => {
       const testString = "Test String Data";
 
       // Make a statement using alice's client - returns transaction hash
-      const { attested: attestedEvent } =
-        await aliceClient.stringObligation.doObligation(testString);
+      const { attested: attestedEvent } = await aliceClient.stringObligation.doObligation(testString);
 
       // Verify attestation UID exists
-      expect(attestedEvent.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attestedEvent.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
     });
 
     test("testMakeAndGetObligation", async () => {
@@ -83,13 +64,10 @@ describe("StringObligation Tests", () => {
       const testString = "Test String Data";
 
       // Make an obligation using alice's client - returns transaction hash
-      const { attested: attestedEvent } =
-        await aliceClient.stringObligation.doObligation(testString);
+      const { attested: attestedEvent } = await aliceClient.stringObligation.doObligation(testString);
 
       // Get the complete obligation
-      const obligation = await aliceClient.stringObligation.getObligation(
-        attestedEvent.uid,
-      );
+      const obligation = await aliceClient.stringObligation.getObligation(attestedEvent.uid);
 
       // Verify attestation details
       expect(obligation.recipient).toBe(alice);
@@ -110,19 +88,15 @@ describe("StringObligation Tests", () => {
       };
 
       // Make a JSON obligation
-      const { attested: attestedEvent } =
-        await aliceClient.stringObligation.doObligationJson(testJsonData);
+      const { attested: attestedEvent } = await aliceClient.stringObligation.doObligationJson(testJsonData);
 
       // Verify attestation UID exists
-      expect(attestedEvent.uid).not.toBe(
-        "0x0000000000000000000000000000000000000000000000000000000000000000",
-      );
+      expect(attestedEvent.uid).not.toBe("0x0000000000000000000000000000000000000000000000000000000000000000");
 
       // Get the JSON obligation
-      const jsonObligation =
-        await aliceClient.stringObligation.getJsonObligation<
-          typeof testJsonData
-        >(attestedEvent.uid);
+      const jsonObligation = await aliceClient.stringObligation.getJsonObligation<typeof testJsonData>(
+        attestedEvent.uid,
+      );
 
       // Verify the decoded JSON data
       expect(jsonObligation.data.item).toEqual(testJsonData);
@@ -130,22 +104,16 @@ describe("StringObligation Tests", () => {
 
     test("testGetInvalidObligation", async () => {
       // Try to get a non-existent obligation
-      const invalidUid =
-        "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`;
+      const invalidUid = "0x0000000000000000000000000000000000000000000000000000000000000001" as `0x${string}`;
 
       // Expect this to throw an error
-      expect(
-        aliceClient.stringObligation.getObligation(invalidUid),
-      ).rejects.toThrow();
+      expect(aliceClient.stringObligation.getObligation(invalidUid)).rejects.toThrow();
     });
 
     test("testDecode", async () => {
       // Create encoded data for testing
       const testString = "Test Decode Function";
-      const encodedData = encodeAbiParameters(
-        parseAbiParameters("(string item)"),
-        [{ item: testString }],
-      );
+      const encodedData = encodeAbiParameters(parseAbiParameters("(string item)"), [{ item: testString }]);
 
       // Use the decode function
       const decoded = aliceClient.stringObligation.decode(encodedData);
@@ -166,16 +134,12 @@ describe("StringObligation Tests", () => {
       };
 
       // Create encoded data for testing
-      const encodedData = encodeAbiParameters(
-        parseAbiParameters("(string item)"),
-        [{ item: JSON.stringify(testJsonData) }],
-      );
+      const encodedData = encodeAbiParameters(parseAbiParameters("(string item)"), [
+        { item: JSON.stringify(testJsonData) },
+      ]);
 
       // Use the decodeJson function
-      const decoded =
-        aliceClient.stringObligation.decodeJson<typeof testJsonData>(
-          encodedData,
-        );
+      const decoded = aliceClient.stringObligation.decodeJson<typeof testJsonData>(encodedData);
 
       // Verify decoded JSON data
       expect(decoded).toEqual(testJsonData);
@@ -187,10 +151,7 @@ describe("StringObligation Tests", () => {
         baz: 123,
       };
 
-      const encodedData = encodeAbiParameters(
-        parseAbiParameters("(string item)"),
-        [{ item: JSON.stringify(data) }],
-      );
+      const encodedData = encodeAbiParameters(parseAbiParameters("(string item)"), [{ item: JSON.stringify(data) }]);
 
       const TestSchema = z.object({
         foo: z.string(),
@@ -198,21 +159,16 @@ describe("StringObligation Tests", () => {
       });
 
       // Test with default options (sync, not safe)
-      const decoded = aliceClient.stringObligation.decodeZod(
-        encodedData,
-        TestSchema,
-      );
+      const decoded = aliceClient.stringObligation.decodeZod(encodedData, TestSchema);
 
       // Verify decoded data - should be the string value directly
       expect(decoded).toEqual(data);
 
       // Test with safe option
-      const safeDecoded = aliceClient.stringObligation.decodeZod(
-        encodedData,
-        TestSchema,
-        undefined,
-        { async: false, safe: true },
-      );
+      const safeDecoded = aliceClient.stringObligation.decodeZod(encodedData, TestSchema, undefined, {
+        async: false,
+        safe: true,
+      });
 
       // Verify safe parsing result
       expect(safeDecoded.success).toBe(true);
@@ -221,23 +177,19 @@ describe("StringObligation Tests", () => {
       }
 
       // Test with async option
-      const asyncDecoded = await aliceClient.stringObligation.decodeZod(
-        encodedData,
-        TestSchema,
-        undefined,
-        { async: true, safe: false },
-      );
+      const asyncDecoded = await aliceClient.stringObligation.decodeZod(encodedData, TestSchema, undefined, {
+        async: true,
+        safe: false,
+      });
 
       // Verify async parsing result
       expect(asyncDecoded).toEqual(data);
 
       // Test with both async and safe options
-      const asyncSafeDecoded = await aliceClient.stringObligation.decodeZod(
-        encodedData,
-        TestSchema,
-        undefined,
-        { async: true, safe: true },
-      );
+      const asyncSafeDecoded = await aliceClient.stringObligation.decodeZod(encodedData, TestSchema, undefined, {
+        async: true,
+        safe: true,
+      });
 
       // Verify async safe parsing result
       expect(asyncSafeDecoded.success).toBe(true);
@@ -252,10 +204,7 @@ describe("StringObligation Tests", () => {
         baz: 123,
       };
 
-      const encodedData = encodeAbiParameters(
-        parseAbiParameters("(string item)"),
-        [{ item: JSON.stringify(data) }],
-      );
+      const encodedData = encodeAbiParameters(parseAbiParameters("(string item)"), [{ item: JSON.stringify(data) }]);
 
       const TestType = type({
         foo: "string",
@@ -263,10 +212,7 @@ describe("StringObligation Tests", () => {
       });
 
       // Use the decodeArkType function
-      const decoded = aliceClient.stringObligation.decodeArkType(
-        encodedData,
-        TestType,
-      );
+      const decoded = aliceClient.stringObligation.decodeArkType(encodedData, TestType);
 
       // Verify decoded data - should be the string value directly
       expect(decoded).toEqual(data);

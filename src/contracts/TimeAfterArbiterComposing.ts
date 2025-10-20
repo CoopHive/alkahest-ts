@@ -1,124 +1,124 @@
 export const abi = [
   {
-    "type": "function",
-    "name": "checkStatement",
-    "inputs": [
+    type: "function",
+    name: "checkStatement",
+    inputs: [
       {
-        "name": "statement",
-        "type": "tuple",
-        "internalType": "struct Attestation",
-        "components": [
+        name: "statement",
+        type: "tuple",
+        internalType: "struct Attestation",
+        components: [
           {
-            "name": "uid",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            name: "uid",
+            type: "bytes32",
+            internalType: "bytes32",
           },
           {
-            "name": "schema",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            name: "schema",
+            type: "bytes32",
+            internalType: "bytes32",
           },
           {
-            "name": "time",
-            "type": "uint64",
-            "internalType": "uint64"
+            name: "time",
+            type: "uint64",
+            internalType: "uint64",
           },
           {
-            "name": "expirationTime",
-            "type": "uint64",
-            "internalType": "uint64"
+            name: "expirationTime",
+            type: "uint64",
+            internalType: "uint64",
           },
           {
-            "name": "revocationTime",
-            "type": "uint64",
-            "internalType": "uint64"
+            name: "revocationTime",
+            type: "uint64",
+            internalType: "uint64",
           },
           {
-            "name": "refUID",
-            "type": "bytes32",
-            "internalType": "bytes32"
+            name: "refUID",
+            type: "bytes32",
+            internalType: "bytes32",
           },
           {
-            "name": "recipient",
-            "type": "address",
-            "internalType": "address"
+            name: "recipient",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "attester",
-            "type": "address",
-            "internalType": "address"
+            name: "attester",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "revocable",
-            "type": "bool",
-            "internalType": "bool"
+            name: "revocable",
+            type: "bool",
+            internalType: "bool",
           },
           {
-            "name": "data",
-            "type": "bytes",
-            "internalType": "bytes"
-          }
-        ]
+            name: "data",
+            type: "bytes",
+            internalType: "bytes",
+          },
+        ],
       },
       {
-        "name": "demand",
-        "type": "bytes",
-        "internalType": "bytes"
+        name: "demand",
+        type: "bytes",
+        internalType: "bytes",
       },
       {
-        "name": "counteroffer",
-        "type": "bytes32",
-        "internalType": "bytes32"
-      }
+        name: "counteroffer",
+        type: "bytes32",
+        internalType: "bytes32",
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "bool",
-        "internalType": "bool"
-      }
+        name: "",
+        type: "bool",
+        internalType: "bool",
+      },
     ],
-    "stateMutability": "view"
+    stateMutability: "view",
   },
   {
-    "type": "function",
-    "name": "decodeDemandData",
-    "inputs": [
+    type: "function",
+    name: "decodeDemandData",
+    inputs: [
       {
-        "name": "data",
-        "type": "bytes",
-        "internalType": "bytes"
-      }
+        name: "data",
+        type: "bytes",
+        internalType: "bytes",
+      },
     ],
-    "outputs": [
+    outputs: [
       {
-        "name": "",
-        "type": "tuple",
-        "internalType": "struct TimeAfterArbiter.DemandData",
-        "components": [
+        name: "",
+        type: "tuple",
+        internalType: "struct TimeAfterArbiter.DemandData",
+        components: [
           {
-            "name": "baseArbiter",
-            "type": "address",
-            "internalType": "address"
+            name: "baseArbiter",
+            type: "address",
+            internalType: "address",
           },
           {
-            "name": "baseDemand",
-            "type": "bytes",
-            "internalType": "bytes"
+            name: "baseDemand",
+            type: "bytes",
+            internalType: "bytes",
           },
           {
-            "name": "time",
-            "type": "uint64",
-            "internalType": "uint64"
-          }
-        ]
-      }
+            name: "time",
+            type: "uint64",
+            internalType: "uint64",
+          },
+        ],
+      },
     ],
-    "stateMutability": "pure"
+    stateMutability: "pure",
   },
   {
-    "type": "error",
-    "name": "TimeNotAfter",
-    "inputs": []
-  }
+    type: "error",
+    name: "TimeNotAfter",
+    inputs: [],
+  },
 ] as const;
