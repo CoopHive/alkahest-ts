@@ -37,6 +37,12 @@ export type Decision = {
   decision: boolean;
 };
 
+export type ArbitrationResult = {
+  obligation?: `0x${string}` | undefined;
+  oracle?: `0x${string}` | undefined;
+  decision?: boolean | undefined;
+};
+
 export type ListenAndArbitrateResult = {
   decisions: Decision[];
   unwatch: () => void;
@@ -240,10 +246,52 @@ export const makeOracleClient = (
     return { decisions, unwatch };
   };
 
+  /**
+   * Wait for an arbitration decision to be made on a TrustedOracleArbiter
+   * Useful for waiting for arbitration before claiming an escrow
+   * @param obligationUid - bytes32 obligation uid
+   * @param oracle - address of the oracle
+   * @param pollingInterval - polling interval in milliseconds (default: 1000)
+   * @returns the arbitration result
+   */
+  const waitForArbitration = async (
+    obligationUid: `0x${string}`,
+    oracle: Address,
+    pollingInterval?: number,
+  ): Promise<ArbitrationResult> => {
+    // First check if arbitration already exists
+    const logs = await viemClient.getLogs({
+      address: addresses.trustedOracleArbiter,
+      event: arbitrationMadeEvent,
+      args: { obligation: obligationUid, oracle },
+      fromBlock: "earliest",
+      toBlock: "latest",
+    });
+
+    if (logs.length) return logs[0].args;
+
+    // Use optimal polling interval based on transport type
+    const optimalInterval = getOptimalPollingInterval(viemClient, pollingInterval ?? 1000);
+
+    return new Promise((resolve) => {
+      const unwatch = viemClient.watchEvent({
+        address: addresses.trustedOracleArbiter,
+        event: arbitrationMadeEvent,
+        args: { obligation: obligationUid, oracle },
+        pollingInterval: optimalInterval,
+        onLogs: (logs) => {
+          resolve(logs[0].args);
+          unwatch();
+        },
+      });
+    });
+  };
+
   return {
     requestArbitration,
     getArbitrationRequests,
     arbitratePast,
     listenAndArbitrate,
+    waitForArbitration,
   };
 };
