@@ -212,6 +212,27 @@ export const makeMinimalClient = (
     intrinsicsArbiter2: contractAddresses?.intrinsicsArbiter2 || baseAddresses?.intrinsicsArbiter2 || zeroAddress,
     anyArbiter: contractAddresses?.anyArbiter || baseAddresses?.anyArbiter || zeroAddress,
     allArbiter: contractAddresses?.allArbiter || baseAddresses?.allArbiter || zeroAddress,
+    notArbiter: contractAddresses?.notArbiter || baseAddresses?.notArbiter || zeroAddress,
+    erc8004Arbiter: contractAddresses?.erc8004Arbiter || baseAddresses?.erc8004Arbiter || zeroAddress,
+    confirmationArbiter: contractAddresses?.confirmationArbiter || baseAddresses?.confirmationArbiter || zeroAddress,
+    confirmationArbiterComposing:
+      contractAddresses?.confirmationArbiterComposing || baseAddresses?.confirmationArbiterComposing || zeroAddress,
+    revocableConfirmationArbiter:
+      contractAddresses?.revocableConfirmationArbiter || baseAddresses?.revocableConfirmationArbiter || zeroAddress,
+    revocableConfirmationArbiterComposing:
+      contractAddresses?.revocableConfirmationArbiterComposing ||
+      baseAddresses?.revocableConfirmationArbiterComposing ||
+      zeroAddress,
+    unrevocableConfirmationArbiter:
+      contractAddresses?.unrevocableConfirmationArbiter || baseAddresses?.unrevocableConfirmationArbiter || zeroAddress,
+    unrevocableArbiterComposing:
+      contractAddresses?.unrevocableArbiterComposing || baseAddresses?.unrevocableArbiterComposing || zeroAddress,
+    nativeTokenEscrowObligation:
+      contractAddresses?.nativeTokenEscrowObligation || baseAddresses?.nativeTokenEscrowObligation || zeroAddress,
+    nativeTokenPaymentObligation:
+      contractAddresses?.nativeTokenPaymentObligation || baseAddresses?.nativeTokenPaymentObligation || zeroAddress,
+    nativeTokenBarterUtils:
+      contractAddresses?.nativeTokenBarterUtils || baseAddresses?.nativeTokenBarterUtils || zeroAddress,
 
     // Attestation Properties Arbiters - Composing
     attesterArbiterComposing:
