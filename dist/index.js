@@ -7075,7 +7075,9 @@ var getOptimalPollingInterval = (viemClient, defaultInterval = 1e3) => {
   return isWebSocketTransport(viemClient) ? void 0 : defaultInterval;
 };
 var getAttestation = async (viemClient, uid, addresses) => {
-  const easAddress = addresses?.eas ?? contractAddresses[viemClient.chain.name].eas;
+  const chainAddresses = contractAddresses[viemClient.chain.name];
+  if (!chainAddresses) throw new Error(`No contract addresses found for chain ${viemClient.chain.name}`);
+  const easAddress = addresses?.eas ?? chainAddresses.eas;
   const attestation = await viemClient.readContract({
     address: easAddress,
     abi: abi29.abi,
@@ -7096,7 +7098,7 @@ var getAttestedEventFromTxHash = async (client, hash) => {
     eventName: "Attested",
     logs: tx.logs
   });
-  if (events.length === 0) {
+  if (events.length === 0 || !events[0]) {
     throw new Error(`No Attested event found in transaction ${hash}`);
   }
   return events[0].args;
@@ -7249,7 +7251,7 @@ var makeGeneralArbitersClient = (viemClient, addresses) => {
         fromBlock: "earliest",
         toBlock: "latest"
       });
-      if (logs.length > 0) {
+      if (logs.length > 0 && logs[0]) {
         return logs[0].args;
       }
       return void 0;
@@ -7269,7 +7271,7 @@ var makeGeneralArbitersClient = (viemClient, addresses) => {
         fromBlock: "earliest",
         toBlock: "latest"
       });
-      if (logs.length) return logs[0].args;
+      if (logs.length && logs[0]) return logs[0].args;
       const optimalInterval = getOptimalPollingInterval(viemClient, pollingInterval ?? 1e3);
       return new Promise((resolve) => {
         const unwatch = viemClient.watchEvent({
@@ -7278,6 +7280,7 @@ var makeGeneralArbitersClient = (viemClient, addresses) => {
           args: { obligation, oracle },
           pollingInterval: optimalInterval,
           onLogs: (logs2) => {
+            if (!logs2[0]) return;
             resolve(logs2[0].args);
             unwatch();
           },
@@ -7300,7 +7303,7 @@ var makeGeneralArbitersClient = (viemClient, addresses) => {
         fromBlock: "earliest",
         toBlock: "latest"
       });
-      if (logs.length) return logs[0].args;
+      if (logs.length && logs[0]) return logs[0].args;
       const optimalInterval = getOptimalPollingInterval(viemClient, pollingInterval ?? 1e3);
       return new Promise((resolve) => {
         const unwatch = viemClient.watchEvent({
@@ -7309,6 +7312,7 @@ var makeGeneralArbitersClient = (viemClient, addresses) => {
           args: { obligation, oracle },
           pollingInterval: optimalInterval,
           onLogs: (logs2) => {
+            if (!logs2[0]) return;
             resolve(logs2[0].args);
             unwatch();
           },
@@ -45111,11 +45115,13 @@ var makeMinimalClient = (walletClient, contractAddresses2) => {
      */
     getAttestedEventFromTxHash: async (hash) => {
       const tx = await viemClient.waitForTransactionReceipt({ hash });
-      return parseEventLogs2({
+      const events = parseEventLogs2({
         abi: abi29.abi,
         eventName: "Attested",
         logs: tx.logs
-      })[0].args;
+      });
+      if (!events[0]) throw new Error("No Attested event found in transaction");
+      return events[0].args;
     },
     /**
      * Waits for an escrow to be fulfilled
@@ -45143,7 +45149,7 @@ var makeMinimalClient = (walletClient, contractAddresses2) => {
         fromBlock: "earliest",
         toBlock: "latest"
       });
-      if (logs.length)
+      if (logs.length && logs[0])
         return {
           payment: logs[0].args.escrow,
           fulfillment: logs[0].args.fulfillment,
@@ -45156,6 +45162,7 @@ var makeMinimalClient = (walletClient, contractAddresses2) => {
           event: fulfillmentEvent,
           args: { escrow: buyAttestation },
           onLogs: (logs2) => {
+            if (!logs2[0]) return;
             resolve({
               payment: logs2[0].args.escrow,
               fulfillment: logs2[0].args.fulfillment,

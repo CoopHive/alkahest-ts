@@ -41,7 +41,9 @@ export const getAttestation = async (
   uid: `0x${string}`,
   addresses?: Pick<ChainAddresses, "eas">,
 ) => {
-  const easAddress = addresses?.eas ?? contractAddresses[viemClient.chain.name].eas;
+  const chainAddresses = contractAddresses[viemClient.chain.name];
+  if (!chainAddresses) throw new Error(`No contract addresses found for chain ${viemClient.chain.name}`);
+  const easAddress = addresses?.eas ?? chainAddresses.eas;
 
   const attestation = await viemClient.readContract({
     address: easAddress,
@@ -65,7 +67,7 @@ export const getAttestedEventFromTxHash = async (client: ViemClient, hash: `0x${
     logs: tx.logs,
   });
 
-  if (events.length === 0) {
+  if (events.length === 0 || !events[0]) {
     throw new Error(`No Attested event found in transaction ${hash}`);
   }
 

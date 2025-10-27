@@ -190,7 +190,7 @@ export const makeGeneralArbitersClient = (
         toBlock: "latest",
       });
 
-      if (logs.length > 0) {
+      if (logs.length > 0 && logs[0]) {
         return logs[0].args as {
           obligation: `0x${string}`;
           oracle: `0x${string}`;
@@ -225,7 +225,7 @@ export const makeGeneralArbitersClient = (
         toBlock: "latest",
       });
 
-      if (logs.length) return logs[0].args;
+      if (logs.length && logs[0]) return logs[0].args;
 
       // Use optimal polling interval based on transport type
       const optimalInterval = getOptimalPollingInterval(viemClient, pollingInterval ?? 1000);
@@ -237,6 +237,7 @@ export const makeGeneralArbitersClient = (
           args: { obligation, oracle },
           pollingInterval: optimalInterval,
           onLogs: (logs) => {
+            if (!logs[0]) return;
             resolve(logs[0].args);
             unwatch();
           },
@@ -268,7 +269,7 @@ export const makeGeneralArbitersClient = (
         toBlock: "latest",
       });
 
-      if (logs.length) return logs[0].args;
+      if (logs.length && logs[0]) return logs[0].args;
 
       // Use optimal polling interval based on transport type
       const optimalInterval = getOptimalPollingInterval(viemClient, pollingInterval ?? 1000);
@@ -280,6 +281,7 @@ export const makeGeneralArbitersClient = (
           args: { obligation, oracle },
           pollingInterval: optimalInterval,
           onLogs: (logs) => {
+            if (!logs[0]) return;
             resolve(logs[0].args);
             unwatch();
           },

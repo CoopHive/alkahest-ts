@@ -915,12 +915,12 @@ declare const makeDefaultExtension: (client: any) => {
                     value: bigint;
                 };
             };
-        };
+        } | undefined;
         decodeEscrow2Obligation: (obligationData: `0x${string}`) => {
             arbiter: `0x${string}`;
             demand: `0x${string}`;
             attestationUid: `0x${string}`;
-        };
+        } | undefined;
         getEscrowSchema: () => Promise<`0x${string}`>;
         getEscrow2Schema: () => Promise<`0x${string}`>;
         getEscrowObligation: (uid: `0x${string}`) => Promise<{
@@ -938,7 +938,7 @@ declare const makeDefaultExtension: (client: any) => {
                         value: bigint;
                     };
                 };
-            };
+            } | undefined;
             uid: `0x${string}`;
             schema: `0x${string}`;
             time: bigint;
@@ -954,7 +954,7 @@ declare const makeDefaultExtension: (client: any) => {
                 arbiter: `0x${string}`;
                 demand: `0x${string}`;
                 attestationUid: `0x${string}`;
-            };
+            } | undefined;
             uid: `0x${string}`;
             schema: `0x${string}`;
             time: bigint;
