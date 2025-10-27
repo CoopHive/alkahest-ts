@@ -108,6 +108,10 @@ export type TestContext = {
 
     // String obligation
     stringObligation: `0x${string}`;
+
+    // Native payment
+    nativeTokenPaymentObligation: `0x${string}`;
+    nativeTokenEscrowObligation: `0x${string}`;
   };
 
   // Mock token addresses
@@ -260,6 +264,8 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     attestationBarterUtils: "" as `0x${string}`,
 
     stringObligation: "" as `0x${string}`,
+    nativeTokenPaymentObligation: "" as `0x${string}`,
+    nativeTokenEscrowObligation: "" as `0x${string}`,
   };
 
   const mockAddresses: TestContext["mockAddresses"] = {
@@ -325,6 +331,8 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   addresses.attestationEscrowObligation = await deployObligation(AttestationEscrowObligation);
   addresses.attestationEscrowObligation2 = await deployObligation(AttestationEscrowObligation2);
   addresses.stringObligation = await deployObligation(StringObligation);
+  addresses.nativeTokenPaymentObligation = await deployObligation(NativeTokenPaymentObligation);
+  addresses.nativeTokenEscrowObligation = await deployObligation(NativeTokenEscrowObligation);
 
   // Deploy barter utils
 
