@@ -203,6 +203,11 @@ export const makeMinimalClient = (
 
     stringObligation: contractAddresses?.stringObligation || baseAddresses?.stringObligation || zeroAddress,
 
+    nativeTokenPaymentObligation:
+      contractAddresses?.nativeTokenPaymentObligation || baseAddresses?.nativeTokenPaymentObligation || zeroAddress,
+    nativeTokenEscrowObligation:
+      contractAddresses?.nativeTokenEscrowObligation || baseAddresses?.nativeTokenEscrowObligation || zeroAddress,
+
     trustedPartyArbiter: contractAddresses?.trustedPartyArbiter || baseAddresses?.trustedPartyArbiter || zeroAddress,
     trivialArbiter: contractAddresses?.trivialArbiter || baseAddresses?.trivialArbiter || zeroAddress,
     specificAttestationArbiter:
