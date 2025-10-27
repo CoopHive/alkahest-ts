@@ -16,6 +16,8 @@ import StringObligation from "@contracts/StringObligation.json";
 import TokenBundleBarterUtils from "@contracts/TokenBundleBarterUtils.json";
 import TokenBundleEscrowObligation from "@contracts/TokenBundleEscrowObligation.json";
 import TokenBundlePaymentObligation from "@contracts/TokenBundlePaymentObligation.json";
+import NativeTokenPaymentObligation from "@contracts/NativeTokenPaymentObligation.json";
+import NativeTokenEscrowObligation from "@contracts/NativeTokenEscrowObligation.json";
 import TrivialArbiter from "@contracts/TrivialArbiter.json";
 import TrustedOracleArbiter from "@contracts/TrustedOracleArbiter.json";
 import TrustedPartyArbiter from "@contracts/TrustedPartyArbiter.json";

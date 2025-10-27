@@ -3,6 +3,7 @@ import { makeAttestationClient } from "./clients/attestation";
 import { makeErc20Client } from "./clients/erc20";
 import { makeErc721Client } from "./clients/erc721";
 import { makeErc1155Client } from "./clients/erc1155";
+import { makeNativeTokenClient } from "./clients/nativeToken";
 import { makeStringObligationClient } from "./clients/stringObligation";
 import { makeTokenBundleClient } from "./clients/tokenBundle";
 import { makeOracleClient } from "./oracle/oracle";
@@ -36,6 +37,9 @@ export const makeDefaultExtension = (client: any) => {
 
     /** Utilities for StringObligation */
     stringObligation: makeStringObligationClient(client.viemClient, client.contractAddresses),
+
+    /** Native token (ETH) utilities for payments and escrow */
+    nativeToken: makeNativeTokenClient(client.viemClient, client.contractAddresses),
 
     /** Oracle functionality - backward compatibility alias */
     oracle: makeOracleClient(client.viemClient, client.contractAddresses),
