@@ -41,9 +41,11 @@ export const getAttestation = async (
   uid: `0x${string}`,
   addresses?: Pick<ChainAddresses, "eas">,
 ) => {
-  const chainAddresses = contractAddresses[viemClient.chain.name];
-  if (!chainAddresses) throw new Error(`No contract addresses found for chain ${viemClient.chain.name}`);
-  const easAddress = addresses?.eas ?? chainAddresses.eas;
+  // Try to use provided addresses first, then fall back to chain name lookup
+  const easAddress = addresses?.eas ?? contractAddresses[viemClient.chain.name]?.eas;
+  if (!easAddress) {
+    throw new Error(`No EAS address found for chain ${viemClient.chain.name}`);
+  }
 
   const attestation = await viemClient.readContract({
     address: easAddress,
