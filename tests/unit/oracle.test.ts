@@ -147,8 +147,10 @@ test("arbitratePast with skipAlreadyArbitrated", async () => {
   expect(firstDecisions.length).toBe(1);
 
   // Wait for transaction confirmation
+  const firstDecision = firstDecisions[0];
+  if (!firstDecision) throw new Error("No first decision found");
   await testContext.testClient.waitForTransactionReceipt({
-    hash: firstDecisions[0].hash,
+    hash: firstDecision.hash,
   });
 
   // Second arbitration with skipAlreadyArbitrated should find nothing

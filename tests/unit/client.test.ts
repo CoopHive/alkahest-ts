@@ -60,6 +60,7 @@ describe("Client Tests", () => {
 
     // Get the schema ID from the event
     const log = receipt.logs[0];
+    if (!log) throw new Error("No log found in receipt");
     return log.topics[1] as `0x${string}`; // Force type to be 0x-prefixed string
   }
 

@@ -171,9 +171,12 @@ test("tradeErc20ForCustom", async () => {
   // }
   // if using a custom Arbiter not supported by the SDK, you can use encodeAbiParameters directly,
   // like we did for the baseDemand
+  const baseSepoliaAddresses = contractAddresses["Base Sepolia"];
+  if (!baseSepoliaAddresses) throw new Error("Base Sepolia addresses not found");
+
   const demand = clientBuyer.arbiters.encodeTrustedPartyDemand({
     creator: clientSeller.address,
-    baseArbiter: contractAddresses["Base Sepolia"].trivialArbiter,
+    baseArbiter: baseSepoliaAddresses.trivialArbiter,
     baseDemand,
   });
 
@@ -187,7 +190,7 @@ test("tradeErc20ForCustom", async () => {
   // and no expiration (would be a future unix timstamp in seconds if used)
   const escrow = await clientBuyer.erc20.buyWithErc20(
     { address: usdc, value: 10n },
-    { arbiter: contractAddresses["Base Sepolia"].trustedPartyArbiter, demand },
+    { arbiter: baseSepoliaAddresses.trustedPartyArbiter, demand },
     0n,
   );
   console.log("escrow: ", escrow);
@@ -253,7 +256,7 @@ test("tradeErc20ForCustom", async () => {
   // return the fulfilling obligation immediately
   // Use WebSocket client for faster event watching if available. This should auto fallback to HTTP if WS is not configured.
   const fulfillment = await clientBuyerWs.waitForFulfillment(
-    contractAddresses["Base Sepolia"].erc20EscrowObligation,
+    baseSepoliaAddresses.erc20EscrowObligation,
     escrow.attested.uid,
   );
   console.log("fulfillment: ", fulfillment);

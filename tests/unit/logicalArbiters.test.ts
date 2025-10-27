@@ -363,7 +363,9 @@ describe("Logical Arbiters Tests", () => {
       expect(decoded.demands).toEqual(allDemand.demands);
 
       // Verify we can decode the nested demand
-      const nestedDecoded = client.arbiters.decodeAnyArbiterDemand(decoded.demands[1]);
+      const nestedDemand = decoded.demands[1];
+      if (!nestedDemand) throw new Error("No nested demand found");
+      const nestedDecoded = client.arbiters.decodeAnyArbiterDemand(nestedDemand);
       expectAddressesEqual(nestedDecoded.arbiters, [alice, bob]);
       expect(nestedDecoded.demands).toEqual(["0x1111", "0x2222"]);
     });
@@ -390,7 +392,9 @@ describe("Logical Arbiters Tests", () => {
       expect(decoded.demands).toEqual(anyDemand.demands);
 
       // Verify we can decode the nested demand
-      const nestedDecoded = client.arbiters.decodeAllArbiterDemand(decoded.demands[1]);
+      const nestedDemand2 = decoded.demands[1];
+      if (!nestedDemand2) throw new Error("No nested demand found");
+      const nestedDecoded = client.arbiters.decodeAllArbiterDemand(nestedDemand2);
       expectAddressesEqual(nestedDecoded.arbiters, [alice, bob, charlie]);
       expect(nestedDecoded.demands).toEqual(["0xaaaa", "0xbbbb", "0xcccc"]);
     });

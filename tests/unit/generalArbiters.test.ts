@@ -321,8 +321,10 @@ describe("General Arbiters Tests", () => {
 
       // Verify event was emitted with correct data
       expect(logs).toHaveLength(1);
-      expect(logs[0].args?.obligation).toBe(obligation);
-      expect(logs[0].args?.oracle?.toLowerCase()).toBe(oracle.toLowerCase());
+      const log = logs[0];
+      if (!log) throw new Error("No log found");
+      expect(log.args?.obligation).toBe(obligation);
+      expect(log.args?.oracle?.toLowerCase()).toBe(oracle.toLowerCase());
     });
 
     test("should check for existing arbitration", async () => {
