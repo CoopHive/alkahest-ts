@@ -11,13 +11,15 @@
       "types": "./dist/index.d.ts"
     },
     "./test-utils": {
-      "import": "./src/test-utils/setup.ts",
-      "types": "./src/test-utils/setup.ts"
+      "import": "./tests/utils/setup.ts",
+      "types": "./tests/utils/setup.ts"
     }
   },
   "files": [
     "dist",
-    "src"
+    "src",
+    "tests/utils",
+    "tests/fixtures"
   ],
   "scripts": {
     "build": "bunx tsc && tsup src/index.ts --dts --format esm,cjs",
