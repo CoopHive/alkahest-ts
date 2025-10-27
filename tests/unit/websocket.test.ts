@@ -94,10 +94,10 @@ describe("WebSocket Transport Support", () => {
     let testContext: TestContext;
     let alice: `0x${string}`;
     let bob: `0x${string}`;
-    let aliceClient: TestContext["aliceClient"];
-    let bobClient: TestContext["bobClient"];
-    let aliceClientWs: TestContext["aliceClientWs"];
-    let bobClientWs: TestContext["bobClientWs"];
+    let aliceClient: TestContext["alice"]["client"];
+    let bobClient: TestContext["bob"]["client"];
+    let aliceClientWs: TestContext["alice"]["clientWs"];
+    let bobClientWs: TestContext["bob"]["clientWs"];
     let testClient: TestContext["testClient"];
 
     // Token addresses
@@ -109,12 +109,12 @@ describe("WebSocket Transport Support", () => {
       testContext = await setupTestEnvironment();
 
       // Extract values for tests
-      alice = testContext.alice;
-      bob = testContext.bob;
-      aliceClient = testContext.aliceClient;
-      bobClient = testContext.bobClient;
-      aliceClientWs = testContext.aliceClientWs;
-      bobClientWs = testContext.bobClientWs;
+      alice = testContext.alice.address;
+      bob = testContext.bob.address;
+      aliceClient = testContext.alice.client;
+      bobClient = testContext.bob.client;
+      aliceClientWs = testContext.alice.clientWs;
+      bobClientWs = testContext.bob.clientWs;
       testClient = testContext.testClient;
 
       // Use mock tokens

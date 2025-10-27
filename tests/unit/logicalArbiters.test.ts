@@ -48,7 +48,7 @@ describe("Logical Arbiters Tests", () => {
 
   describe("AnyArbiter", () => {
     test("should encode and decode AnyArbiter demand data correctly", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const originalDemand = {
         arbiters: [alice, bob, charlie],
@@ -66,7 +66,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle single arbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const originalDemand = {
         arbiters: [alice],
@@ -81,7 +81,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle empty demands", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const originalDemand = {
         arbiters: [alice, bob],
@@ -96,7 +96,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle many arbiters", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // Generate 10 test addresses
       const arbiters = Array.from({ length: 10 }, () => privateKeyToAddress(generatePrivateKey()));
@@ -112,7 +112,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle complex demand data", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const originalDemand = {
         arbiters: [alice, bob],
@@ -135,7 +135,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle mismatched array lengths", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // The implementation doesn't validate array lengths, so this should encode successfully
       // but may not be meaningful for actual contract usage
@@ -155,7 +155,7 @@ describe("Logical Arbiters Tests", () => {
 
   describe("AllArbiter", () => {
     test("should encode and decode AllArbiter demand data correctly", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const originalDemand = {
         arbiters: [alice, bob, charlie],
@@ -173,7 +173,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle single arbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const originalDemand = {
         arbiters: [bob],
@@ -188,7 +188,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle empty arrays", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const originalDemand = {
         arbiters: [] as `0x${string}`[],
@@ -203,7 +203,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle large datasets", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // Generate 50 test addresses and demands
       const arbiters = Array.from({ length: 50 }, () => privateKeyToAddress(generatePrivateKey()));
@@ -219,7 +219,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle varied demand lengths", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const originalDemand = {
         arbiters: [alice, bob, charlie],
@@ -240,7 +240,7 @@ describe("Logical Arbiters Tests", () => {
 
   describe("Cross-compatibility", () => {
     test("AnyArbiter and AllArbiter should use the same encoding format", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const demand = {
         arbiters: [alice, bob],
@@ -265,7 +265,7 @@ describe("Logical Arbiters Tests", () => {
 
   describe("Error handling", () => {
     test("should throw error for invalid hex data in AnyArbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       expect(() => {
         client.arbiters.decodeAnyArbiterDemand("invalid-hex" as `0x${string}`);
@@ -273,7 +273,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should throw error for invalid hex data in AllArbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       expect(() => {
         client.arbiters.decodeAllArbiterDemand("not-hex" as `0x${string}`);
@@ -281,7 +281,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should throw error for insufficient data", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       expect(() => {
         client.arbiters.decodeAnyArbiterDemand("0x123" as `0x${string}`);
@@ -293,7 +293,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should throw error for malformed addresses", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       expect(() => {
         client.arbiters.encodeAnyArbiterDemand({
@@ -306,7 +306,7 @@ describe("Logical Arbiters Tests", () => {
 
   describe("Integration with manual encoding", () => {
     test("should produce same result as manual ABI encoding for AnyArbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const demand = {
         arbiters: [alice, bob],
@@ -323,7 +323,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should produce same result as manual ABI encoding for AllArbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const demand = {
         arbiters: [charlie],
@@ -342,7 +342,7 @@ describe("Logical Arbiters Tests", () => {
 
   describe("Nested arbiters scenario", () => {
     test("should handle nested AnyArbiter inside AllArbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // First, create a demand for a nested AnyArbiter
       const nestedAnyDemand = client.arbiters.encodeAnyArbiterDemand({
@@ -371,7 +371,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle nested AllArbiter inside AnyArbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // First, create a demand for a nested AllArbiter
       const nestedAllDemand = client.arbiters.encodeAllArbiterDemand({
@@ -402,7 +402,7 @@ describe("Logical Arbiters Tests", () => {
 
   describe("ABI-driven encoding validation", () => {
     test("should use contract ABI when available for AnyArbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const demand = {
         arbiters: [alice, bob],
@@ -426,7 +426,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should use contract ABI when available for AllArbiter", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const demand = {
         arbiters: [alice, bob, charlie],
@@ -450,7 +450,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle ABI extraction correctly", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // Test both arbiters with the same demand structure
       const demand = {
@@ -475,7 +475,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should maintain type safety with ABI-driven approach", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const demand = {
         arbiters: [alice, bob],
@@ -506,7 +506,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle edge cases with ABI-driven encoding", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // Test empty arrays
       const emptyDemand = {
@@ -548,7 +548,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should produce consistent results across multiple calls", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       const demand = {
         arbiters: [alice, bob, charlie],
@@ -574,7 +574,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle contract ABI vs fallback consistency", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // Test various demand structures to ensure ABI extraction works consistently
       const testCases = [
@@ -614,7 +614,7 @@ describe("Logical Arbiters Tests", () => {
 
   describe("Real-world usage patterns", () => {
     test("should handle typical multi-signature scenario", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // Create demands for multiple trusted party arbiters
       const trusteeAddresses = [alice, bob, charlie];
@@ -638,7 +638,7 @@ describe("Logical Arbiters Tests", () => {
     });
 
     test("should handle fallback arbiter scenario", () => {
-      const client = testContext.aliceClient;
+      const client = testContext.alice.client;
 
       // AnyArbiter: Primary arbiter or fallback arbiter
       const fallbackDemand = {

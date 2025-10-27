@@ -28,23 +28,23 @@ describe("Arbiters Tests", () => {
   let testContext: TestContext;
   let alice: `0x${string}`;
   let bob: `0x${string}`;
-  let aliceClient: TestContext["aliceClient"];
-  let bobClient: TestContext["bobClient"];
+  let aliceClient: TestContext["alice"]["client"];
+  let bobClient: TestContext["bob"]["client"];
   let testClient: TestContext["testClient"];
 
   // Additional oracle account
   let oracle: `0x${string}`;
-  let oracleClient: (typeof testContext)["aliceClient"];
+  let oracleClient: (typeof testContext)["alice"]["client"];
 
   beforeAll(async () => {
     // Setup test environment
     testContext = await setupTestEnvironment();
 
     // Extract the values we need for tests
-    alice = testContext.alice;
-    bob = testContext.bob;
-    aliceClient = testContext.aliceClient;
-    bobClient = testContext.bobClient;
+    alice = testContext.alice.address;
+    bob = testContext.bob.address;
+    aliceClient = testContext.alice.client;
+    bobClient = testContext.bob.client;
     testClient = testContext.testClient;
 
     // We'll use Bob as the oracle for simplicity
@@ -81,8 +81,8 @@ describe("Arbiters Tests", () => {
         expirationTime: 0n,
         revocationTime: 0n,
         refUID: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient: testContext.alice,
-        attester: testContext.bob,
+        recipient: testContext.alice.address,
+        attester: testContext.bob.address,
         revocable: true,
         data: "0x1234" as `0x${string}`,
       };
@@ -110,8 +110,8 @@ describe("Arbiters Tests", () => {
         expirationTime: 0n,
         revocationTime: 0n,
         refUID: "0x0000000000000000000000000000000000000000000000000000000000000000" as `0x${string}`,
-        recipient: testContext.alice,
-        attester: testContext.bob,
+        recipient: testContext.alice.address,
+        attester: testContext.bob.address,
         revocable: true,
         data: "0x1234" as `0x${string}`,
       };

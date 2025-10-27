@@ -56,15 +56,24 @@ export type TestContext = {
   anvilInitState?: `0x${string}`;
 
   // User addresses and clients
-  alice: `0x${string}`;
-  bob: `0x${string}`;
-  charlie: `0x${string}`;
-  aliceClient: ReturnType<typeof makeClient>;
-  bobClient: ReturnType<typeof makeClient>;
-  charlieClient: ReturnType<typeof makeClient>;
-  aliceClientWs: ReturnType<typeof makeClient>;
-  bobClientWs: ReturnType<typeof makeClient>;
-  charlieClientWs: ReturnType<typeof makeClient>;
+  alice: {
+    address: `0x${string}`;
+    privateKey: `0x${string}`;
+    client: ReturnType<typeof makeClient>;
+    clientWs: ReturnType<typeof makeClient>;
+  };
+  bob: {
+    address: `0x${string}`;
+    privateKey: `0x${string}`;
+    client: ReturnType<typeof makeClient>;
+    clientWs: ReturnType<typeof makeClient>;
+  };
+  charlie: {
+    address: `0x${string}`;
+    privateKey: `0x${string}`;
+    client: ReturnType<typeof makeClient>;
+    clientWs: ReturnType<typeof makeClient>;
+  };
 
   // Contract addresses
   addresses: {
@@ -159,18 +168,22 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   });
 
   // Create test accounts
-  const aliceAccount = privateKeyToAccount(generatePrivateKey(), {
+  const alicePrivateKey = generatePrivateKey();
+  const bobPrivateKey = generatePrivateKey();
+  const charliePrivateKey = generatePrivateKey();
+
+  const aliceAccount = privateKeyToAccount(alicePrivateKey, {
     nonceManager,
   });
-  const bobAccount = privateKeyToAccount(generatePrivateKey(), {
+  const bobAccount = privateKeyToAccount(bobPrivateKey, {
     nonceManager,
   });
-  const charlieAccount = privateKeyToAccount(generatePrivateKey(), {
+  const charlieAccount = privateKeyToAccount(charliePrivateKey, {
     nonceManager,
   });
-  const alice = aliceAccount.address;
-  const bob = bobAccount.address;
-  const charlie = charlieAccount.address;
+  const aliceAddress = aliceAccount.address;
+  const bobAddress = bobAccount.address;
+  const charlieAddress = charlieAccount.address;
 
   // Create test client for deployment
   const testClient = createTestClient({
@@ -191,15 +204,15 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     value: parseEther("10"),
   });
   await testClient.setBalance({
-    address: alice,
+    address: aliceAddress,
     value: parseEther("10"),
   });
   await testClient.setBalance({
-    address: bob,
+    address: bobAddress,
     value: parseEther("10"),
   });
   await testClient.setBalance({
-    address: charlie,
+    address: charlieAddress,
     value: parseEther("10"),
   });
 
@@ -399,14 +412,14 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     address: mockAddresses.erc20A,
     abi: MockERC20Permit.abi,
     functionName: "transfer",
-    args: [alice, parseEther("1000")],
+    args: [aliceAddress, parseEther("1000")],
   });
 
   await testClient.writeContract({
     address: mockAddresses.erc20B,
     abi: MockERC20Permit.abi,
     functionName: "transfer",
-    args: [bob, parseEther("1000")],
+    args: [bobAddress, parseEther("1000")],
   });
 
   // Mint NFTs to test accounts
@@ -414,14 +427,14 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     address: mockAddresses.erc721A,
     abi: MockERC721.abi,
     functionName: "mint",
-    args: [alice],
+    args: [aliceAddress],
   });
 
   await testClient.writeContract({
     address: mockAddresses.erc721B,
     abi: MockERC721.abi,
     functionName: "mint",
-    args: [bob],
+    args: [bobAddress],
   });
 
   // Mint ERC1155 tokens
@@ -429,14 +442,14 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     address: mockAddresses.erc1155A,
     abi: MockERC1155.abi,
     functionName: "mint",
-    args: [alice, 1n, 100n],
+    args: [aliceAddress, 1n, 100n],
   });
 
   await testClient.writeContract({
     address: mockAddresses.erc1155B,
     abi: MockERC1155.abi,
     functionName: "mint",
-    args: [bob, 1n, 100n],
+    args: [bobAddress, 1n, 100n],
   });
 
   // Mint ERC1155 tokens for Charlie
@@ -444,21 +457,21 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     address: mockAddresses.erc20C,
     abi: MockERC20Permit.abi,
     functionName: "transfer",
-    args: [charlie, parseEther("1000")],
+    args: [charlieAddress, parseEther("1000")],
   });
 
   await testClient.writeContract({
     address: mockAddresses.erc721C,
     abi: MockERC721.abi,
     functionName: "mint",
-    args: [charlie],
+    args: [charlieAddress],
   });
 
   await testClient.writeContract({
     address: mockAddresses.erc1155C,
     abi: MockERC1155.abi,
     functionName: "mint",
-    args: [charlie, 1n, 100n],
+    args: [charlieAddress, 1n, 100n],
   });
 
   // Create Alkahest clients
@@ -503,15 +516,24 @@ export async function setupTestEnvironment(): Promise<TestContext> {
     deployContract,
     deployObligation,
 
-    alice,
-    bob,
-    charlie,
-    aliceClient,
-    bobClient,
-    charlieClient,
-    aliceClientWs,
-    bobClientWs,
-    charlieClientWs,
+    alice: {
+      address: aliceAddress,
+      privateKey: alicePrivateKey,
+      client: aliceClient,
+      clientWs: aliceClientWs,
+    },
+    bob: {
+      address: bobAddress,
+      privateKey: bobPrivateKey,
+      client: bobClient,
+      clientWs: bobClientWs,
+    },
+    charlie: {
+      address: charlieAddress,
+      privateKey: charliePrivateKey,
+      client: charlieClient,
+      clientWs: charlieClientWs,
+    },
 
     addresses,
     mockAddresses,

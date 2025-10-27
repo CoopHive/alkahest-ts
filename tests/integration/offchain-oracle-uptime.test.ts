@@ -34,7 +34,7 @@ type SchedulerContext = {
 
 let schedulerContext: SchedulerContext | undefined;
 
-type ArbiterModule = TestContext["charlieClient"]["arbiters"];
+type ArbiterModule = TestContext["charlie"]["client"]["arbiters"];
 
 function setScheduler(ctx?: SchedulerContext) {
   schedulerContext = ctx;
@@ -149,12 +149,12 @@ test("asynchronous offchain oracle uptime flow", async () => {
 
   const demandBytes = encodeAbiParameters(uptimeDemandAbi, [{ payload: stringToHex(JSON.stringify(demandPayload)) }]);
 
-  const demand = testContext.aliceClient.arbiters.encodeTrustedOracleDemand({
-    oracle: testContext.charlie,
+  const demand = testContext.alice.client.arbiters.encodeTrustedOracleDemand({
+    oracle: testContext.charlie.address,
     data: demandBytes,
   });
 
-  const { attested: escrow } = await testContext.aliceClient.erc20.permitAndBuyWithErc20(
+  const { attested: escrow } = await testContext.alice.client.erc20.permitAndBuyWithErc20(
     {
       address: testContext.mockAddresses.erc20A,
       value: parseEther("100"),
@@ -167,7 +167,7 @@ test("asynchronous offchain oracle uptime flow", async () => {
   );
 
   const serviceUrl = demandPayload.service_url;
-  const { attested: fulfillment } = await testContext.bobClient.stringObligation.doObligation(serviceUrl, escrow.uid);
+  const { attested: fulfillment } = await testContext.bob.client.stringObligation.doObligation(serviceUrl, escrow.uid);
 
   const scheduler: SchedulerContext = {
     jobDb: new Map(),
@@ -177,15 +177,15 @@ test("asynchronous offchain oracle uptime flow", async () => {
   scheduler.urlIndex.set(serviceUrl, fulfillment.uid);
   setScheduler(scheduler);
 
-  const worker = startSchedulerWorker(scheduler, testContext.charlieClient.arbiters);
+  const worker = startSchedulerWorker(scheduler, testContext.charlie.client.arbiters);
 
-  const listener = await testContext.charlieClient.oracle.listenAndArbitrate(
+  const listener = await testContext.charlie.client.oracle.listenAndArbitrate(
     async (attestation) => {
       const ctx = getScheduler();
       if (!ctx) return null;
 
       // Extract obligation data
-      const obligation = testContext.charlieClient.extractObligationData(stringObligationAbi, attestation);
+      const obligation = testContext.charlie.client.extractObligationData(stringObligationAbi, attestation);
 
       const statement = obligation[0];
       if (!statement?.item) return null;
@@ -194,7 +194,7 @@ test("asynchronous offchain oracle uptime flow", async () => {
       if (!fulfillmentUid || ctx.jobDb.has(fulfillmentUid)) return null;
 
       // Get escrow and extract demand data
-      const [, demandData] = await testContext.charlieClient.getEscrowAndDemand(uptimeDemandAbi, attestation);
+      const [, demandData] = await testContext.charlie.client.getEscrowAndDemand(uptimeDemandAbi, attestation);
 
       const payloadHex = demandData[0]?.payload;
       if (!payloadHex) return null;
@@ -225,11 +225,11 @@ test("asynchronous offchain oracle uptime flow", async () => {
     { skipAlreadyArbitrated: true },
   );
 
-  await testContext.bobClient.oracle.requestArbitration(fulfillment.uid, testContext.charlie);
+  await testContext.bob.client.oracle.requestArbitration(fulfillment.uid, testContext.charlie.address);
 
-  const arbitration = await testContext.charlieClient.arbiters.waitForTrustedOracleArbitration(
+  const arbitration = await testContext.charlie.client.arbiters.waitForTrustedOracleArbitration(
     fulfillment.uid,
-    testContext.charlie,
+    testContext.charlie.address,
   );
 
   expect(arbitration?.decision).toBe(true);
@@ -237,7 +237,7 @@ test("asynchronous offchain oracle uptime flow", async () => {
   let collectionHash: `0x${string}` | undefined;
   for (let attempts = 0; attempts < 50; attempts++) {
     try {
-      collectionHash = await testContext.bobClient.erc20.collectEscrow(escrow.uid, fulfillment.uid);
+      collectionHash = await testContext.bob.client.erc20.collectEscrow(escrow.uid, fulfillment.uid);
       break;
     } catch {
       await Bun.sleep(100);
