@@ -12,10 +12,13 @@ import { makeLogicalArbitersClient } from "./logicalArbiters";
  * - Logical arbiters (Any, All)
  * - Attestation properties arbiters (Attester, Time, Schema, etc.)
  */
-export const makeArbitersClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
+export const makeArbitersClient = (
+  viemClient: ViemClient,
+  addresses: Pick<ChainAddresses, "trustedOracleArbiter">,
+) => {
   const generalArbiters = makeGeneralArbitersClient(viemClient, addresses);
-  const logicalArbiters = makeLogicalArbitersClient(viemClient, addresses);
-  const attestationPropertiesArbiters = makeAttestationPropertiesArbitersClient(viemClient, addresses);
+  const logicalArbiters = makeLogicalArbitersClient(viemClient);
+  const attestationPropertiesArbiters = makeAttestationPropertiesArbitersClient(viemClient);
 
   return {
     // General arbiters

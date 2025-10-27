@@ -3066,7 +3066,7 @@ var schemaArbiterComposingDemandDataType = schemaArbiterComposingDecodeDemandFun
 var schemaArbiterNonComposingDemandDataType = schemaArbiterNonComposingDecodeDemandFunction.outputs[0];
 var uidArbiterComposingDemandDataType = uidArbiterComposingDecodeDemandFunction.outputs[0];
 var uidArbiterNonComposingDemandDataType = uidArbiterNonComposingDecodeDemandFunction.outputs[0];
-var makeAttestationPropertiesArbitersClient = (viemClient, addresses) => {
+var makeAttestationPropertiesArbitersClient = (viemClient) => {
   return {
     // Attester Arbiters
     /**
@@ -8077,7 +8077,7 @@ var allArbiterDecodeDemandFunction = (0, import_viem4.getAbiItem)({
 });
 var anyDemandDataType = anyArbiterDecodeDemandFunction.outputs[0];
 var allDemandDataType = allArbiterDecodeDemandFunction.outputs[0];
-var makeLogicalArbitersClient = (viemClient, addresses) => {
+var makeLogicalArbitersClient = (viemClient) => {
   return {
     /**
      * Encodes AnyArbiter.DemandData to bytes.
@@ -8117,8 +8117,8 @@ var makeLogicalArbitersClient = (viemClient, addresses) => {
 // src/clients/arbiters.ts
 var makeArbitersClient = (viemClient, addresses) => {
   const generalArbiters = makeGeneralArbitersClient(viemClient, addresses);
-  const logicalArbiters = makeLogicalArbitersClient(viemClient, addresses);
-  const attestationPropertiesArbiters = makeAttestationPropertiesArbitersClient(viemClient, addresses);
+  const logicalArbiters = makeLogicalArbitersClient(viemClient);
+  const attestationPropertiesArbiters = makeAttestationPropertiesArbitersClient(viemClient);
   return {
     // General arbiters
     ...generalArbiters,

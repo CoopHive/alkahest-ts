@@ -42,7 +42,10 @@ const trustedOracleArbiterDemandDataType = trustedOracleArbiterDecodeDemandFunct
  *   - Supports requestArbitration for requesting arbitration from specific oracles
  *   - Provides listening functions for oracles to respond only to arbitration requests
  */
-export const makeGeneralArbitersClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
+export const makeGeneralArbitersClient = (
+  viemClient: ViemClient,
+  addresses: Pick<ChainAddresses, "trustedOracleArbiter">,
+) => {
   // Cache the parsed event ABIs to avoid re-parsing on each call
   const arbitrationMadeEvent = parseAbiItem(
     "event ArbitrationMade(bytes32 indexed obligation, address indexed oracle, bool decision)",

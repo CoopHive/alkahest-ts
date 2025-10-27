@@ -36,7 +36,11 @@ export const getOptimalPollingInterval = (
   return isWebSocketTransport(viemClient) ? undefined : defaultInterval;
 };
 
-export const getAttestation = async (viemClient: ViemClient, uid: `0x${string}`, addresses?: ChainAddresses) => {
+export const getAttestation = async (
+  viemClient: ViemClient,
+  uid: `0x${string}`,
+  addresses?: Pick<ChainAddresses, "eas">,
+) => {
   const easAddress = addresses?.eas ?? contractAddresses[viemClient.chain.name].eas;
 
   const attestation = await viemClient.readContract({

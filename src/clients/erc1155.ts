@@ -20,7 +20,10 @@ const erc1155PaymentDecodeFunction = getAbiItem({
 const erc1155EscrowObligationDataType = erc1155EscrowDecodeFunction.outputs[0];
 const erc1155PaymentObligationDataType = erc1155PaymentDecodeFunction.outputs[0];
 
-export const makeErc1155Client = (viemClient: ViemClient, addresses: ChainAddresses) => {
+export const makeErc1155Client = (
+  viemClient: ViemClient,
+  addresses: Pick<ChainAddresses, "erc1155EscrowObligation" | "erc1155PaymentObligation" | "erc1155BarterUtils">,
+) => {
   /**
    * Encodes ERC1155EscrowObligation.ObligationData to bytes using raw parameters.
    * @param data - ObligationData object to encode

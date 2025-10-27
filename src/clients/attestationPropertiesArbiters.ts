@@ -237,23 +237,23 @@ if (!uidArbiterNonComposingDemandDataType) {
 
 /**
  * Attestation Properties Arbiters Client
- * 
+ *
  * Handles arbiters that validate specific properties of attestations. Each arbiter type
  * comes in two variants:
  * - Composing: Can be combined with a base arbiter for additional validation
  * - Non-Composing: Standalone validation against the property
- * 
+ *
  * Supported attestation properties:
  * - Attester: Validates the attester address
  * - Time: Validates timestamp (After/Before/Equal variants)
  * - ExpirationTime: Validates expiration timestamp (After/Before/Equal variants)
- * - Recipient: Validates the recipient address  
+ * - Recipient: Validates the recipient address
  * - RefUID: Validates the reference UID
  * - Revocable: Validates the revocable flag
  * - Schema: Validates the schema hash
  * - UID: Validates the attestation UID
  */
-export const makeAttestationPropertiesArbitersClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
+export const makeAttestationPropertiesArbitersClient = (viemClient: ViemClient) => {
   return {
     // Attester Arbiters
     /**

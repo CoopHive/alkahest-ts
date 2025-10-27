@@ -8,7 +8,13 @@ import { abi as tokenBundlePaymentAbi } from "../contracts/TokenBundlePaymentObl
 import type { ApprovalPurpose, ChainAddresses, Demand, TokenBundle } from "../types";
 import { flattenTokenBundle, getAttestedEventFromTxHash, type ViemClient } from "../utils";
 
-export const makeTokenBundleClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
+export const makeTokenBundleClient = (
+  viemClient: ViemClient,
+  addresses: Pick<
+    ChainAddresses,
+    "tokenBundleEscrowObligation" | "tokenBundlePaymentObligation" | "tokenBundleBarterUtils"
+  >,
+) => {
   // Extract ABI types for encoding/decoding from contract ABIs
   const escrowObligationDataType = getAbiItem({
     abi: tokenBundleEscrowAbi.abi,

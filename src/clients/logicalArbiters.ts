@@ -28,7 +28,7 @@ const allDemandDataType = allArbiterDecodeDemandFunction.outputs[0];
  * These arbiters take arrays of arbiter addresses and their corresponding demand data,
  * allowing for complex logical compositions of arbitration rules.
  */
-export const makeLogicalArbitersClient = (viemClient: ViemClient, addresses: ChainAddresses) => {
+export const makeLogicalArbitersClient = (viemClient: ViemClient) => {
   return {
     /**
      * Encodes AnyArbiter.DemandData to bytes.

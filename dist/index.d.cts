@@ -207,7 +207,7 @@ declare const isWebSocketTransport: (viemClient: ViemClient) => boolean;
  * @returns optimal polling interval or undefined for WebSocket
  */
 declare const getOptimalPollingInterval: (viemClient: ViemClient, defaultInterval?: number) => number | undefined;
-declare const getAttestation: (viemClient: ViemClient, uid: `0x${string}`, addresses?: ChainAddresses) => Promise<{
+declare const getAttestation: (viemClient: ViemClient, uid: `0x${string}`, addresses?: Pick<ChainAddresses, "eas">) => Promise<{
     uid: `0x${string}`;
     schema: `0x${string}`;
     time: bigint;
@@ -1092,7 +1092,7 @@ declare const makeDefaultExtension: (client: any) => {
  * - Logical arbiters (Any, All)
  * - Attestation properties arbiters (Attester, Time, Schema, etc.)
  */
-declare const makeArbitersClient: (viemClient: ViemClient, addresses: ChainAddresses) => {
+declare const makeArbitersClient: (viemClient: ViemClient, addresses: Pick<ChainAddresses, "trustedOracleArbiter">) => {
     /**
      * @deprecated Use encodeAnyArbiterDemand instead
      */
@@ -1460,7 +1460,7 @@ if (!uidArbiterNonComposingDemandDataType) {
  * - Schema: Validates the schema hash
  * - UID: Validates the attestation UID
  */
-declare const makeAttestationPropertiesArbitersClient: (viemClient: ViemClient, addresses: ChainAddresses) => {
+declare const makeAttestationPropertiesArbitersClient: (viemClient: ViemClient) => {
     /**
      * Encodes AttesterArbiterComposing.DemandData to bytes.
      * @param demand - struct DemandData {address baseArbiter, bytes baseDemand, address attester}
@@ -1834,7 +1834,7 @@ declare const makeAttestationPropertiesArbitersClient: (viemClient: ViemClient, 
  *   - Supports requestArbitration for requesting arbitration from specific oracles
  *   - Provides listening functions for oracles to respond only to arbitration requests
  */
-declare const makeGeneralArbitersClient: (viemClient: ViemClient, addresses: ChainAddresses) => {
+declare const makeGeneralArbitersClient: (viemClient: ViemClient, addresses: Pick<ChainAddresses, "trustedOracleArbiter">) => {
     /**
      * Encodes IntrinsicsArbiter2.DemandData to bytes.
      * @param demand - struct DemandData {bytes32 schema}
@@ -1976,7 +1976,7 @@ declare const makeGeneralArbitersClient: (viemClient: ViemClient, addresses: Cha
  * These arbiters take arrays of arbiter addresses and their corresponding demand data,
  * allowing for complex logical compositions of arbitration rules.
  */
-declare const makeLogicalArbitersClient: (viemClient: ViemClient, addresses: ChainAddresses) => {
+declare const makeLogicalArbitersClient: (viemClient: ViemClient) => {
     /**
      * Encodes AnyArbiter.DemandData to bytes.
      * @param demand - struct DemandData {address[] arbiters, bytes[] demands}

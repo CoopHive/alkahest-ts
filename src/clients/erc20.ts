@@ -48,7 +48,18 @@ const erc721EscrowObligationDataType = erc721EscrowDoObligationFunction.inputs[0
 const tokenBundleEscrowObligationDataType = tokenBundleEscrowDecodeFunction.outputs[0];
 const tokenBundlePaymentObligationDataType = tokenBundlePaymentDecodeFunction.outputs[0];
 
-export const makeErc20Client = (viemClient: ViemClient, addresses: ChainAddresses) => {
+export const makeErc20Client = (
+  viemClient: ViemClient,
+  addresses: Pick<
+    ChainAddresses,
+    | "erc20EscrowObligation"
+    | "erc20PaymentObligation"
+    | "erc20BarterUtils"
+    | "erc721EscrowObligation"
+    | "erc721PaymentObligation"
+    | "eas"
+  >,
+) => {
   const getEscrowSchema = async () =>
     await viemClient.readContract({
       address: addresses.erc20EscrowObligation,

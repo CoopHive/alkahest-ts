@@ -21,7 +21,7 @@
     "tests"
   ],
   "scripts": {
-    "build": "tsup src/index.ts --dts --format esm,cjs",
+    "build": "bunx tsc && tsup src/index.ts --dts --format esm,cjs",
     "test": "bun test",
     "test:unit": "bun test tests/unit"
   },
