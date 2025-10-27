@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeAll, afterAll } from 'bun:test';
 import { parseEther, zeroAddress } from 'viem';
 import { makeClient } from '../../src/index.js';
+import { type NativeTokenEscrowObligationData } from '../../src/clients/nativeToken.js';
 import {
   setupTestEnvironment,
   teardownTestEnvironment,
@@ -25,7 +26,7 @@ describe('Native Token Integration Tests', () => {
   });
 
   describe('Native Token Demand Creation Integration', () => {
-    it('creates native token payment demand and integrates with oracle system', () => {
+    it('should create native token payment demand and integrate with oracle system', () => {
       // Create Native Token payment obligation data
       const nativeTokenObligationData = {
         amount: parseEther('1.5'),
@@ -52,7 +53,7 @@ describe('Native Token Integration Tests', () => {
         data: nativeTokenDemand.demand, // Use Native Token demand as the oracle data
       };
 
-      const encodedOracleData = client.arbiters.encodeTrustedOracleDemand(oracleData);
+      const encodedOracleData = client.arbiters.general.trustedOracle.encode(oracleData);
       
       // Verify oracle demand includes Native Token payment request
       expect(testContext.addresses.trustedOracleArbiter).toBeDefined();
@@ -61,12 +62,12 @@ describe('Native Token Integration Tests', () => {
       expect(encodedOracleData.startsWith('0x')).toBe(true);
 
       // Verify the oracle data was correctly encoded by decoding it
-      const decodedOracleData = client.arbiters.decodeTrustedOracleDemand(encodedOracleData);
+      const decodedOracleData = client.arbiters.general.trustedOracle.decode(encodedOracleData);
       expect(decodedOracleData.oracle.toLowerCase()).toBe(testContext.alice.toLowerCase());  
       expect(decodedOracleData.data).toBe(nativeTokenDemand.demand);
     });
 
-    it('encodes and decodes native token obligation data consistently with edge cases', () => {
+    it('should encode and decode native token obligation data consistently with edge cases', () => {
       const originalData = {
         amount: parseEther('0.123456789'),
         payee: testContext.alice,
@@ -99,7 +100,7 @@ describe('Native Token Integration Tests', () => {
       }
     });
 
-    it('creates multiple payment demands with varying amounts and recipients', () => {
+    it('should create multiple payment demands with varying amounts and recipients', () => {
       // Create Native Token payment demands with different amounts
       const demands = [
         { amount: parseEther('1.0'), payee: testContext.alice },
@@ -125,7 +126,7 @@ describe('Native Token Integration Tests', () => {
   });
 
   describe('Native Token Payment Flow Integration', () => {
-    it('executes complete payment workflow from demand creation to balance verification', async () => {
+    it('should execute complete payment workflow from demand creation to balance verification', async () => {
       // 1. Create Native Token payment obligation data
       const paymentData = {
         amount: parseEther('1.0'),
@@ -160,7 +161,7 @@ describe('Native Token Integration Tests', () => {
       expect(decodedDemand.payee.toLowerCase()).toBe(paymentData.payee.toLowerCase());
     });
 
-    it('processes sequential payments to different recipients with balance tracking', async () => {
+    it('should process sequential payments to different recipients with balance tracking', async () => {
       const recipients = [testContext.bob, testContext.charlie];
       const amounts = [parseEther('0.5'), parseEther('0.3')];
       
@@ -184,12 +185,11 @@ describe('Native Token Integration Tests', () => {
       }
     });
 
-    it('creates escrow demands and handles ABI parameter mismatches gracefully', async () => {
-      const escrowData = {
+    it('should create escrow demands and handle ABI parameter mismatches gracefully', async () => {
+      const escrowData: NativeTokenEscrowObligationData = {
+        arbiter: testContext.addresses.trivialArbiter, // Use a simple arbiter for the escrow
+        demand: "0x", // Empty demand data
         amount: parseEther('2.0'),
-        payee: testContext.bob,
-        escrowAgent: testContext.charlie,
-        releaseCondition: 'manual',
       };
 
       // Try to create escrow demand - this may fail due to ABI parameter mismatch
@@ -207,17 +207,17 @@ describe('Native Token Integration Tests', () => {
       // Verify validation works for the payment data structure
       const validation = client.nativeToken.validatePaymentObligationData({
         amount: escrowData.amount,
-        payee: escrowData.payee,
+        payee: testContext.bob, // Use bob as the payee for validation
       });
       expect(validation.valid).toBe(true);
       expect(validation.errors).toHaveLength(0);
 
       console.log(`Escrow Amount: ${escrowData.amount} wei`);
-      console.log(`Payee: ${escrowData.payee}`);
-      console.log(`Escrow Agent: ${escrowData.escrowAgent}`);
+      console.log(`Escrow Arbiter: ${escrowData.arbiter}`);
+      console.log(`Escrow Demand: ${escrowData.demand}`);
     });
 
-    it('executes batch operations with demand creation and payment execution', async () => {
+    it('should execute batch operations with demand creation and payment execution', async () => {
       // Test multiple operations in sequence
       const operations = [
         { amount: parseEther('0.5'), payee: testContext.bob },
@@ -253,13 +253,13 @@ describe('Native Token Integration Tests', () => {
 
   describe('Native Token Contract Integration', () => {
     describe('Contract Deployment and Basic Functions', () => {
-      it('verifies native token payment obligation contract deployment', () => {
+      it('should verify native token payment obligation contract deployment', () => {
         expect(testContext.addresses.nativeTokenPaymentObligation).toBeDefined();
         expect(testContext.addresses.nativeTokenPaymentObligation).toMatch(/^0x[a-fA-F0-9]{40}$/);
         expect(testContext.addresses.nativeTokenPaymentObligation).not.toBe('0x');
       });
 
-      it('validates contract bytecode and ABI interface availability', async () => {
+      it('should validate contract bytecode and ABI interface availability', async () => {
         // Test that the contract is deployed and has the expected ABI
         expect(aliceClient.nativeToken.paymentAbi).toBeDefined();
         expect(Array.isArray(aliceClient.nativeToken.paymentAbi)).toBe(true);
@@ -288,7 +288,7 @@ describe('Native Token Integration Tests', () => {
     });
 
     describe('Native Token Payment Execution', () => {
-      it('executes payment obligations with transaction confirmation and balance updates', async () => {
+      it('should execute payment obligations with transaction confirmation and balance updates', async () => {
         const obligationData = {
           amount: parseEther('0.5'),
           payee: testContext.bob,
@@ -310,7 +310,7 @@ describe('Native Token Integration Tests', () => {
         expect(finalBalance).toBe(initialBalance + obligationData.amount);
       });
 
-      it('creates payment demands with proper encoding and decoding validation', async () => {
+      it('should create payment demands with proper encoding and decoding validation', async () => {
         const obligationData = {
           amount: parseEther('1.5'),
           payee: testContext.charlie,
@@ -327,7 +327,7 @@ describe('Native Token Integration Tests', () => {
         expect(decoded.payee.toLowerCase()).toBe(obligationData.payee.toLowerCase());
       });
 
-      it('validates payment obligation data structure and returns success status', () => {
+      it('should validate payment obligation data structure and return success status', () => {
         const validData = {
           amount: parseEther('1.0'),
           payee: testContext.alice,
@@ -340,7 +340,7 @@ describe('Native Token Integration Tests', () => {
     });
 
     describe('Error Handling', () => {
-      it('throws error when attempting payment with insufficient ETH balance', async () => {
+      it('should throw error when attempting payment with insufficient ETH balance', async () => {
         // Try to send more ETH than Alice has (she has 10 ETH from setup)  
         const obligationData = {
           amount: parseEther('15.0'), // More than Alice's balance
@@ -355,7 +355,7 @@ describe('Native Token Integration Tests', () => {
     });
 
     describe('Oracle Integration', () => {
-      it('integrates native token demands with trusted oracle arbiter system', () => {
+      it('should integrate native token demands with trusted oracle arbiter system', () => {
         const obligationData = {
           amount: parseEther('2.0'),
           payee: testContext.bob,
@@ -370,19 +370,19 @@ describe('Native Token Integration Tests', () => {
           data: demand.demand,
         };
 
-        const oracleDemand = aliceClient.arbiters.encodeTrustedOracleDemand(oracleData);
+        const oracleDemand = aliceClient.arbiters.general.trustedOracle.encode(oracleData);
         expect(oracleDemand).toBeDefined();
         expect(oracleDemand.startsWith('0x')).toBe(true);
 
         // Verify oracle demand can be decoded
-        const decodedOracle = aliceClient.arbiters.decodeTrustedOracleDemand(oracleDemand);
+        const decodedOracle = aliceClient.arbiters.general.trustedOracle.decode(oracleDemand);
         expect(decodedOracle.oracle.toLowerCase()).toBe(testContext.charlie.toLowerCase());
         expect(decodedOracle.data).toBe(demand.demand);
       });
     });
 
     describe('Payment Implementation Verification', () => {
-      it('processes multiple payment amounts with transaction success verification', async () => {
+      it('should process multiple payment amounts with transaction success verification', async () => {
         const testAmounts = [
           parseEther('0.1'),
           parseEther('0.05'),
@@ -408,26 +408,6 @@ describe('Native Token Integration Tests', () => {
             address: testContext.bob,
           });
           expect(finalBalance).toBe(initialBalance + amount);
-        }
-      });
-
-      it('handles escrow demand creation with expected ABI parameter mismatch errors', () => {
-        const escrowData = {
-          amount: parseEther('3.0'),
-          payee: testContext.alice,
-          escrowAgent: testContext.charlie,
-          releaseCondition: 'manual',
-        };
-
-        try {
-          const demand = aliceClient.nativeToken.createNativeTokenEscrowDemand(escrowData);
-          expect(demand.arbiter).toBe(testContext.addresses.nativeTokenEscrowObligation);
-          expect(demand.demand).toBeDefined();
-          expect(demand.demand.startsWith('0x')).toBe(true);
-        } catch (error) {
-          // Expected to fail due to ABI parameter mismatch - this is a known issue
-          expect(error).toBeDefined();
-          console.log('Escrow demand creation failed as expected due to ABI mismatch');
         }
       });
     });

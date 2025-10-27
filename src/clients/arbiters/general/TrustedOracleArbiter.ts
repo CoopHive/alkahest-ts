@@ -13,6 +13,30 @@ const trustedOracleArbiterDecodeDemandFunction = getAbiItem({
 const trustedOracleArbiterDemandDataType = trustedOracleArbiterDecodeDemandFunction.outputs[0];
 
 /**
+ * Static encoding/decoding utilities for TrustedOracleArbiter demands
+ * These functions don't require client instantiation since they only handle data transformation
+ */
+export const TrustedOracleArbiterCodec = {
+  /**
+   * Encodes TrustedOracleArbiter.DemandData to bytes.
+   * @param demand - struct DemandData {address oracle, bytes data}
+   * @returns abi encoded bytes
+   */
+  encode: (demand: { oracle: `0x${string}`; data: `0x${string}` }) => {
+    return encodeAbiParameters([trustedOracleArbiterDemandDataType], [demand]);
+  },
+
+  /**
+   * Decodes TrustedOracleArbiter.DemandData from bytes.
+   * @param demandData - DemandData as abi encoded bytes
+   * @returns the decoded DemandData object
+   */
+  decode: (demandData: `0x${string}`) => {
+    return decodeAbiParameters([trustedOracleArbiterDemandDataType], demandData)[0];
+  },
+} as const;
+
+/**
  * Options for arbitration
  */
 export type ArbitrateOptions = {
@@ -237,18 +261,14 @@ export const makeTrustedOracleArbiterClient = (viemClient: ViemClient, addresses
      * @param demand - struct DemandData {address oracle, bytes data}
      * @returns abi encoded bytes
      */
-    encode: (demand: { oracle: `0x${string}`; data: `0x${string}` }) => {
-      return encodeAbiParameters([trustedOracleArbiterDemandDataType], [demand]);
-    },
+    encode: TrustedOracleArbiterCodec.encode,
 
     /**
      * Decodes TrustedOracleArbiter.DemandData from bytes.
      * @param demandData - DemandData as abi encoded bytes
      * @returns the decoded DemandData object
      */
-    decode: (demandData: `0x${string}`) => {
-      return decodeAbiParameters([trustedOracleArbiterDemandDataType], demandData)[0];
-    },
+    decode: TrustedOracleArbiterCodec.decode,
 
     /**
      * Arbitrate on the validity of an obligation fulfilling a demand

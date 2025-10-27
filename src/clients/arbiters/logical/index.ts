@@ -1,7 +1,7 @@
 import type { ChainAddresses } from "../../../types";
 import type { ViemClient } from "../../../utils";
-import { makeAllArbiterClient } from "./AllArbiter";
-import { makeAnyArbiterClient } from "./AnyArbiter";
+import { AllArbiterCodec, makeAllArbiterClient } from "./AllArbiter";
+import { AnyArbiterCodec, makeAnyArbiterClient } from "./AnyArbiter";
 
 /**
  * Logical Arbiters Client
@@ -28,3 +28,6 @@ export const makeLogicalArbitersClient = (viemClient: ViemClient, addresses: Cha
     decodeAllArbiterDemand: all.decode,
   };
 };
+
+// Export static codecs for use without client instantiation
+export { AnyArbiterCodec, AllArbiterCodec };

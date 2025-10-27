@@ -1,8 +1,8 @@
 import type { ChainAddresses } from "../../types";
 import type { ViemClient } from "../../utils";
 import { makeAttestationPropertiesArbitersClient } from "./attestation";
-import { makeGeneralArbitersClient } from "./general";
-import { makeLogicalArbitersClient } from "./logical";
+import { TrustedOracleArbiterCodec, makeGeneralArbitersClient } from "./general";
+import { AnyArbiterCodec, AllArbiterCodec, makeLogicalArbitersClient } from "./logical";
 
 /**
  * Hierarchical Arbiters Client
@@ -56,3 +56,6 @@ export const makeArbitersClient = (viemClient: ViemClient, addresses: ChainAddre
 
   return client;
 };
+
+// Export static codecs for use without client instantiation
+export { AnyArbiterCodec, AllArbiterCodec, TrustedOracleArbiterCodec };
