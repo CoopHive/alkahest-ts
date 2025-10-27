@@ -17,10 +17,12 @@
   },
   "files": [
     "dist",
+    "src",
     "tests"
   ],
   "scripts": {
     "build": "tsup src/index.ts --dts --format esm,cjs",
+    "prepare": "bun run build",
     "test": "bun test",
     "test:unit": "bun test tests/unit"
   },
