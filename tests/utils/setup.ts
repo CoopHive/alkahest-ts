@@ -1,24 +1,24 @@
-import AttestationBarterUtils from "@contracts/AttestationBarterUtils.json";
-import AttestationEscrowObligation from "@contracts/AttestationEscrowObligation.json";
-import AttestationEscrowObligation2 from "@contracts/AttestationEscrowObligation2.json";
-import ERC20BarterCrossToken from "@contracts/ERC20BarterCrossToken.json";
-// Import contract artifacts
-import ERC20EscrowObligation from "@contracts/ERC20EscrowObligation.json";
-import ERC20PaymentObligation from "@contracts/ERC20PaymentObligation.json";
-import ERC721BarterCrossToken from "@contracts/ERC721BarterCrossToken.json";
-import ERC721EscrowObligation from "@contracts/ERC721EscrowObligation.json";
-import ERC721PaymentObligation from "@contracts/ERC721PaymentObligation.json";
-import ERC1155BarterCrossToken from "@contracts/ERC1155BarterCrossToken.json";
-import ERC1155EscrowObligation from "@contracts/ERC1155EscrowObligation.json";
-import ERC1155PaymentObligation from "@contracts/ERC1155PaymentObligation.json";
-import SpecificAttestationArbiter from "@contracts/SpecificAttestationArbiter.json";
-import StringObligation from "@contracts/StringObligation.json";
-import TokenBundleBarterUtils from "@contracts/TokenBundleBarterUtils.json";
-import TokenBundleEscrowObligation from "@contracts/TokenBundleEscrowObligation.json";
-import TokenBundlePaymentObligation from "@contracts/TokenBundlePaymentObligation.json";
-import TrivialArbiter from "@contracts/TrivialArbiter.json";
-import TrustedOracleArbiter from "@contracts/TrustedOracleArbiter.json";
-import TrustedPartyArbiter from "@contracts/TrustedPartyArbiter.json";
+// Import contract artifacts using relative paths (not path aliases)
+import AttestationBarterUtils from "../../src/contracts/AttestationBarterUtils.json";
+import AttestationEscrowObligation from "../../src/contracts/AttestationEscrowObligation.json";
+import AttestationEscrowObligation2 from "../../src/contracts/AttestationEscrowObligation2.json";
+import ERC20BarterCrossToken from "../../src/contracts/ERC20BarterCrossToken.json";
+import ERC20EscrowObligation from "../../src/contracts/ERC20EscrowObligation.json";
+import ERC20PaymentObligation from "../../src/contracts/ERC20PaymentObligation.json";
+import ERC721BarterCrossToken from "../../src/contracts/ERC721BarterCrossToken.json";
+import ERC721EscrowObligation from "../../src/contracts/ERC721EscrowObligation.json";
+import ERC721PaymentObligation from "../../src/contracts/ERC721PaymentObligation.json";
+import ERC1155BarterCrossToken from "../../src/contracts/ERC1155BarterCrossToken.json";
+import ERC1155EscrowObligation from "../../src/contracts/ERC1155EscrowObligation.json";
+import ERC1155PaymentObligation from "../../src/contracts/ERC1155PaymentObligation.json";
+import SpecificAttestationArbiter from "../../src/contracts/SpecificAttestationArbiter.json";
+import StringObligation from "../../src/contracts/StringObligation.json";
+import TokenBundleBarterUtils from "../../src/contracts/TokenBundleBarterUtils.json";
+import TokenBundleEscrowObligation from "../../src/contracts/TokenBundleEscrowObligation.json";
+import TokenBundlePaymentObligation from "../../src/contracts/TokenBundlePaymentObligation.json";
+import TrivialArbiter from "../../src/contracts/TrivialArbiter.json";
+import TrustedOracleArbiter from "../../src/contracts/TrustedOracleArbiter.json";
+import TrustedPartyArbiter from "../../src/contracts/TrustedPartyArbiter.json";
 import { createAnvil } from "@viem/anvil";
 import { $ } from "bun";
 import {
@@ -159,6 +159,9 @@ export async function setupTestEnvironment(): Promise<TestContext> {
   const anvil = createAnvil({
     port,
     host: "127.0.0.1",
+    chainId: 84532, // Base Sepolia - for x402 compatibility
+    forkUrl: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
+    forkBlockNumber: undefined, // Use latest block
   });
   await anvil.start();
 
