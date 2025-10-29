@@ -1,127 +1,128 @@
 import { decodeAbiParameters, encodeAbiParameters, getAbiItem } from "viem";
-// Import all attestation properties arbiter ABIs
-import { abi as AttesterArbiterComposingAbi } from "../contracts/AttesterArbiterComposing";
-import { abi as AttesterArbiterNonComposingAbi } from "../contracts/AttesterArbiterNonComposing";
-import { abi as ExpirationTimeAfterArbiterComposingAbi } from "../contracts/ExpirationTimeAfterArbiterComposing";
-import { abi as ExpirationTimeAfterArbiterNonComposingAbi } from "../contracts/ExpirationTimeAfterArbiterNonComposing";
-import { abi as ExpirationTimeBeforeArbiterComposingAbi } from "../contracts/ExpirationTimeBeforeArbiterComposing";
-import { abi as ExpirationTimeBeforeArbiterNonComposingAbi } from "../contracts/ExpirationTimeBeforeArbiterNonComposing";
-import { abi as ExpirationTimeEqualArbiterComposingAbi } from "../contracts/ExpirationTimeEqualArbiterComposing";
-import { abi as ExpirationTimeEqualArbiterNonComposingAbi } from "../contracts/ExpirationTimeEqualArbiterNonComposing";
-import { abi as RecipientArbiterComposingAbi } from "../contracts/RecipientArbiterComposing";
-import { abi as RecipientArbiterNonComposingAbi } from "../contracts/RecipientArbiterNonComposing";
-import { abi as RefUidArbiterComposingAbi } from "../contracts/RefUidArbiterComposing";
-import { abi as RefUidArbiterNonComposingAbi } from "../contracts/RefUidArbiterNonComposing";
-import { abi as RevocableArbiterComposingAbi } from "../contracts/RevocableArbiterComposing";
-import { abi as RevocableArbiterNonComposingAbi } from "../contracts/RevocableArbiterNonComposing";
-import { abi as SchemaArbiterComposingAbi } from "../contracts/SchemaArbiterComposing";
-import { abi as SchemaArbiterNonComposingAbi } from "../contracts/SchemaArbiterNonComposing";
-import { abi as TimeAfterArbiterComposingAbi } from "../contracts/TimeAfterArbiterComposing";
-import { abi as TimeAfterArbiterNonComposingAbi } from "../contracts/TimeAfterArbiterNonComposing";
-import { abi as TimeBeforeArbiterComposingAbi } from "../contracts/TimeBeforeArbiterComposing";
-import { abi as TimeBeforeArbiterNonComposingAbi } from "../contracts/TimeBeforeArbiterNonComposing";
-import { abi as TimeEqualArbiterComposingAbi } from "../contracts/TimeEqualArbiterComposing";
-import { abi as TimeEqualArbiterNonComposingAbi } from "../contracts/TimeEqualArbiterNonComposing";
-import { abi as UidArbiterComposingAbi } from "../contracts/UidArbiterComposing";
-import { abi as UidArbiterNonComposingAbi } from "../contracts/UidArbiterNonComposing";
+// Import all attestation properties arbiter contracts
+import { abi as AttesterArbiterComposing } from "../contracts/AttesterArbiterComposing";
+import { abi as AttesterArbiterNonComposing } from "../contracts/AttesterArbiterNonComposing";
+import { abi as ExpirationTimeAfterArbiterComposing } from "../contracts/ExpirationTimeAfterArbiterComposing";
+import { abi as ExpirationTimeAfterArbiterNonComposing } from "../contracts/ExpirationTimeAfterArbiterNonComposing";
+import { abi as ExpirationTimeBeforeArbiterComposing } from "../contracts/ExpirationTimeBeforeArbiterComposing";
+import { abi as ExpirationTimeBeforeArbiterNonComposing } from "../contracts/ExpirationTimeBeforeArbiterNonComposing";
+import { abi as ExpirationTimeEqualArbiterComposing } from "../contracts/ExpirationTimeEqualArbiterComposing";
+import { abi as ExpirationTimeEqualArbiterNonComposing } from "../contracts/ExpirationTimeEqualArbiterNonComposing";
+import { abi as RecipientArbiterComposing } from "../contracts/RecipientArbiterComposing";
+import { abi as RecipientArbiterNonComposing } from "../contracts/RecipientArbiterNonComposing";
+import { abi as RefUidArbiterComposing } from "../contracts/RefUidArbiterComposing";
+import { abi as RefUidArbiterNonComposing } from "../contracts/RefUidArbiterNonComposing";
+import { abi as RevocableArbiterComposing } from "../contracts/RevocableArbiterComposing";
+import { abi as RevocableArbiterNonComposing } from "../contracts/RevocableArbiterNonComposing";
+import { abi as SchemaArbiterComposing } from "../contracts/SchemaArbiterComposing";
+import { abi as SchemaArbiterNonComposing } from "../contracts/SchemaArbiterNonComposing";
+import { abi as TimeAfterArbiterComposing } from "../contracts/TimeAfterArbiterComposing";
+import { abi as TimeAfterArbiterNonComposing } from "../contracts/TimeAfterArbiterNonComposing";
+import { abi as TimeBeforeArbiterComposing } from "../contracts/TimeBeforeArbiterComposing";
+import { abi as TimeBeforeArbiterNonComposing } from "../contracts/TimeBeforeArbiterNonComposing";
+import { abi as TimeEqualArbiterComposing } from "../contracts/TimeEqualArbiterComposing";
+import { abi as TimeEqualArbiterNonComposing } from "../contracts/TimeEqualArbiterNonComposing";
+import { abi as UidArbiterComposing } from "../contracts/UidArbiterComposing";
+import { abi as UidArbiterNonComposing } from "../contracts/UidArbiterNonComposing";
 import type { ChainAddresses } from "../types";
 import type { ViemClient } from "../utils";
 
 // Extract DemandData struct ABIs from contract ABIs at module initialization
+// The contract exports include the full artifact with nested 'abi' property
 const attesterArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: AttesterArbiterComposingAbi,
+  abi: AttesterArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const attesterArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: AttesterArbiterNonComposingAbi,
+  abi: AttesterArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const timeAfterArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: TimeAfterArbiterComposingAbi,
+  abi: TimeAfterArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const timeAfterArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: TimeAfterArbiterNonComposingAbi,
+  abi: TimeAfterArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const timeBeforeArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: TimeBeforeArbiterComposingAbi,
+  abi: TimeBeforeArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const timeBeforeArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: TimeBeforeArbiterNonComposingAbi,
+  abi: TimeBeforeArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const timeEqualArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: TimeEqualArbiterComposingAbi,
+  abi: TimeEqualArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const timeEqualArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: TimeEqualArbiterNonComposingAbi,
+  abi: TimeEqualArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const expirationTimeAfterArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: ExpirationTimeAfterArbiterComposingAbi,
+  abi: ExpirationTimeAfterArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const expirationTimeAfterArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: ExpirationTimeAfterArbiterNonComposingAbi,
+  abi: ExpirationTimeAfterArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const expirationTimeBeforeArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: ExpirationTimeBeforeArbiterComposingAbi,
+  abi: ExpirationTimeBeforeArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const expirationTimeBeforeArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: ExpirationTimeBeforeArbiterNonComposingAbi,
+  abi: ExpirationTimeBeforeArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const expirationTimeEqualArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: ExpirationTimeEqualArbiterComposingAbi,
+  abi: ExpirationTimeEqualArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const expirationTimeEqualArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: ExpirationTimeEqualArbiterNonComposingAbi,
+  abi: ExpirationTimeEqualArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const recipientArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: RecipientArbiterComposingAbi,
+  abi: RecipientArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const recipientArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: RecipientArbiterNonComposingAbi,
+  abi: RecipientArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const refUidArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: RefUidArbiterComposingAbi,
+  abi: RefUidArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const refUidArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: RefUidArbiterNonComposingAbi,
+  abi: RefUidArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const revocableArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: RevocableArbiterComposingAbi,
+  abi: RevocableArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const revocableArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: RevocableArbiterNonComposingAbi,
+  abi: RevocableArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const schemaArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: SchemaArbiterComposingAbi,
+  abi: SchemaArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const schemaArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: SchemaArbiterNonComposingAbi,
+  abi: SchemaArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 const uidArbiterComposingDecodeDemandFunction = getAbiItem({
-  abi: UidArbiterComposingAbi,
+  abi: UidArbiterComposing.abi,
   name: "decodeDemandData",
 });
 const uidArbiterNonComposingDecodeDemandFunction = getAbiItem({
-  abi: UidArbiterNonComposingAbi,
+  abi: UidArbiterNonComposing.abi,
   name: "decodeDemandData",
 });
 

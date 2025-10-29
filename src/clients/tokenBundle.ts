@@ -235,8 +235,9 @@ export const makeTokenBundleClient = (
             ...flattenTokenBundle(bid),
             arbiter: "0x0000000000000000000000000000000000000000",
             demand: "0x",
+            nativeAmount: 0n,
           },
-          { ...flattenTokenBundle(ask), payee: viemClient.account.address },
+          { ...flattenTokenBundle(ask), payee: viemClient.account.address, nativeAmount: 0n },
           expiration,
         ],
       });
