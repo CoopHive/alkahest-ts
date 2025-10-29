@@ -153,16 +153,24 @@ export type TestContext = {
  *
  * @returns TestContext object with all necessary test resources
  */
-export async function setupTestEnvironment(): Promise<TestContext> {
+export interface SetupTestEnvironmentOptions {
+  anvilOptions?: Partial<Parameters<typeof createAnvil>[0]>;
+}
+
+export async function setupTestEnvironment(options?: SetupTestEnvironmentOptions): Promise<TestContext> {
   // Use a dynamic port to avoid conflicts when running multiple tests
   const port = Math.floor(Math.random() * 10000) + 50000; // Random port between 50000-60000
-  const anvil = createAnvil({
+
+  const defaultAnvilConfig = {
     port,
     host: "127.0.0.1",
     chainId: 84532, // Base Sepolia - for x402 compatibility
     forkUrl: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
     forkBlockNumber: undefined, // Use latest block
-  });
+  };
+
+  const anvilConfig = { ...defaultAnvilConfig, ...options?.anvilOptions };
+  const anvil = createAnvil(anvilConfig);
   await anvil.start();
 
   const chain = foundry;

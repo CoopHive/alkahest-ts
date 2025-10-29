@@ -7106,9 +7106,10 @@ var getOptimalPollingInterval = (viemClient, defaultInterval = 1e3) => {
   return isWebSocketTransport(viemClient) ? void 0 : defaultInterval;
 };
 var getAttestation = async (viemClient, uid, addresses) => {
-  const chainAddresses = contractAddresses[viemClient.chain.name];
-  if (!chainAddresses) throw new Error(`No contract addresses found for chain ${viemClient.chain.name}`);
-  const easAddress = addresses?.eas ?? chainAddresses.eas;
+  const easAddress = addresses?.eas ?? contractAddresses[viemClient.chain.name]?.eas;
+  if (!easAddress) {
+    throw new Error(`No EAS address found for chain ${viemClient.chain.name}`);
+  }
   const attestation = await viemClient.readContract({
     address: easAddress,
     abi: abi29.abi,
