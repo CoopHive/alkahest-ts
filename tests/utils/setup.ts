@@ -218,16 +218,25 @@ export async function setupTestEnvironment(options?: SetupTestEnvironmentOptions
   const defaultAnvilConfig = {
     port,
     host: "127.0.0.1",
-    chainId: 84532, // Base Sepolia - for x402 compatibility
-    forkUrl: process.env.BASE_SEPOLIA_RPC_URL || "https://sepolia.base.org",
-    forkBlockNumber: undefined, // Use latest block
+    chainId: 31337, // Default Anvil/Foundry chain ID
   };
 
   const anvilConfig = { ...defaultAnvilConfig, ...options?.anvilOptions };
   const anvil = createAnvil(anvilConfig);
   await anvil.start();
 
-  const chain = foundry;
+  // Override foundry chain to match anvil's actual configuration
+  const chain = {
+    ...foundry,
+    id: anvilConfig.chainId,
+    rpcUrls: {
+      default: {
+        http: [`http://${anvilConfig.host}:${anvilConfig.port}`],
+        webSocket: [`ws://${anvilConfig.host}:${anvilConfig.port}`],
+      },
+    },
+  } as const;
+
   const transport = http(`http://${anvil.host}:${anvil.port}`, {
     timeout: 60_000,
   });
