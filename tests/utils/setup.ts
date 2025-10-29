@@ -41,6 +41,32 @@ import AllArbiter from "../../src/contracts/AllArbiter.json";
 import AnyArbiter from "../../src/contracts/AnyArbiter.json";
 import IntrinsicsArbiter from "../../src/contracts/IntrinsicsArbiter2.json";
 import IntrinsicsArbiter2 from "../../src/contracts/IntrinsicsArbiter2.json";
+// Attestation Properties Arbiters - Non-Composing
+import AttesterArbiterNonComposing from "../../src/contracts/AttesterArbiterNonComposing.json";
+import RecipientArbiterNonComposing from "../../src/contracts/RecipientArbiterNonComposing.json";
+import RefUidArbiterNonComposing from "../../src/contracts/RefUidArbiterNonComposing.json";
+import RevocableArbiterNonComposing from "../../src/contracts/RevocableArbiterNonComposing.json";
+import SchemaArbiterNonComposing from "../../src/contracts/SchemaArbiterNonComposing.json";
+import TimeAfterArbiterNonComposing from "../../src/contracts/TimeAfterArbiterNonComposing.json";
+import TimeBeforeArbiterNonComposing from "../../src/contracts/TimeBeforeArbiterNonComposing.json";
+import TimeEqualArbiterNonComposing from "../../src/contracts/TimeEqualArbiterNonComposing.json";
+import UidArbiterNonComposing from "../../src/contracts/UidArbiterNonComposing.json";
+import ExpirationTimeAfterArbiterNonComposing from "../../src/contracts/ExpirationTimeAfterArbiterNonComposing.json";
+import ExpirationTimeBeforeArbiterNonComposing from "../../src/contracts/ExpirationTimeBeforeArbiterNonComposing.json";
+import ExpirationTimeEqualArbiterNonComposing from "../../src/contracts/ExpirationTimeEqualArbiterNonComposing.json";
+// Attestation Properties Arbiters - Composing
+import AttesterArbiterComposing from "../../src/contracts/AttesterArbiterComposing.json";
+import RecipientArbiterComposing from "../../src/contracts/RecipientArbiterComposing.json";
+import RefUidArbiterComposing from "../../src/contracts/RefUidArbiterComposing.json";
+import RevocableArbiterComposing from "../../src/contracts/RevocableArbiterComposing.json";
+import SchemaArbiterComposing from "../../src/contracts/SchemaArbiterComposing.json";
+import TimeAfterArbiterComposing from "../../src/contracts/TimeAfterArbiterComposing.json";
+import TimeBeforeArbiterComposing from "../../src/contracts/TimeBeforeArbiterComposing.json";
+import TimeEqualArbiterComposing from "../../src/contracts/TimeEqualArbiterComposing.json";
+import UidArbiterComposing from "../../src/contracts/UidArbiterComposing.json";
+import ExpirationTimeAfterArbiterComposing from "../../src/contracts/ExpirationTimeAfterArbiterComposing.json";
+import ExpirationTimeBeforeArbiterComposing from "../../src/contracts/ExpirationTimeBeforeArbiterComposing.json";
+import ExpirationTimeEqualArbiterComposing from "../../src/contracts/ExpirationTimeEqualArbiterComposing.json";
 // Import implementation contracts from fixtures
 import EAS from "../fixtures/EAS.json";
 import MockERC20Permit from "../fixtures/MockERC20Permit.json";
@@ -80,7 +106,7 @@ export type TestContext = {
     eas: `0x${string}`;
     easSchemaRegistry: `0x${string}`;
 
-    // Arbiters
+    // Arbiters - General
     trivialArbiter: `0x${string}`;
     trustedPartyArbiter: `0x${string}`;
     trustedOracleArbiter: `0x${string}`;
@@ -89,6 +115,34 @@ export type TestContext = {
     intrinsicsArbiter2: `0x${string}`;
     anyArbiter: `0x${string}`;
     allArbiter: `0x${string}`;
+
+    // Attestation Properties Arbiters - Non-Composing
+    attesterArbiterNonComposing: `0x${string}`;
+    recipientArbiterNonComposing: `0x${string}`;
+    refUidArbiterNonComposing: `0x${string}`;
+    revocableArbiterNonComposing: `0x${string}`;
+    schemaArbiterNonComposing: `0x${string}`;
+    timeAfterArbiterNonComposing: `0x${string}`;
+    timeBeforeArbiterNonComposing: `0x${string}`;
+    timeEqualArbiterNonComposing: `0x${string}`;
+    uidArbiterNonComposing: `0x${string}`;
+    expirationTimeAfterArbiterNonComposing: `0x${string}`;
+    expirationTimeBeforeArbiterNonComposing: `0x${string}`;
+    expirationTimeEqualArbiterNonComposing: `0x${string}`;
+
+    // Attestation Properties Arbiters - Composing
+    attesterArbiterComposing: `0x${string}`;
+    recipientArbiterComposing: `0x${string}`;
+    refUidArbiterComposing: `0x${string}`;
+    revocableArbiterComposing: `0x${string}`;
+    schemaArbiterComposing: `0x${string}`;
+    timeAfterArbiterComposing: `0x${string}`;
+    timeBeforeArbiterComposing: `0x${string}`;
+    timeEqualArbiterComposing: `0x${string}`;
+    uidArbiterComposing: `0x${string}`;
+    expirationTimeAfterArbiterComposing: `0x${string}`;
+    expirationTimeBeforeArbiterComposing: `0x${string}`;
+    expirationTimeEqualArbiterComposing: `0x${string}`;
 
     // ERC20
     erc20EscrowObligation: `0x${string}`;
@@ -327,6 +381,34 @@ export async function setupTestEnvironment(options?: SetupTestEnvironmentOptions
   addresses.intrinsicsArbiter2 = await deployContract(IntrinsicsArbiter2);
   addresses.anyArbiter = await deployContract(AnyArbiter);
   addresses.allArbiter = await deployContract(AllArbiter);
+
+  // Deploy Attestation Properties Arbiters - Non-Composing
+  addresses.attesterArbiterNonComposing = await deployContract(AttesterArbiterNonComposing);
+  addresses.recipientArbiterNonComposing = await deployContract(RecipientArbiterNonComposing);
+  addresses.refUidArbiterNonComposing = await deployContract(RefUidArbiterNonComposing);
+  addresses.revocableArbiterNonComposing = await deployContract(RevocableArbiterNonComposing);
+  addresses.schemaArbiterNonComposing = await deployContract(SchemaArbiterNonComposing);
+  addresses.timeAfterArbiterNonComposing = await deployContract(TimeAfterArbiterNonComposing);
+  addresses.timeBeforeArbiterNonComposing = await deployContract(TimeBeforeArbiterNonComposing);
+  addresses.timeEqualArbiterNonComposing = await deployContract(TimeEqualArbiterNonComposing);
+  addresses.uidArbiterNonComposing = await deployContract(UidArbiterNonComposing);
+  addresses.expirationTimeAfterArbiterNonComposing = await deployContract(ExpirationTimeAfterArbiterNonComposing);
+  addresses.expirationTimeBeforeArbiterNonComposing = await deployContract(ExpirationTimeBeforeArbiterNonComposing);
+  addresses.expirationTimeEqualArbiterNonComposing = await deployContract(ExpirationTimeEqualArbiterNonComposing);
+
+  // Deploy Attestation Properties Arbiters - Composing
+  addresses.attesterArbiterComposing = await deployContract(AttesterArbiterComposing);
+  addresses.recipientArbiterComposing = await deployContract(RecipientArbiterComposing);
+  addresses.refUidArbiterComposing = await deployContract(RefUidArbiterComposing);
+  addresses.revocableArbiterComposing = await deployContract(RevocableArbiterComposing);
+  addresses.schemaArbiterComposing = await deployContract(SchemaArbiterComposing);
+  addresses.timeAfterArbiterComposing = await deployContract(TimeAfterArbiterComposing);
+  addresses.timeBeforeArbiterComposing = await deployContract(TimeBeforeArbiterComposing);
+  addresses.timeEqualArbiterComposing = await deployContract(TimeEqualArbiterComposing);
+  addresses.uidArbiterComposing = await deployContract(UidArbiterComposing);
+  addresses.expirationTimeAfterArbiterComposing = await deployContract(ExpirationTimeAfterArbiterComposing);
+  addresses.expirationTimeBeforeArbiterComposing = await deployContract(ExpirationTimeBeforeArbiterComposing);
+  addresses.expirationTimeEqualArbiterComposing = await deployContract(ExpirationTimeEqualArbiterComposing);
 
   // Deploy obligation contracts (all following same pattern with EAS and schema registry)
 
