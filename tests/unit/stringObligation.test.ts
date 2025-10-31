@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { type } from "arktype";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { z } from "zod";
@@ -13,8 +13,8 @@ describe("StringObligation Tests", () => {
   let bobClient: TestContext["bob"]["client"];
   let testClient: TestContext["testClient"];
 
-  beforeAll(async () => {
-    // Setup test environment
+  beforeEach(async () => {
+    // Setup fresh test environment for each test
     testContext = await setupTestEnvironment();
 
     // Extract the values we need for tests
@@ -34,8 +34,8 @@ describe("StringObligation Tests", () => {
     }
   });
 
-  afterAll(async () => {
-    // Clean up
+  afterEach(async () => {
+    // Clean up after each test
     await teardownTestEnvironment(testContext);
   });
 

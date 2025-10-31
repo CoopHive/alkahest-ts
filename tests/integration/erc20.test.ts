@@ -87,9 +87,17 @@ function createNetworkClients() {
   };
 }
 
+const baseSepoliaAddresses = contractAddresses["Base Sepolia"];
+const shouldSkip =
+  !process.env.PRIVKEY_ALICE ||
+  !process.env.PRIVKEY_BOB ||
+  !process.env.RPC_URL ||
+  !baseSepoliaAddresses ||
+  baseSepoliaAddresses.trustedPartyArbiter === "0x";
+
 beforeAll(() => {
   // Skip tests if required environment variables are not set
-  if (!process.env.PRIVKEY_ALICE || !process.env.PRIVKEY_BOB || !process.env.RPC_URL) {
+  if (shouldSkip) {
     console.log("Skipping external network tests - missing environment variables");
     return;
   }
@@ -102,11 +110,7 @@ beforeAll(() => {
 });
 
 test("tradeErc20ForErc20", async () => {
-  // Skip test if environment variables are not set
-  if (!process.env.PRIVKEY_ALICE || !process.env.PRIVKEY_BOB || !process.env.RPC_URL) {
-    console.log("Skipping test - missing environment variables for external network");
-    return;
-  }
+  if (shouldSkip) return;
 
   // approve escrow contract to spend tokens
   const escrowApproval = await clientBuyer.erc20.approve({ address: usdc, value: 10n }, "escrow");
@@ -130,11 +134,7 @@ test("tradeErc20ForErc20", async () => {
 });
 
 test("tradeErc20ForCustom", async () => {
-  // Skip test if environment variables are not set
-  if (!process.env.PRIVKEY_ALICE || !process.env.PRIVKEY_BOB || !process.env.RPC_URL) {
-    console.log("Skipping test - missing environment variables for external network");
-    return;
-  }
+  if (shouldSkip) return;
 
   // the example will use JobResultObligation to demand a string to be capitalized
   // but JobResultObligation is generic enough to represent much more (a db query, a Dockerfile...)
@@ -171,7 +171,6 @@ test("tradeErc20ForCustom", async () => {
   // }
   // if using a custom Arbiter not supported by the SDK, you can use encodeAbiParameters directly,
   // like we did for the baseDemand
-  const baseSepoliaAddresses = contractAddresses["Base Sepolia"];
   if (!baseSepoliaAddresses) throw new Error("Base Sepolia addresses not found");
 
   const demand = clientBuyer.arbiters.encodeTrustedPartyDemand({

@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, expect, test } from "bun:test";
+import { afterEach, beforeEach, beforeEach, expect, test } from "bun:test";
 import { parseAbiParameters, recoverMessageAddress } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
@@ -17,20 +17,11 @@ type IdentityFulfillment = {
   signature: `0x${string}`;
 };
 
-beforeAll(async () => {
+beforeEach(async () => {
   testContext = await setupTestEnvironment();
 });
 
-beforeEach(async () => {
-  identityRegistry.clear();
-  if (testContext.anvilInitState) {
-    await testContext.testClient.loadState({
-      state: testContext.anvilInitState,
-    });
-  }
-});
-
-afterAll(async () => {
+afterEach(async () => {
   identityRegistry.clear();
   await teardownTestEnvironment(testContext);
 });

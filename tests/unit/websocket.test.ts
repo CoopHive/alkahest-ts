@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { createWalletClient, http, nonceManager, parseAbiParameters, parseEther, webSocket } from "viem";
 import { privateKeyToAccount } from "viem/accounts";
 import { baseSepolia } from "viem/chains";
@@ -18,7 +18,7 @@ describe("WebSocket Transport Support", () => {
     let httpClient: ReturnType<typeof makeClient>;
     let wsClient: ReturnType<typeof makeClient>;
 
-    beforeAll(() => {
+    beforeEach(() => {
       // Create HTTP client
       httpClient = makeClient(
         createWalletClient({
@@ -104,7 +104,7 @@ describe("WebSocket Transport Support", () => {
     let erc20TokenA: `0x${string}`;
     let erc20TokenB: `0x${string}`;
 
-    beforeAll(async () => {
+    beforeEach(async () => {
       // Setup test environment with both HTTP and WebSocket clients
       testContext = await setupTestEnvironment();
 
@@ -131,7 +131,7 @@ describe("WebSocket Transport Support", () => {
       }
     });
 
-    afterAll(async () => {
+    afterEach(async () => {
       // Clean up test environment
       await teardownTestEnvironment(testContext);
     });
@@ -323,7 +323,7 @@ describe("WebSocket Transport Support", () => {
         },
       );
 
-      // Clean up
+      // Clean up after each test
       setTimeout(() => unwatch(), 1000);
     });
   });

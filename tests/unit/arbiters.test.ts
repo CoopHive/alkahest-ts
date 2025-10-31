@@ -10,7 +10,7 @@
  * These tests mirror the solidity tests in test/unit/arbiters
  */
 
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
 import { abi as allArbiterAbi } from "../../src/contracts/AllArbiter";
@@ -36,8 +36,8 @@ describe("Arbiters Tests", () => {
   let oracle: `0x${string}`;
   let oracleClient: (typeof testContext)["alice"]["client"];
 
-  beforeAll(async () => {
-    // Setup test environment
+  beforeEach(async () => {
+    // Setup fresh test environment for each test
     testContext = await setupTestEnvironment();
 
     // Extract the values we need for tests
@@ -61,8 +61,8 @@ describe("Arbiters Tests", () => {
     }
   });
 
-  afterAll(async () => {
-    // Clean up
+  afterEach(async () => {
+    // Clean up after each test
     await teardownTestEnvironment(testContext);
   });
 

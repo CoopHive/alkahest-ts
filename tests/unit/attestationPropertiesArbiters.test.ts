@@ -12,7 +12,7 @@
  * - UidArbiter (Composing & NonComposing)
  */
 
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { encodeAbiParameters, parseAbiParameters } from "viem";
 import { generatePrivateKey, privateKeyToAddress } from "viem/accounts";
 import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
@@ -23,7 +23,7 @@ describe("Attestation Properties Arbiters Tests", () => {
   let bob: `0x${string}`;
   let testClient: TestContext["testClient"];
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     testContext = await setupTestEnvironment();
 
     // Generate test accounts
@@ -35,7 +35,7 @@ describe("Attestation Properties Arbiters Tests", () => {
     testClient = testContext.testClient;
   });
 
-  afterAll(async () => {
+  afterEach(async () => {
     await teardownTestEnvironment(testContext);
   });
 

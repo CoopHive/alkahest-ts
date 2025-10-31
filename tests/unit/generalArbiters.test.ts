@@ -8,7 +8,7 @@
  * - TrustedOracleArbiter: Oracle-based decision making with arbitration requests
  */
 
-import { afterAll, beforeAll, beforeEach, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { createWalletClient, encodeAbiParameters, http, parseAbiParameters, publicActions } from "viem";
 import { generatePrivateKey, privateKeyToAccount, privateKeyToAddress } from "viem/accounts";
 import { foundry } from "viem/chains";
@@ -30,8 +30,8 @@ describe("General Arbiters Tests", () => {
   let bobClient: TestContext["bob"]["client"];
   let testClient: TestContext["testClient"];
 
-  beforeAll(async () => {
-    // Setup test environment
+  beforeEach(async () => {
+    // Setup fresh test environment for each test
     testContext = await setupTestEnvironment();
 
     // Extract the values we need for tests
@@ -53,8 +53,8 @@ describe("General Arbiters Tests", () => {
     }
   });
 
-  afterAll(async () => {
-    // Clean up
+  afterEach(async () => {
+    // Clean up after each test
     await teardownTestEnvironment(testContext);
   });
 

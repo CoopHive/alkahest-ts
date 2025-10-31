@@ -126,9 +126,15 @@ export const makeOracleClient = (viemClient: ViemClient, addresses: ChainAddress
     const attestations = await getArbitrationRequests(options);
 
     const decisions = await Promise.all(
-      attestations.map(async (attestation) => {
+      attestations.map(async (attestation, index) => {
         const decision = await arbitrate(attestation);
         if (decision === null) return null;
+
+        // Add tiny delay to help nonce manager coordinate parallel transactions
+        // This gives the nonce manager time to properly track deltas
+        if (index > 0) {
+          await new Promise((resolve) => setTimeout(resolve, 10));
+        }
 
         const hash = await arbitrateOnchain(attestation.uid, decision);
         return { hash, attestation, decision };

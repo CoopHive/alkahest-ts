@@ -25,7 +25,6 @@ import {
   createTestClient,
   createWalletClient,
   http,
-  nonceManager,
   type PublicActions,
   parseEther,
   publicActions,
@@ -36,6 +35,7 @@ import {
 } from "viem";
 import { generatePrivateKey, privateKeyToAccount } from "viem/accounts";
 import { foundry } from "viem/chains";
+import { nonceManager } from "viem";
 import { makeClient } from "../../src";
 import AllArbiter from "../../src/contracts/AllArbiter.json";
 import AnyArbiter from "../../src/contracts/AnyArbiter.json";
@@ -246,15 +246,11 @@ export async function setupTestEnvironment(options?: SetupTestEnvironmentOptions
   const bobPrivateKey = generatePrivateKey();
   const charliePrivateKey = generatePrivateKey();
 
-  const aliceAccount = privateKeyToAccount(alicePrivateKey, {
-    nonceManager,
-  });
-  const bobAccount = privateKeyToAccount(bobPrivateKey, {
-    nonceManager,
-  });
-  const charlieAccount = privateKeyToAccount(charliePrivateKey, {
-    nonceManager,
-  });
+  // Use viem's default singleton nonce manager
+  // This is shared across all tests and accounts, keyed by ${address}.${chainId}
+  const aliceAccount = privateKeyToAccount(alicePrivateKey, { nonceManager });
+  const bobAccount = privateKeyToAccount(bobPrivateKey, { nonceManager });
+  const charlieAccount = privateKeyToAccount(charliePrivateKey, { nonceManager });
   const aliceAddress = aliceAccount.address;
   const bobAddress = bobAccount.address;
   const charlieAddress = charlieAccount.address;
@@ -262,9 +258,7 @@ export async function setupTestEnvironment(options?: SetupTestEnvironmentOptions
   // Create test client for deployment
   const testClient = createTestClient({
     mode: "anvil",
-    account: privateKeyToAccount(generatePrivateKey(), {
-      nonceManager,
-    }),
+    account: privateKeyToAccount(generatePrivateKey(), { nonceManager }),
     chain,
     transport,
   })

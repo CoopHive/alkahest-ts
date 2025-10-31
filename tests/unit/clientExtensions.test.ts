@@ -1,4 +1,4 @@
-import { beforeAll, describe, expect, test } from "bun:test";
+import { afterEach, beforeEach, describe, expect, test } from "bun:test";
 import { makeClient, makeMinimalClient } from "../../src";
 import { makeErc20Client } from "../../src/clients/erc20";
 import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
@@ -7,9 +7,13 @@ describe("Client Extension Tests", () => {
   let testContext: TestContext;
   let walletClient: TestContext["alice"]["client"]["viemClient"];
 
-  beforeAll(async () => {
+  beforeEach(async () => {
     testContext = await setupTestEnvironment();
     walletClient = testContext.alice.client.viemClient;
+  });
+
+  afterEach(async () => {
+    await teardownTestEnvironment(testContext);
   });
 
   test("makeClient should return a client with all default extensions", () => {

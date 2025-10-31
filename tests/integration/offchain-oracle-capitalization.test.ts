@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, expect, test } from "bun:test";
+import { afterEach, beforeEach, beforeEach, expect, test } from "bun:test";
 import { exec as execCallback } from "node:child_process";
 import { promisify } from "node:util";
 import { encodeAbiParameters, hexToBytes, parseAbiParameters, parseEther, stringToHex } from "viem";
@@ -21,19 +21,11 @@ type ShellOracleDemand = {
 const stringObligationAbi = parseAbiParameters("(string item)");
 const shellDemandAbi = parseAbiParameters("(bytes payload)");
 
-beforeAll(async () => {
+beforeEach(async () => {
   testContext = await setupTestEnvironment();
 });
 
-beforeEach(async () => {
-  if (testContext.anvilInitState) {
-    await testContext.testClient.loadState({
-      state: testContext.anvilInitState,
-    });
-  }
-});
-
-afterAll(async () => {
+afterEach(async () => {
   await teardownTestEnvironment(testContext);
 });
 
@@ -70,8 +62,9 @@ test("synchronous offchain oracle capitalization flow", async () => {
     escrow.uid,
   );
 
-  // Request arbitration
-  await testContext.bob.client.oracle.requestArbitration(fulfillment.uid, testContext.charlie.address);
+  // Request arbitration and wait for it to be mined before setting up listener
+  const requestHash = await testContext.bob.client.oracle.requestArbitration(fulfillment.uid, testContext.charlie.address);
+  await testContext.bob.client.viemClient.waitForTransactionReceipt({ hash: requestHash });
 
   const { decisions, unwatch } = await testContext.charlie.client.oracle.listenAndArbitrate(
     async (attestation) => {
@@ -118,6 +111,13 @@ test("synchronous offchain oracle capitalization flow", async () => {
       return true;
     },
     { skipAlreadyArbitrated: true },
+  );
+
+  // Wait for all arbitration transactions to be mined
+  await Promise.all(
+    decisions.map((decision) =>
+      testContext.charlie.client.viemClient.waitForTransactionReceipt({ hash: decision.hash }),
+    ),
   );
 
   unwatch();

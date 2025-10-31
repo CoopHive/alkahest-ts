@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, beforeEach, expect, test } from "bun:test";
+import { afterEach, beforeEach, beforeEach, expect, test } from "bun:test";
 import { encodeAbiParameters, hexToBytes, parseAbiParameters, parseEther, stringToHex } from "viem";
 import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 
@@ -119,20 +119,11 @@ function startSchedulerWorker(ctx: SchedulerContext, arbiters: ArbiterModule) {
   };
 }
 
-beforeAll(async () => {
+beforeEach(async () => {
   testContext = await setupTestEnvironment();
 });
 
-beforeEach(async () => {
-  if (schedulerContext) setScheduler(undefined);
-  if (testContext.anvilInitState) {
-    await testContext.testClient.loadState({
-      state: testContext.anvilInitState,
-    });
-  }
-});
-
-afterAll(async () => {
+afterEach(async () => {
   setScheduler(undefined);
   await teardownTestEnvironment(testContext);
 });
