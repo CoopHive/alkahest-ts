@@ -287,55 +287,48 @@ export const makeTokenBundleClient = (
       const target =
         purpose === "escrow" ? addresses.tokenBundleEscrowObligation : addresses.tokenBundlePaymentObligation;
 
-      // Prepare approval transactions for all token types
-      const approvalPromises: Promise<`0x${string}`>[] = [];
+      const results: `0x${string}`[] = [];
 
-      // Process ERC20 tokens in parallel
-      bundle.erc20s.forEach((token) => {
-        approvalPromises.push(
-          viemClient.writeContract({
-            address: token.address,
-            abi: erc20Abi.abi,
-            functionName: "approve",
-            args: [target, token.value],
-          }),
-        );
-      });
+      // Process ERC20 tokens sequentially (submit only, don't wait)
+      for (const token of bundle.erc20s) {
+        const hash = await viemClient.writeContract({
+          address: token.address,
+          abi: erc20Abi.abi,
+          functionName: "approve",
+          args: [target, token.value],
+        });
+        results.push(hash);
+      }
 
-      // Process ERC721 tokens
-      // Group by token contract to use setApprovalForAll when possible
+      // Process ERC721 tokens sequentially (submit only, don't wait)
+      // Group by token contract to use setApprovalForAll
       const erc721AddressesSet = new Set(bundle.erc721s.map((token) => token.address));
+      for (const address of erc721AddressesSet) {
+        const hash = await viemClient.writeContract({
+          address: address,
+          abi: erc721Abi.abi,
+          functionName: "setApprovalForAll",
+          args: [target, true],
+        });
+        results.push(hash);
+      }
 
-      // For contracts with multiple tokens, use setApprovalForAll in parallel
-      erc721AddressesSet.forEach((address) => {
-        approvalPromises.push(
-          viemClient.writeContract({
-            address: address,
-            abi: erc721Abi.abi,
-            functionName: "setApprovalForAll",
-            args: [target, true],
-          }),
-        );
-      });
-
-      // Process ERC1155 tokens
+      // Process ERC1155 tokens sequentially (submit only, don't wait)
       // Group by token contract to use setApprovalForAll
       const erc1155AddressesSet = new Set(bundle.erc1155s.map((token) => token.address));
+      for (const address of erc1155AddressesSet) {
+        const hash = await viemClient.writeContract({
+          address: address,
+          abi: erc1155Abi.abi,
+          functionName: "setApprovalForAll",
+          args: [target, true],
+        });
+        results.push(hash);
+      }
 
-      // For ERC1155, always use setApprovalForAll in parallel
-      erc1155AddressesSet.forEach((address) => {
-        approvalPromises.push(
-          viemClient.writeContract({
-            address: address,
-            abi: erc1155Abi.abi,
-            functionName: "setApprovalForAll",
-            args: [target, true],
-          }),
-        );
-      });
+      // Wait for all transactions to be mined in parallel
+      await Promise.all(results.map((hash) => viemClient.waitForTransactionReceipt({ hash })));
 
-      // Execute all approval transactions in parallel
-      const results = await Promise.all(approvalPromises);
       return results;
     },
   };

@@ -125,23 +125,24 @@ export const makeOracleClient = (viemClient: ViemClient, addresses: ChainAddress
   ): Promise<Decision[]> => {
     const attestations = await getArbitrationRequests(options);
 
-    const decisions = await Promise.all(
-      attestations.map(async (attestation, index) => {
-        const decision = await arbitrate(attestation);
-        if (decision === null) return null;
+    // Process arbitration sequentially to avoid nonce conflicts
+    const decisions: (Decision | null)[] = [];
+    for (const attestation of attestations) {
+      const decision = await arbitrate(attestation);
+      if (decision === null) {
+        decisions.push(null);
+        continue;
+      }
 
-        // Add tiny delay to help nonce manager coordinate parallel transactions
-        // This gives the nonce manager time to properly track deltas
-        if (index > 0) {
-          await new Promise((resolve) => setTimeout(resolve, 10));
-        }
+      const hash = await arbitrateOnchain(attestation.uid, decision);
+      decisions.push({ hash, attestation, decision });
+    }
 
-        const hash = await arbitrateOnchain(attestation.uid, decision);
-        return { hash, attestation, decision };
-      }),
-    );
+    // Wait for all transactions to be mined in parallel
+    const validDecisions = decisions.filter((d) => d !== null) as Decision[];
+    await Promise.all(validDecisions.map((d) => viemClient.waitForTransactionReceipt({ hash: d.hash })));
 
-    return decisions.filter((d) => d !== null) as Decision[];
+    return validDecisions;
   };
 
   /**
