@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, beforeEach, expect, test } from "bun:test";
+import { afterEach, beforeEach, expect, test } from "bun:test";
 import { encodeAbiParameters, hexToBytes, parseAbiParameters, parseEther, stringToHex } from "viem";
 import { setupTestEnvironment, type TestContext, teardownTestEnvironment } from "../utils/setup";
 
